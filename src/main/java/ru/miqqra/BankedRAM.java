@@ -32,14 +32,9 @@ import com.cburch.logisim.proj.Project;
 public class BankedRAM extends BankedMem {
     static final AttributeOption BUS_COMBINED
             = new AttributeOption("combined", BankedStrings.getter("ramBusSynchCombined"));
-    static final AttributeOption BUS_ASYNCH
-            = new AttributeOption("asynch", BankedStrings.getter("ramBusAsynchCombined"));
-    static final AttributeOption BUS_SEPARATE
-            = new AttributeOption("separate", BankedStrings.getter("ramBusSeparate"));
-
     static final Attribute<AttributeOption> ATTR_BUS = Attributes.forOption("bus",
             BankedStrings.getter("ramBusAttr"),
-            new AttributeOption[]{BUS_COMBINED, BUS_ASYNCH, BUS_SEPARATE});
+            new AttributeOption[]{BUS_COMBINED});
 
     private static Attribute<?>[] ATTRIBUTES = {
             BankedMem.ADDR_ATTR, BankedMem.DATA_ATTR, ATTR_BUS
@@ -53,6 +48,17 @@ public class BankedRAM extends BankedMem {
     private static final int CLK = MEM_INPUTS + 2;
     private static final int WE = MEM_INPUTS + 3;
     private static final int DIN = MEM_INPUTS + 4;
+
+
+
+    public static final int DEFAULT_DATA_SIZE = 16;
+    public static final int DATA = 0;
+    public static final int ADDR = 1;
+    public static final int SEL = 2;
+    public static final int LD = 3;
+    public static final int CLEAR = 4;
+    public static final int CLOCK = 5;
+    public static final int BITS = 6;
 
     private static Object[][] logOptions = new Object[9][];
 
@@ -78,32 +84,35 @@ public class BankedRAM extends BankedMem {
     void configurePorts(Instance instance) {
         Object bus = instance.getAttributeValue(ATTR_BUS);
         if (bus == null) bus = BUS_COMBINED;
-        boolean asynch = bus == null ? false : bus.equals(BUS_ASYNCH);
-        boolean separate = bus == null ? false : bus.equals(BUS_SEPARATE);
 
-        int portCount = MEM_INPUTS;
-        if (asynch) portCount += 2;
-        else if (separate) portCount += 5;
-        else portCount += 3;
+        int portCount = 7;
         Port[] ps = new Port[portCount];
 
+        /*
         configureStandardPorts(instance, ps);
         ps[OE] = new Port(-50, 40, Port.INPUT, 1);
         ps[OE].setToolTip(BankedStrings.getter("ramOETip"));
         ps[CLR] = new Port(-30, 40, Port.INPUT, 1);
         ps[CLR].setToolTip(BankedStrings.getter("ramClrTip"));
-        if (!asynch) {
-            ps[CLK] = new Port(-70, 40, Port.INPUT, 1);
-            ps[CLK].setToolTip(BankedStrings.getter("ramClkTip"));
-        }
-        if (separate) {
-            ps[WE] = new Port(-110, 40, Port.INPUT, 1);
-            ps[WE].setToolTip(BankedStrings.getter("ramWETip"));
-            ps[DIN] = new Port(-140, 20, Port.INPUT, DATA_ATTR);
-            ps[DIN].setToolTip(BankedStrings.getter("ramInTip"));
-        } else {
-            ps[DATA].setToolTip(BankedStrings.getter("ramBusTip"));
-        }
+        ps[DATA].setToolTip(BankedStrings.getter("ramBusTip"));
+         */
+
+        ps[DATA] = new Port(0, 0, "inout", DEFAULT_DATA_SIZE);
+        ps[ADDR] = new Port(-140, 0, "inout", ADDR_ATTR);
+        ps[SEL] = new Port(-90, 40, "input", 1);
+        ps[LD] = new Port(-50, 40, "input", 1);
+        ps[CLEAR] = new Port(-30, 40, "input", 1);
+        ps[CLOCK] = new Port(-70, 40, "input", 1);
+        ps[BITS] = new Port(-110, 40, "input", 1);
+
+        ps[DATA].setToolTip(BankedStrings.getter("ramBusTip"));
+        ps[ADDR].setToolTip(BankedStrings.getter("memAddrTip"));
+        ps[SEL].setToolTip(BankedStrings.getter("memCSTip"));
+        ps[LD].setToolTip(BankedStrings.getter("ramOETip"));
+        ps[CLEAR].setToolTip(BankedStrings.getter("ramClrTip"));
+        ps[CLOCK].setToolTip(BankedStrings.getter("ramClkTip"));
+        ps[BITS].setToolTip(BankedStrings.getter("ramBits"));
+
         instance.setPorts(ps);
     }
 
@@ -156,12 +165,11 @@ public class BankedRAM extends BankedMem {
         BankedRamState myState = (BankedRamState) getState(state);
         BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
         Object busVal = state.getAttributeValue(ATTR_BUS);
-        boolean asynch = busVal == null ? false : busVal.equals(BUS_ASYNCH);
-        boolean separate = busVal == null ? false : busVal.equals(BUS_SEPARATE);
 
         Value addrValue = state.getPort(ADDR);
+        Value bits = state.getPort(BITS);
         boolean chipSelect = state.getPort(CS) != Value.FALSE;
-        boolean triggered = asynch || myState.setClock(state.getPort(CLK), StdAttr.TRIG_RISING);
+        boolean triggered = myState.setClock(state.getPort(CLK), StdAttr.TRIG_RISING);
         boolean outputEnabled = state.getPort(OE) != Value.FALSE;
         boolean shouldClear = state.getPort(CLR) == Value.TRUE;
 
@@ -171,7 +179,7 @@ public class BankedRAM extends BankedMem {
 
         if (!chipSelect) {
             myState.setCurrent(-1);
-            state.setPort(DATA, Value.createUnknown(dataBits), DELAY);
+            state.setPort(DATA, Value.createUnknown(BitWidth.create(DEFAULT_DATA_SIZE)), DELAY);
             return;
         }
 
@@ -183,43 +191,44 @@ public class BankedRAM extends BankedMem {
             myState.scrollToShow(addr);
         }
 
-        if (!shouldClear && triggered) {
-            boolean shouldStore;
-            if (separate) {
-                shouldStore = state.getPort(WE) != Value.FALSE;
-            } else {
-                shouldStore = !outputEnabled;
+        if (!shouldClear && triggered && !outputEnabled) {
+            int data = state.getPort(DATA).toIntValue();
+            if (bits.toIntValue() == 0){
+                data = (data << 8) >>> 8;
             }
-            if (shouldStore) {
-                Value dataValue = state.getPort(separate ? DIN : DATA);
-                myState.getContents().set(addr, dataValue.toIntValue());
+            else if (bits.toIntValue() == 1){
+                //?
+                data = data;
             }
+            myState.getContents().set(addr, data);
         }
 
         if (outputEnabled) {
-            int val = myState.getContents().get(addr);
-            state.setPort(DATA, Value.createKnown(dataBits, val), DELAY);
+            int val = 0;
+            if (bits.toIntValue() == 0){
+                val = myState.getContents().get((long)addr);
+            }
+            else if (bits.toIntValue() == 1){
+                if (addr%2==0){
+                    int val1, val2;
+                    val1 = myState.getContents().get(addr);
+                    val2 = myState.getContents().get(addr+1);
+                    val2 = (val2 << 8);
+                    val = val1 | val2;
+                }
+            }
+            state.setPort(DATA, Value.createKnown(BitWidth.create(DEFAULT_DATA_SIZE), val), DELAY);
         } else {
-            state.setPort(DATA, Value.createUnknown(dataBits), DELAY);
+            state.setPort(DATA, Value.createUnknown(BitWidth.create(DEFAULT_DATA_SIZE)), DELAY);
         }
     }
 
     @Override
     public void paintInstance(InstancePainter painter) {
         super.paintInstance(painter);
-        Object busVal = painter.getAttributeValue(ATTR_BUS);
-        boolean asynch = busVal == null ? false : busVal.equals(BUS_ASYNCH);
-        boolean separate = busVal == null ? false : busVal.equals(BUS_SEPARATE);
-
-        if (!asynch) painter.drawClock(CLK, Direction.NORTH);
+        painter.drawClock(CLK, Direction.NORTH);
         painter.drawPort(OE, BankedStrings.get("ramOELabel"), Direction.SOUTH);
         painter.drawPort(CLR, BankedStrings.get("ramClrLabel"), Direction.SOUTH);
-
-        if (separate) {
-            painter.drawPort(WE, BankedStrings.get("ramWELabel"), Direction.SOUTH);
-            painter.getGraphics().setColor(Color.BLACK);
-            painter.drawPort(DIN, BankedStrings.get("ramDataLabel"), Direction.EAST);
-        }
     }
 
     private static class BankedRamState extends BankedMemState
