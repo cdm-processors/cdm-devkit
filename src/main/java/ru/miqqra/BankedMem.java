@@ -111,6 +111,7 @@ abstract class BankedMem extends InstanceFactory {
             int bytes = 1 << addrBits;
             String label;
             if (this instanceof BankedROM) {
+
                 if (addrBits >= 30) {
                     label = StringUtil.format(BankedStrings.get("romGigabyteLabel"), ""
                             + (bytes >>> 30));
@@ -148,6 +149,10 @@ abstract class BankedMem extends InstanceFactory {
         painter.drawPort(ADDR, BankedStrings.get("ramAddrLabel"), Direction.EAST);
         g.setColor(Color.GRAY);
         painter.drawPort(CS, BankedStrings.get("ramCSLabel"), Direction.SOUTH);
+
+        if (this instanceof BankedROM){
+            painter.drawPort(BankedROM.BITS, BankedStrings.get("Bit"), Direction.SOUTH);
+        }
     }
 
     File getCurrentImage(Instance instance) {

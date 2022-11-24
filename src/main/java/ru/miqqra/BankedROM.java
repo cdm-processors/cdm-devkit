@@ -37,20 +37,35 @@ public class BankedROM extends BankedMem {
         memListeners = new WeakHashMap<Instance, MemListener>();
     }
 
-    private final int ADDR = 1;
-    private final int DATA = 0;
-    private final int SEL = 2;
-    private final int BITS = 3;
-    private final int PORTS = 4;
-    private final int DATABITS = 16;
-    private final int ADDRBITS = 8;
+    public static final int ADDR = 1;
+    public static final int DATA = 0;
+    public static final int SEL = 2;
+    public static final int BITS = 3;
+    public static final int PORTS = 4;
+    public static final int DATABITS = 16;
+    public static final int ADDRBITS = 8;
 
 
     @Override
     void configurePorts(Instance instance) {
+
+        Port[] ps = new Port[PORTS];
+        ps[DATA] = new Port(0, 0, "inout", 16);
+        ps[ADDR] = new Port(-140, 0, "input", 8);
+        ps[SEL] = new Port(-90, 40, "input", 1);
+        ps[BITS] = new Port(-50, 40, "input", 1);
+        ps[DATA].setToolTip(BankedStrings.getter("memDataTip"));
+        ps[ADDR].setToolTip(BankedStrings.getter("memAddrTip"));
+        ps[SEL].setToolTip(BankedStrings.getter("memCSTip"));
+        ps[BITS].setToolTip(BankedStrings.getter("bits"));
+        instance.setPorts(ps);
+
+        /*
         Port[] ps = new Port[MEM_INPUTS];
         configureStandardPorts(instance, ps);
         instance.setPorts(ps);
+
+         */
     }
 
     @Override
@@ -92,6 +107,41 @@ public class BankedROM extends BankedMem {
 
     @Override
     public void propagate(InstanceState state) {
+
+        BankedMemState myState = this.getState(state);
+        BitWidth dataBits = (BitWidth)state.getAttributeValue(DATA_ATTR);
+        Value addrValue = state.getPort(1);
+        Value bits = state.getPort(3);
+        boolean chipSelect = state.getPort(2) != Value.FALSE;
+        if (!chipSelect) {
+            myState.setCurrent(-1L);
+            state.setPort(0, Value.createUnknown(BitWidth.create(16)), 10);
+        } else {
+            int addr = addrValue.toIntValue();
+            if (addrValue.isFullyDefined() && addr >= 0) {
+                if ((long)addr != myState.getCurrent()) {
+                    myState.setCurrent((long)addr);
+                    myState.scrollToShow((long)addr);
+                }
+
+                int val = 0;
+                if (bits.toIntValue() == 0){
+                    val = myState.getContents().get((long)addr);
+                }
+                else if (bits.toIntValue() == 1){
+                    if (addr%2==0){
+                        int val1, val2;
+                        val1 = myState.getContents().get(addr);
+                        val2 = myState.getContents().get(addr+1);
+                        val2 = (val2 << 8);
+                        val = val1 | val2;
+                    }
+                }
+                state.setPort(DATA, Value.createKnown(BitWidth.create(16), val), 10);
+            }
+        }
+
+        /*
         BankedMemState myState = getState(state);
         BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
 
@@ -114,6 +164,8 @@ public class BankedROM extends BankedMem {
 
         int val = myState.getContents().get(addr);
         state.setPort(DATA, Value.createKnown(dataBits, val), DELAY);
+
+         */
     }
 
     @Override
