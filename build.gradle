@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group 'ru.miqqra'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dir 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava {
+    options.compilerArgs.addAll(['--release', 7, '-Xlint:-options'])
+}
+
+jar {
+    manifest {
+        attributes 'Library-Class': 'ru.miqqra.Components'
+    }
+}
