@@ -48,7 +48,6 @@ public class BankedROM extends BankedMem {
 
     @Override
     void configurePorts(Instance instance) {
-
         Port[] ps = new Port[PORTS];
         ps[DATA] = new Port(0, 0, "inout", 16);
         ps[ADDR] = new Port(-140, 0, "input", 8);
@@ -59,13 +58,6 @@ public class BankedROM extends BankedMem {
         ps[SEL].setToolTip(BankedStrings.getter("memCSTip"));
         ps[BITS].setToolTip(BankedStrings.getter("bits"));
         instance.setPorts(ps);
-
-        /*
-        Port[] ps = new Port[MEM_INPUTS];
-        configureStandardPorts(instance, ps);
-        instance.setPorts(ps);
-
-         */
     }
 
     @Override
@@ -107,9 +99,7 @@ public class BankedROM extends BankedMem {
 
     @Override
     public void propagate(InstanceState state) {
-
         BankedMemState myState = this.getState(state);
-        BitWidth dataBits = (BitWidth)state.getAttributeValue(DATA_ATTR);
         Value addrValue = state.getPort(1);
         Value bits = state.getPort(3);
         boolean chipSelect = state.getPort(2) != Value.FALSE;
@@ -123,7 +113,6 @@ public class BankedROM extends BankedMem {
                     myState.setCurrent((long)addr);
                     myState.scrollToShow((long)addr);
                 }
-
                 int val = 0;
                 if (bits.toIntValue() == 0){
                     val = myState.getContents().get((long)addr);
@@ -140,32 +129,6 @@ public class BankedROM extends BankedMem {
                 state.setPort(DATA, Value.createKnown(BitWidth.create(16), val), 10);
             }
         }
-
-        /*
-        BankedMemState myState = getState(state);
-        BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
-
-        Value addrValue = state.getPort(ADDR);
-        boolean chipSelect = state.getPort(CS) != Value.FALSE;
-
-        if (!chipSelect) {
-            myState.setCurrent(-1);
-            state.setPort(DATA, Value.createUnknown(dataBits), DELAY);
-            return;
-        }
-
-        int addr = addrValue.toIntValue();
-        if (!addrValue.isFullyDefined() || addr < 0)
-            return;
-        if (addr != myState.getCurrent()) {
-            myState.setCurrent(addr);
-            myState.scrollToShow(addr);
-        }
-
-        int val = myState.getContents().get(addr);
-        state.setPort(DATA, Value.createKnown(dataBits, val), DELAY);
-
-         */
     }
 
     @Override

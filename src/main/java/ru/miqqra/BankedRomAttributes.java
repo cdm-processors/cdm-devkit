@@ -15,13 +15,13 @@ import com.cburch.logisim.proj.Project;
 
 class BankedRomAttributes extends AbstractAttributeSet {
     private static List<Attribute<?>> ATTRIBUTES = Arrays.asList(new Attribute<?>[]{
-            BankedMem.ADDR_ATTR, BankedMem.DATA_ATTR, BankedROM.CONTENTS_ATTR
+            BankedMem.ADDR_ATTR, BankedROM.CONTENTS_ATTR
     });
 
     private static WeakHashMap<BankedMemContents, BankedRomContentsListener> listenerRegistry
-            = new WeakHashMap<BankedMemContents, BankedRomContentsListener>();
+            = new WeakHashMap<>();
     private static WeakHashMap<BankedMemContents, HexFrame> windowRegistry
-            = new WeakHashMap<BankedMemContents, HexFrame>();
+            = new WeakHashMap<>();
 
     static void register(BankedMemContents value, Project proj) {
         if (proj == null || listenerRegistry.containsKey(value)) return;

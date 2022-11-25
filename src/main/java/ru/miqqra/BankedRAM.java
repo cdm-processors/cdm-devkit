@@ -1,9 +1,5 @@
 package ru.miqqra;
 
-/* Copyright (c) 2010, Carl Burch. License information is located in the
- * com.cburch.logisim.Main source code and at www.cburch.com/logisim/. */
-
-import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -37,10 +33,10 @@ public class BankedRAM extends BankedMem {
             new AttributeOption[]{BUS_COMBINED});
 
     private static Attribute<?>[] ATTRIBUTES = {
-            BankedMem.ADDR_ATTR, BankedMem.DATA_ATTR, ATTR_BUS
+            BankedMem.ADDR_ATTR
     };
     private static Object[] DEFAULTS = {
-            BitWidth.create(8), BitWidth.create(8), BUS_COMBINED
+            BitWidth.create(8), BitWidth.create(8)
     };
 
     private static final int OE = MEM_INPUTS + 0;
@@ -48,8 +44,6 @@ public class BankedRAM extends BankedMem {
     private static final int CLK = MEM_INPUTS + 2;
     private static final int WE = MEM_INPUTS + 3;
     private static final int DIN = MEM_INPUTS + 4;
-
-
 
     public static final int DEFAULT_DATA_SIZE = 16;
     public static final int DATA = 0;
@@ -82,20 +76,8 @@ public class BankedRAM extends BankedMem {
 
     @Override
     void configurePorts(Instance instance) {
-        Object bus = instance.getAttributeValue(ATTR_BUS);
-        if (bus == null) bus = BUS_COMBINED;
-
         int portCount = 7;
         Port[] ps = new Port[portCount];
-
-        /*
-        configureStandardPorts(instance, ps);
-        ps[OE] = new Port(-50, 40, Port.INPUT, 1);
-        ps[OE].setToolTip(BankedStrings.getter("ramOETip"));
-        ps[CLR] = new Port(-30, 40, Port.INPUT, 1);
-        ps[CLR].setToolTip(BankedStrings.getter("ramClrTip"));
-        ps[DATA].setToolTip(BankedStrings.getter("ramBusTip"));
-         */
 
         ps[DATA] = new Port(0, 0, "inout", DEFAULT_DATA_SIZE);
         ps[ADDR] = new Port(-140, 0, "inout", ADDR_ATTR);
@@ -124,7 +106,7 @@ public class BankedRAM extends BankedMem {
     @Override
     BankedMemState getState(InstanceState state) {
         BitWidth addrBits = state.getAttributeValue(ADDR_ATTR);
-        BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
+        BitWidth dataBits = BitWidth.create(8);
 
         BankedRamState myState = (BankedRamState) state.getData();
         if (myState == null) {
@@ -194,13 +176,15 @@ public class BankedRAM extends BankedMem {
         if (!shouldClear && triggered && !outputEnabled) {
             int data = state.getPort(DATA).toIntValue();
             if (bits.toIntValue() == 0){
-                data = (data << 8) >>> 8;
+                data = data & ((1<<8)-1);
+                myState.getContents().set(addr, data);
             }
             else if (bits.toIntValue() == 1){
-                //?
-                data = data;
+                int data1 = data & ((1<<8)-1);
+                int data2 = (data & (((1<<8)-1)<<8)) >>> 8;
+                myState.getContents().set(addr, data1);
+                myState.getContents().set(addr+1, data2);
             }
-            myState.getContents().set(addr, data);
         }
 
         if (outputEnabled) {
