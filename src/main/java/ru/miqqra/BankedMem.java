@@ -49,6 +49,9 @@ abstract class BankedMem extends InstanceFactory {
     static final int CS = 2;
     static final int MEM_INPUTS = 3;
 
+    public static final int DEFAULT_BITS_SIZE = 1;
+    public static final int DEFAULT_BITS_VALUE = 0;
+
     // other constants
     static final int DELAY = 10;
 
@@ -150,11 +153,10 @@ abstract class BankedMem extends InstanceFactory {
         g.setColor(Color.GRAY);
         painter.drawPort(CS, BankedStrings.get("ramCSLabel"), Direction.SOUTH);
 
-        if (this instanceof BankedROM){
-            painter.drawPort(BankedROM.BITS, BankedStrings.get("Bit"), Direction.SOUTH);
-        }
-        else if (this instanceof BankedRAM){
-            painter.drawPort(BankedRAM.BITS, BankedStrings.get("Bit"), Direction.SOUTH);
+        if (this instanceof BankedROM) {
+            painter.drawPort(BankedROM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
+        } else if (this instanceof BankedRAM) {
+            painter.drawPort(BankedRAM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
         }
     }
 
