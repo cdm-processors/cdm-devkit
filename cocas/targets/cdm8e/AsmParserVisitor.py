@@ -1,4 +1,4 @@
-# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cdm_asm/AsmParser.g4 by ANTLR 4.10.1
+# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cocas/AsmParser.g4 by ANTLR 4.10.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .AsmParser import AsmParser

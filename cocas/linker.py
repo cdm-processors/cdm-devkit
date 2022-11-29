@@ -1,8 +1,8 @@
-from cdm_asm.assembler import ObjectSectionRecord, ObjectModule
+from cocas.assembler import ObjectSectionRecord, ObjectModule
 import itertools
 
-from cdm_asm.error import CdmLinkException
-from cdm_asm.location import CodeLocation
+from cocas.error import CdmLinkException
+from cocas.location import CodeLocation
 
 
 def init_bins(asects: list[ObjectSectionRecord]):
@@ -86,7 +86,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[ObjectModule]):
+def link(objects: list[ObjectModule], isa):
     asects = list(itertools.chain.from_iterable([obj.asects for obj in objects]))
     rsects = list(itertools.chain.from_iterable([obj.rsects for obj in objects]))
 

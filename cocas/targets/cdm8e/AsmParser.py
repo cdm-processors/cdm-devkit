@@ -1,4 +1,4 @@
-# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cdm_asm/AsmParser.g4 by ANTLR 4.10.1
+# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cocas/AsmParser.g4 by ANTLR 4.10.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO

@@ -1,10 +1,10 @@
-from cdm_asm.asm_commands import instructions as insset, assembly_directives as dirset
-from cdm_asm.ast_nodes import *
-from cdm_asm.code_segments import *
+from cocas.asm_commands import instructions as insset, assembly_directives as dirset
+from cocas.ast_nodes import *
+from cocas.code_segments import *
 from typing import get_origin, get_args
 import bitstruct
 
-from cdm_asm.error import CdmException, CdmExceptionTag, CdmTempException
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 
 
 def assert_args(args, *types, single_type=False):

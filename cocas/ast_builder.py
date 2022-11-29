@@ -1,10 +1,10 @@
 from antlr4 import *
-from cdm_asm.ast_nodes import *
-from cdm_asm.generated.AsmLexer import AsmLexer
-from cdm_asm.generated.AsmParser import AsmParser
-from cdm_asm.generated.AsmParserVisitor import AsmParserVisitor
+from cocas.ast_nodes import *
+from cocas.targets.cdm8e.AsmLexer import AsmLexer
+from cocas.targets.cdm8e.AsmParser import AsmParser
+from cocas.targets.cdm8e.AsmParserVisitor import AsmParserVisitor
 from base64 import b64decode
-from cdm_asm.error import AntlrErrorListener, CdmExceptionTag, CdmException
+from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException
 
 
 class BuildAstVisitor(AsmParserVisitor):
@@ -243,7 +243,7 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
 
 
-def build_ast(input_stream: InputStream, filepath: str):
+def build_ast(input_stream: InputStream, filepath: str, isa):
     lexer = AsmLexer(input_stream)
     lexer.removeErrorListeners()
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))

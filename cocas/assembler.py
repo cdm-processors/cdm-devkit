@@ -1,9 +1,9 @@
-from cdm_asm.asm_commands import instructions as insset, assembly_directives as dirset
-from cdm_asm.ast_nodes import *
-from cdm_asm.code_segments import *
-from cdm_asm.command_handlers import assemble_command
+from cocas.asm_commands import instructions as insset, assembly_directives as dirset
+from cocas.ast_nodes import *
+from cocas.code_segments import *
+from cocas.command_handlers import assemble_command
 from dataclasses import dataclass
-from cdm_asm.error import CdmException, CdmExceptionTag
+from cocas.error import CdmException, CdmExceptionTag
 
 TAG = CdmExceptionTag.ASM
 
@@ -438,7 +438,7 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
             break
 
 
-def assemble(pn: ProgramNode):
+def assemble(pn: ProgramNode, isa):
     templates = [Template(t) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 

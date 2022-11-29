@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from cdm_asm.location import CodeLocation
+from cocas.location import CodeLocation
 
 
 @dataclass

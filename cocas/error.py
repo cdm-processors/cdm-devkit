@@ -1,8 +1,7 @@
-from antlr4.error.Errors import CancellationException, ParseCancellationException
 from antlr4.error.ErrorListener import ErrorListener
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from enum import Enum
-from cdm_asm.generated import AsmParser
+from cocas.targets.cdm8e import AsmParser
 
 
 class CdmExceptionTag(Enum):

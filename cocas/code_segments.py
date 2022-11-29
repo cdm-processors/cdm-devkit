@@ -1,5 +1,5 @@
-from cdm_asm.ast_nodes import RelocatableExpressionNode
-from cdm_asm.location import CodeLocation
+from cocas.ast_nodes import RelocatableExpressionNode
+from cocas.location import CodeLocation
 from dataclasses import dataclass, field
 
 
