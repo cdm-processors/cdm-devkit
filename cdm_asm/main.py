@@ -30,54 +30,6 @@ def write_image(filename: str, arr: list):
         f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
     f.close()
 
-def write_object_file(filename: str, obj: ObjectModule):
-    # TODO: write code locations
-    f = open(filename, 'w')
-
-    for asect in obj.asects:
-        f.write(f'ABS  {asect.address:04x}: ')
-        f.write(' '.join([f'{b:02x}' for b in asect.data]) + '\n')
-
-    for asect in obj.asects:
-        for ent in asect.ents:
-            f.write(f'NTRY {ent} {asect.ents[ent]:04x}\n')
-
-    for rsect in obj.rsects:
-        f.write(f'NAME {rsect.name}\n')
-        f.write('DATA ' + ' '.join([f'{b:02x}' for b in rsect.data]) + '\n')
-        f.write('RELL ' + ' '.join([f'{a:04x}' for a in rsect.rell])  + '\n')
-        f.write('RELH ' + ' '.join([f'{a:04x} {b:02x}' for a, b in rsect.relh])  + '\n')
-        for ent in rsect.ents:
-            f.write(f'NTRY {ent} {rsect.ents[ent]:04x}\n')
-
-    xtrl = dict()
-    for sect in obj.asects + obj.rsects:
-        for ext_name in sect.xtrl:
-            sections_using_ext = xtrl.setdefault(ext_name, dict())
-            xtrl_uses = sections_using_ext.setdefault(sect.name, [])
-            xtrl_uses.extend(sect.xtrl[ext_name])
-
-    xtrh = dict()
-    for sect in obj.asects + obj.rsects:
-        for ext_name in sect.xtrh:
-            sections_using_ext = xtrh.setdefault(ext_name, dict())
-            xtrh_uses = sections_using_ext.setdefault(sect.name, [])
-            xtrh_uses.extend(sect.xtrh[ext_name])
-
-    for ext_name in xtrl:
-        f.write(f'XTRL {ext_name}:')
-        for sect_name in xtrl[ext_name]:
-            f.write(' ' + ' '.join([f'{sect_name} {a:04x}' for a in xtrl[ext_name][sect_name]]))
-        f.write('\n')
-
-    for ext_name in xtrh:
-        f.write(f'XTRH {ext_name}:')
-        for sect_name in xtrh[ext_name]:
-            f.write(' ' + ' '.join([f'{sect_name} {a:04x} {b:02x}' for a, b in xtrh[ext_name][sect_name]]))
-        f.write('\n')
-
-    f.close()
-
 
 def main():
     # TODO: enable object file generation (when stand-alone linker will be ready)
@@ -91,6 +43,8 @@ def main():
     colorama.init()
 
     try:
+        # Contains information from standard.mlb
+        # Definitions of macros and how to convert them into commands
         library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath('standard.mlb').absolute()))
         source_files = args.sources
         objects = []
@@ -101,9 +55,16 @@ def main():
                 # tolerate files without newline at the end
                 if data[-1] != '\n':
                     data += '\n'
+                # InputStream: Vacuum all input from a string and then treat it like a buffer.
                 input_stream = InputStream(data)
 
-            macro_expanded_input_stream = process_macros(input_stream, library_macros, str(pathlib.Path(filepath).absolute()))
+            # Assembler code but with one tag in the beginning
+            # Macros (tst, clr but not if) are replaced to commands and wrapped by tags
+            # Number in tags - begin/end line numbers and macro number
+            # Hash of source file name
+            # Remove comments
+            macro_expanded_input_stream = process_macros(input_stream, library_macros,
+                                                         str(pathlib.Path(filepath).absolute()))
             # print(macro_expanded_input_stream)
             r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))
             obj = assemble(r)
@@ -114,6 +75,8 @@ def main():
         image_root, _ = os.path.splitext(source_files[0])
         if args.image is not None:
             write_image(args.image, data)
+        else:
+            write_image("out.img", data)
 
         # write code locations(debug info)
         code_locations = {key: asdict(loc) for key, loc in code_locations.items()}
@@ -135,7 +98,6 @@ def main():
     except CdmLinkException as e:
         log_error(CdmExceptionTag.LINK.value, e.message)
         exit(1)
-
 
 
 if __name__ == '__main__':

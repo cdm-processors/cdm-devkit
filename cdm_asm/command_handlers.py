@@ -6,6 +6,7 @@ import bitstruct
 
 from cdm_asm.error import CdmException, CdmExceptionTag, CdmTempException
 
+
 def assert_args(args, *types, single_type=False):
     ts = [(t if get_origin(t) is None else get_args(t)) for t in types]
     if single_type:
@@ -25,14 +26,17 @@ def binary_handler(opcode: int, arguments: list):
     data = bitstruct.pack("u4u2u2", opcode // 16, arguments[0].number, arguments[1].number)
     return [BytesSegment(bytearray(data))]
 
+
 def unary_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode)
     data = bitstruct.pack('u6u2', opcode // 4, arguments[0].number)
     return [BytesSegment(bytearray(data))]
 
+
 def zero_handler(opcode: int, arguments: list):
     assert_args(arguments)
     return [BytesSegment(bytearray([opcode]))]
+
 
 def branch_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
@@ -40,11 +44,13 @@ def branch_handler(opcode: int, arguments: list):
 
     return [BytesSegment(bytearray([opcode])), OffsetExpressionSegment(arg)]
 
+
 def long_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
     return [BytesSegment(bytearray([opcode])), LongExpressionSegment(arg)]
+
 
 def ldsa_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode, RelocatableExpressionNode)
@@ -53,7 +59,9 @@ def ldsa_handler(opcode: int, arguments: list):
 
     return [BytesSegment(cmd_piece.data), ShortExpressionSegment(arg)]
 
+
 def ldi_handler(opcode: int, arguments: list):
+    # check types
     assert_args(arguments, RegisterNode, RelocatableExpressionNode | str)
     reg, arg = arguments
     cmd_piece = unary_handler(opcode, [reg])[0]
@@ -67,11 +75,13 @@ def ldi_handler(opcode: int, arguments: list):
     elif isinstance(arg, RelocatableExpressionNode):
         return [BytesSegment(cmd_piece.data), ShortExpressionSegment(arg)]
 
+
 def osix_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
     return [BytesSegment(bytearray([opcode])), ConstExpressionSegment(arg, positive=True)]
+
 
 def spmove_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
@@ -101,6 +111,7 @@ def dc_handler(arguments: list):
                 segments.append(ShortExpressionSegment(arg))
     return segments
 
+
 def ds_handler(arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
@@ -113,14 +124,14 @@ def ds_handler(arguments: list):
 
 
 command_handlers = {
-    'zero':   zero_handler,
-    'unary':  unary_handler,
+    'zero': zero_handler,
+    'unary': unary_handler,
     'binary': binary_handler,
     'branch': branch_handler,
-    'long':   long_handler,
-    'ldsa':   ldsa_handler,
-    'ldi':    ldi_handler,
-    'osix':   osix_handler,
+    'long': long_handler,
+    'ldsa': ldsa_handler,
+    'ldi': ldi_handler,
+    'osix': osix_handler,
     'spmove': spmove_handler,
 
     'dc': dc_handler,

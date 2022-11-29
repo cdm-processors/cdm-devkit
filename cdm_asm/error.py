@@ -24,6 +24,7 @@ class CdmLinkException(Exception):
     def __init__(self, message: str):
         self.message = message
 
+
 class CdmException(Exception):
     def __init__(self, tag: str | CdmExceptionTag, file: str, line: int, description: str):
         if isinstance(tag, CdmExceptionTag):
@@ -34,7 +35,8 @@ class CdmException(Exception):
         self.description = description
 
     def log(self):
-        print(f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of {Style.BRIGHT}{self.file}{Style.RESET_ALL}')
+        print(
+            f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of {Style.BRIGHT}{self.file}{Style.RESET_ALL}')
         print(f'{self.description}')
 
 
@@ -42,7 +44,6 @@ def log_error(tag: str, message: str):
     print(
         f'[{tag}] {Fore.RED}ERROR{Fore.RESET}')
     print(message)
-
 
 
 class AntlrErrorListener(ErrorListener):
@@ -55,6 +56,3 @@ class AntlrErrorListener(ErrorListener):
             line = line - recognizer.current_offset
             self.file = recognizer.current_file
         raise CdmException(self.tag, self.file, line, msg)
-
-
-

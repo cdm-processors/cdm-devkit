@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from cdm_asm.location import CodeLocation
 
+
 @dataclass
 class RegisterNode:
     number: int
+
 
 @dataclass
 class LabelNode:
@@ -15,10 +17,12 @@ class LocatableNode:
     def __post_init__(self):
         self.location: CodeLocation = CodeLocation()
 
+
 @dataclass
 class TemplateFieldNode(LocatableNode):
     template_name: str
     field_name: str
+
 
 @dataclass
 class RelocatableExpressionNode(LocatableNode):
@@ -27,16 +31,19 @@ class RelocatableExpressionNode(LocatableNode):
     sub_terms: list
     const_term: int
 
+
 @dataclass
 class LabelDeclarationNode(LocatableNode):
     label: LabelNode
     entry: bool
     external: bool
 
+
 @dataclass
 class InstructionNode(LocatableNode):
     mnemonic: str
     arguments: list
+
 
 @dataclass
 class ConditionNode:
@@ -44,11 +51,13 @@ class ConditionNode:
     branch_mnemonic: str
     conjunction: str
 
+
 @dataclass
 class ConditionalStatementNode:
     conditions: list
     then_lines: list
     else_lines: list
+
 
 @dataclass
 class WhileLoopNode:
@@ -56,18 +65,22 @@ class WhileLoopNode:
     branch_mnemonic: str
     lines: list
 
+
 @dataclass
 class UntilLoopNode:
     lines: list
     branch_mnemonic: str
 
+
 @dataclass
 class BreakStatementNode(LocatableNode):
     pass
 
+
 @dataclass
 class ContinueStatementNode(LocatableNode):
     pass
+
 
 @dataclass
 class SaveRestoreStatementNode:
@@ -75,10 +88,12 @@ class SaveRestoreStatementNode:
     lines: list
     restored_register: RegisterNode
 
+
 @dataclass
 class GotoStatementNode(LocatableNode):
     branch_mnemonic: str
     expr: RelocatableExpressionNode
+
 
 @dataclass
 class SectionNode:
@@ -94,13 +109,16 @@ class SectionNode:
 class AbsoluteSectionNode(SectionNode):
     address: int
 
+
 @dataclass
 class RelocatableSectionNode(SectionNode):
     name: str
 
+
 @dataclass
 class TemplateSectionNode(SectionNode):
     name: str
+
 
 @dataclass
 class ProgramNode:

@@ -23,7 +23,7 @@ class BuildAstVisitor(AsmParserVisitor):
             return CodeLocation(self.current_macro_file, self.current_macro_line)
         return CodeLocation(self.source_path, ctx.start.line - self.line_offset)
 
-    def visitProgram(self, ctx:AsmParser.ProgramContext) -> ProgramNode:
+    def visitProgram(self, ctx: AsmParser.ProgramContext) -> ProgramNode:
         ret = ProgramNode([], [], [])
         for child in ctx.children:
             if isinstance(child, AsmParser.AbsoluteSectionContext):
@@ -36,25 +36,25 @@ class BuildAstVisitor(AsmParserVisitor):
                 self.visitLine_mark(child)
         return ret
 
-    def visitAbsoluteSection(self, ctx:AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
+    def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
         lines, locations = self.visitSection_body(ctx.section_body())
         address = self.visitNumber(header.number())
         return AbsoluteSectionNode(lines, locations, address)
 
-    def visitRelocatableSection(self, ctx:AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
+    def visitRelocatableSection(self, ctx: AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
         header = ctx.rsect_header()
         lines, locations = self.visitSection_body(ctx.section_body())
         name = header.name().getText()
         return RelocatableSectionNode(lines, locations, name)
 
-    def visitTemplateSection(self, ctx:AsmParser.TemplateSectionContext) -> TemplateSectionNode:
+    def visitTemplateSection(self, ctx: AsmParser.TemplateSectionContext) -> TemplateSectionNode:
         header = ctx.tplate_header()
         lines, locations = self.visitSection_body(ctx.section_body())
         name = header.name().getText()
         return TemplateSectionNode(lines, locations, name)
 
-    def visitLine_mark(self, ctx:AsmParser.Line_markContext):
+    def visitLine_mark(self, ctx: AsmParser.Line_markContext):
         # TODO: use already parsed values
         value = int(ctx.line_number().getText())
         filepath = b64decode(ctx.filepath().getText()[3:]).decode()
@@ -71,8 +71,7 @@ class BuildAstVisitor(AsmParserVisitor):
             elif info == 'mstop':
                 self.in_macro = False
 
-
-    def visitNumber(self, ctx:AsmParser.NumberContext) -> int:
+    def visitNumber(self, ctx: AsmParser.NumberContext) -> int:
         return int(ctx.getText(), base=0)
 
     def visitCharacter(self, ctx: AsmParser.CharacterContext) -> int:
@@ -81,7 +80,7 @@ class BuildAstVisitor(AsmParserVisitor):
         else:
             return ord(ctx.getText()[1])
 
-    def visitSection_body(self, ctx:AsmParser.Section_bodyContext) -> tuple[list, list[CodeLocation]]:
+    def visitSection_body(self, ctx: AsmParser.Section_bodyContext) -> tuple[list, list[CodeLocation]]:
         return self.visitCode_block(ctx.code_block(), return_locations=True)
 
     def visitConditional(self, ctx: AsmParser.ConditionalContext):
@@ -101,7 +100,8 @@ class BuildAstVisitor(AsmParserVisitor):
         cond = self.visitCondition(ctx.condition())
         cond.conjunction = ctx.conjunction().getText()
         if cond.conjunction != 'and' and cond.conjunction != 'or':
-            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset, 'Expected "and" or "or" in compound condition')
+            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                               'Expected "and" or "or" in compound condition')
         return cond
 
     def visitCondition(self, ctx: AsmParser.ConditionContext):
@@ -169,7 +169,7 @@ class BuildAstVisitor(AsmParserVisitor):
             elif isinstance(c, AsmParser.Goto_statementContext):
                 nodes.append(self.visitGoto_statement(c))
             elif isinstance(c, AsmParser.Line_markContext):
-                self.visit(c)
+                self.visit(c)  # visitLine_mark
             for node in nodes:
                 if isinstance(node, LocatableNode):
                     node.location = self._ctx_location(c)
@@ -204,32 +204,33 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
-    def visitStandaloneLabel(self, ctx:AsmParser.StandaloneLabelContext) -> LabelNode:
+    def visitStandaloneLabel(self, ctx: AsmParser.StandaloneLabelContext) -> LabelNode:
         label_decl = self.visitLabel_declaration(ctx.label_declaration())
         label_decl.external = ctx.Ext() is not None
         if label_decl.entry and label_decl.external:
-            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset, f'Label {label_decl.label.name} cannot be both external and entry')
+            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                               f'Label {label_decl.label.name} cannot be both external and entry')
         return label_decl
 
     def visitLabel_declaration(self, ctx: AsmParser.Label_declarationContext) -> LabelDeclarationNode:
         is_entry = ctx.ANGLE_BRACKET() is not None
         return LabelDeclarationNode(self.visitLabel(ctx.label()), is_entry, False)
 
-    def visitLabel(self, ctx:AsmParser.LabelContext) -> LabelNode:
+    def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
         return LabelNode(ctx.getText())
 
-    def visitString(self, ctx:AsmParser.StringContext):
+    def visitString(self, ctx: AsmParser.StringContext):
         return ctx.getText()[1:-1]
 
-    def visitRegister(self, ctx:AsmParser.RegisterContext):
+    def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
 
-    def visitTemplate_field(self, ctx:AsmParser.Template_fieldContext):
+    def visitTemplate_field(self, ctx: AsmParser.Template_fieldContext):
         template_name = ctx.name()[0].getText()
         field_name = ctx.name()[1].getText()
         return TemplateFieldNode(template_name, field_name)
 
-    def visitInstructionLine(self, ctx:AsmParser.InstructionLineContext) -> list:
+    def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list:
         ret = []
         if ctx.label_declaration() is not None:
             ret.append(self.visitLabel_declaration(ctx.label_declaration()))
@@ -238,8 +239,9 @@ class BuildAstVisitor(AsmParserVisitor):
         ret.append(InstructionNode(op, args))
         return ret
 
-    def visitArguments(self, ctx:AsmParser.ArgumentsContext):
+    def visitArguments(self, ctx: AsmParser.ArgumentsContext):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
+
 
 def build_ast(input_stream: InputStream, filepath: str):
     lexer = AsmLexer(input_stream)
@@ -250,5 +252,13 @@ def build_ast(input_stream: InputStream, filepath: str):
     parser = AsmParser(token_stream)
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))
-    cst = parser.program()
-    return BuildAstVisitor(filepath).visit(cst)
+
+    cst = parser.program()  # it is already a tree with sections
+    # some magic happens in generated files. antlr makes a tree of program structure like in .g4
+
+    bav = BuildAstVisitor(filepath)
+
+    # Converts Context tree with ugly file position marks
+    # into tree of nodes from ast_nodes.py
+    result = bav.visit(cst)  # BuildAstVisitor.visitProgram
+    return result

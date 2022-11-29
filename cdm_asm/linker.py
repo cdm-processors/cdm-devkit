@@ -25,8 +25,9 @@ def init_bins(asects: list[ObjectSectionRecord]):
 
     return rsect_bins
 
+
 def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
-    sect_addresses = { '$abs': 0 }
+    sect_addresses = {'$abs': 0}
     for rsect in rsects:
         rsect_size = len(rsect.data)
         for i in range(len(rsect_bins)):
@@ -41,6 +42,7 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
             raise CdmLinkException(f'Section "{rsect.name}" exceeds image size limit')
     return sect_addresses
 
+
 def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]):
     ents = dict()
     for sect in sects:
@@ -50,6 +52,7 @@ def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]
             ents[ent_name] = sect.ents[ent_name] + sect_addresses[sect.name]
     return ents
 
+
 def find_exts_by_sect(sects: list[ObjectSectionRecord]):
     exts_by_sect = dict()
     for sect in sects:
@@ -57,12 +60,14 @@ def find_exts_by_sect(sects: list[ObjectSectionRecord]):
         exts |= set(sect.xtrl.keys()) | set(sect.xtrh.keys())
     return exts_by_sect
 
+
 def find_sect_by_ent(sects: list[ObjectSectionRecord]):
     sect_by_ent = dict()
     for sect in sects:
         for ent_name in sect.ents:
             sect_by_ent[ent_name] = sect.name
     return sect_by_ent
+
 
 def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[str, str]):
     used_sects_queue = ['$abs']
@@ -79,6 +84,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
                     used_sects.add(new_sect)
         i += 1
     return used_sects
+
 
 def link(objects: list[ObjectModule]):
     asects = list(itertools.chain.from_iterable([obj.asects for obj in objects]))
@@ -125,7 +131,5 @@ def link(objects: list[ObjectModule]):
             for offset, byte in sect.xtrh[ext_name]:
                 image[sect_addresses[sect.name] + offset] = \
                     (image[sect_addresses[sect.name] + offset] + (ents[ext_name] + byte) // 0x100) & 0xFF
-
-
 
     return image, code_locations

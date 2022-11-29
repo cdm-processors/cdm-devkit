@@ -35,6 +35,7 @@ def unique(params: list[str]):
         defined_vars[param] = f'r{i}'
     return defined_vars
 
+
 macro_instructions = {
     'unique': unique,
 }
@@ -43,19 +44,24 @@ macro_instructions = {
 @dataclass
 class MacroParameter:
     n: int
+
+
 @dataclass
 class MacroNonce:
     pass
 
+
 @dataclass
 class MacroVariable:
     name_pieces: list
+
 
 @dataclass
 class MacroLine:
     label_pieces: list
     instruction_pieces: list
     parameter_pieces: list[list]
+
 
 @dataclass
 class MacroDefinition:
@@ -77,6 +83,7 @@ def substitute_piece(piece, params: list[str], nonce: str, variables: dict[str, 
     else:
         return piece
 
+
 def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, variables: dict[str, str]):
     sub = lambda p: substitute_piece(p, params, nonce, variables)
     sub_all = lambda ps: ''.join(map(sub, ps))
@@ -84,6 +91,7 @@ def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, va
     instruction_part = sub_all(line.instruction_pieces)
     parameter_parts = list(map(sub_all, line.parameter_pieces))
     return (label_part, instruction_part, parameter_parts)
+
 
 class ExpandMacrosVisitor(MacroVisitor):
     def __init__(self, rewriter: TokenStreamRewriter, mlb_macros, filepath: str):
@@ -95,7 +103,8 @@ class ExpandMacrosVisitor(MacroVisitor):
     def _generate_location_line(self, filepath: str, line: int, info: str = None) -> str:
         if info is not None:
             info = " " + info
-        else:info = ""
+        else:
+            info = ""
         return f'-| {line} fp-{b64encode(filepath.encode()).decode()} {info}\n'
 
     def add_macro(self, macro: MacroDefinition):
@@ -105,6 +114,8 @@ class ExpandMacrosVisitor(MacroVisitor):
             raise CdmTempException(f'Multiple definitions of macro {macro.name}')
         self.macros[macro.name][macro.arity] = macro
 
+    # Returns a None for things as asect or empty line.
+    # Returns string of macro
     def expand_macro(self, macro_name: str, macro_params: list[str]):
         arity = len(macro_params)
         if macro_name in self.macros and arity in self.macros[macro_name]:
@@ -145,13 +156,13 @@ class ExpandMacrosVisitor(MacroVisitor):
                         else:
                             ret_parts.append('\n')
                         ret_parts.append(expanded_text)
-                        ret_parts.append(f'\n{self._generate_location_line(macro.location.file, macro.location.line + line_number+1)}')
+                        ret_parts.append(
+                            f'\n{self._generate_location_line(macro.location.file, macro.location.line + line_number + 1)}')
                     else:
                         ret_parts.append(f'{label_part}{instruction_part}{",".join(parameter_parts)}\n')
                 line_number += 1
             return ''.join(ret_parts)
         return None
-
 
     def visitMlb(self, ctx: MacroParser.MlbContext):
         for child in filter(lambda c: isinstance(c, MacroParser.Mlb_macroContext), ctx.children):
@@ -176,7 +187,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                             expanded_text = f'{label}\n{expanded_text}'
 
                         mstart = self._generate_location_line(self.filepath, child.start.line, "mstart")
-                        mstop = self._generate_location_line(self.filepath, child.stop.line+1, "mstop")
+                        mstop = self._generate_location_line(self.filepath, child.stop.line + 1, "mstop")
                         expanded_text = f'{mstart}{expanded_text}{mstop}'
                         self.rewriter.insertBeforeToken(child.start, expanded_text)
                         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, child.start, child.stop)
@@ -189,7 +200,7 @@ class ExpandMacrosVisitor(MacroVisitor):
         arity = int(header.DIGIT().getText())
         lines = self.visitMacro_body(ctx.macro_body())
         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, ctx.start, ctx.stop)
-        self.rewriter.insertAfterToken(ctx.stop, self._generate_location_line(self.filepath, ctx.stop.line+1))
+        self.rewriter.insertAfterToken(ctx.stop, self._generate_location_line(self.filepath, ctx.stop.line + 1))
         return MacroDefinition(name, arity, lines, CodeLocation(self.filepath, ctx.macro_body().start.line, 0))
 
     def visitMlb_macro(self, ctx: MacroParser.Mlb_macroContext):
@@ -278,14 +289,18 @@ def read_mlb(filepath):
 
 # filepath should be absolute
 def process_macros(input_stream: InputStream, library_macros, filepath: str):
-    lexer = MacroLexer(input_stream)
+    lexer = MacroLexer(input_stream)  # using generated class
     lexer.removeErrorListeners()
+    # Adds a class that will be called somehow from antlr. And it will raise exceptions with MACRO and filepath
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
     token_stream = CommonTokenStream(lexer)
-    parser = MacroParser(token_stream)
+
+    parser = MacroParser(token_stream)  # using generated class
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
-    cst = parser.program()
+    cst = parser.program()  # .children contains lines, their .children are tokens
     rewriter = TokenStreamRewriter(token_stream)
-    ExpandMacrosVisitor(rewriter, library_macros, filepath).visit(cst)
-    return InputStream(rewriter.getDefaultText())
+    emv = ExpandMacrosVisitor(rewriter, library_macros, filepath)
+    some_result = emv.visit(cst)  # this кал just calls emv.visitProgram(cst)
+    new_test = rewriter.getDefaultText()
+    return InputStream(new_test)

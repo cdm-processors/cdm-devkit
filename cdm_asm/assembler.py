@@ -7,8 +7,10 @@ from cdm_asm.error import CdmException, CdmExceptionTag
 
 TAG = CdmExceptionTag.ASM
 
+
 def _error(segment: CodeSegment, message: str):
     raise CdmException(TAG, segment.location.file, segment.location.line, message)
+
 
 @dataclass
 class Template:
@@ -38,6 +40,7 @@ class Template:
 
         self.labels['_'] = size
 
+
 @dataclass
 class CodeBlock:
     def __init__(self, address: int, lines: list):
@@ -60,15 +63,15 @@ class CodeBlock:
 
     def assemble_lines(self, lines: list):
         ast_node_handlers = {
-            LabelDeclarationNode:       self.assemble_label_declaration,
-            InstructionNode:            self.assemble_instruction,
-            ConditionalStatementNode:   self.assemble_conditional_statement,
-            WhileLoopNode:              self.assemble_while_loop,
-            UntilLoopNode:              self.assemble_until_loop,
-            SaveRestoreStatementNode:   self.assemble_save_restore_statement,
-            BreakStatementNode:         self.assemble_break_statement,
-            ContinueStatementNode:      self.assemble_continue_statement,
-            GotoStatementNode:          self.assemble_goto_statement
+            LabelDeclarationNode: self.assemble_label_declaration,
+            InstructionNode: self.assemble_instruction,
+            ConditionalStatementNode: self.assemble_conditional_statement,
+            WhileLoopNode: self.assemble_while_loop,
+            UntilLoopNode: self.assemble_until_loop,
+            SaveRestoreStatementNode: self.assemble_save_restore_statement,
+            BreakStatementNode: self.assemble_break_statement,
+            ContinueStatementNode: self.assemble_continue_statement,
+            GotoStatementNode: self.assemble_goto_statement
         }
         for line in lines:
             if isinstance(line, LocatableNode):
@@ -78,8 +81,8 @@ class CodeBlock:
     def assemble_label_declaration(self, line: LabelDeclarationNode):
         label_name = line.label.name
         if (label_name in self.labels or
-            label_name in self.ents or
-            label_name in self.exts):
+                label_name in self.ents or
+                label_name in self.exts):
             raise Exception(f'Duplicate label "{label_name}" declaration')
 
         if line.external:
@@ -156,7 +159,7 @@ class CodeBlock:
     def assemble_save_restore_statement(self, line: SaveRestoreStatementNode):
         rn = line.saved_register.number
         push = InstructionNode('push', [RegisterNode(rn)], None)
-        pop  = InstructionNode('pop',  [RegisterNode(rn)], None)
+        pop = InstructionNode('pop', [RegisterNode(rn)], None)
         self.assemble_instruction(push)
         self.assemble_lines(line.lines)
         self.assemble_instruction(pop)
@@ -178,6 +181,7 @@ class CodeBlock:
         self.segments[-1].location = line.location
         self.size += GotoSegment.base_size
 
+
 @dataclass
 class Section(CodeBlock):
     def __init__(self, sn: SectionNode):
@@ -188,6 +192,7 @@ class Section(CodeBlock):
             self.name = sn.name
             address = 0
         super().__init__(address, sn.lines)
+
 
 @dataclass
 class ObjectSectionRecord:
@@ -203,12 +208,12 @@ class ObjectSectionRecord:
         self.code_locations = s.code_locations
 
         segment_handlers = {
-            BytesSegment:               self.fill_bytes,
-            ShortExpressionSegment:     self.fill_short_expr,
-            LongExpressionSegment:      self.fill_long_expr,
-            ConstExpressionSegment:     self.fill_const_expr,
-            OffsetExpressionSegment:    self.fill_offset_expr,
-            GotoSegment:                self.fill_goto
+            BytesSegment: self.fill_bytes,
+            ShortExpressionSegment: self.fill_short_expr,
+            LongExpressionSegment: self.fill_long_expr,
+            ConstExpressionSegment: self.fill_const_expr,
+            OffsetExpressionSegment: self.fill_offset_expr,
+            GotoSegment: self.fill_goto
         }
         for seg in s.segments:
             segment_handlers[type(seg)](seg, s, local_labels, template_fields)
@@ -217,10 +222,12 @@ class ObjectSectionRecord:
         if ext is None:
             return
 
-        val_lo, _ = val.to_bytes(2, 'little', signed=(val<0))
+        val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
         match seg.expr.byte_specifier:
-            case 'low':  self.xtrl.setdefault(ext, []).append(s.address + len(self.data))
-            case 'high': self.xtrh.setdefault(ext, []).append((s.address + len(self.data), val_lo))
+            case 'low':
+                self.xtrl.setdefault(ext, []).append(s.address + len(self.data))
+            case 'high':
+                self.xtrh.setdefault(ext, []).append((s.address + len(self.data), val_lo))
             case _:
                 self.xtrl.setdefault(ext, []).append(s.address + len(self.data))
                 self.xtrh.setdefault(ext, []).append((s.address + len(self.data) + 1, val_lo))
@@ -229,10 +236,12 @@ class ObjectSectionRecord:
         if not is_rel:
             return
 
-        val_lo, _ = val.to_bytes(2, 'little', signed=(val<0))
+        val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
         match seg.expr.byte_specifier:
-            case 'low':  self.rell.add(s.address + len(self.data))
-            case 'high': self.relh.add((s.address + len(self.data), val_lo))
+            case 'low':
+                self.rell.add(s.address + len(self.data))
+            case 'high':
+                self.relh.add((s.address + len(self.data), val_lo))
             case _:
                 self.rell.add(s.address + len(self.data))
                 self.relh.add((s.address + len(self.data) + 1, val_lo))
@@ -242,29 +251,29 @@ class ObjectSectionRecord:
         self.data += seg.data
 
     def fill_short_expr(self, seg: ShortExpressionSegment, s: Section,
-                      local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
+                        local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, val_long, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
         is_rel = (val_sect == s.name != '$abs')
         if seg.expr.byte_specifier is None and (is_rel or ext is not None):
             _error(seg, 'Expected a 1-byte expression')
-        if not -2**7 <= val < 2**8:
+        if not -2 ** 7 <= val < 2 ** 8:
             _error(seg, 'Number out of range')
 
         self.add_rel_record(is_rel, s, val_long, seg)
         self.add_ext_record(ext, s, val_long, seg)
-        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val<0)))
+        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
     def fill_long_expr(self, seg: LongExpressionSegment, s: Section,
                        local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, val_long, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
-        if not -2**15 <= val < 2**16:
+        if not -2 ** 15 <= val < 2 ** 16:
             _error(seg, 'Number out of range')
 
         self.add_rel_record(val_sect, s, val_long, seg)
         self.add_ext_record(ext, s, val_long, seg)
-        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val<0)))
+        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
     def fill_const_expr(self, seg: ConstExpressionSegment, s: Section,
                         local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
@@ -272,10 +281,10 @@ class ObjectSectionRecord:
 
         if val_sect is not None or ext is not None:
             _error(seg, 'Number expected but label found')
-        if not -2**7 <= val < 2**8 or (seg.positive and val < 0):
+        if not -2 ** 7 <= val < 2 ** 8 or (seg.positive and val < 0):
             _error(seg, 'Number out of range')
 
-        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val<0)))
+        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
     def fill_offset_expr(self, seg: OffsetExpressionSegment, s: Section,
                          local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
@@ -290,10 +299,10 @@ class ObjectSectionRecord:
             _error(seg, 'Invalid destination address (byte of relative address)')
 
         val -= s.address + len(self.data)
-        if not -2**7 <= val < 2**7:
+        if not -2 ** 7 <= val < 2 ** 7:
             _error(seg, f'Destination address is too far')
 
-        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val<0)))
+        self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
     def fill_goto(self, seg: GotoSegment, s: Section,
                   local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
@@ -307,6 +316,7 @@ class ObjectSectionRecord:
             self.data += bytearray([branch_opcode])
             self.fill_offset_expr(OffsetExpressionSegment(seg.expr), s, local_labels, template_fields)
 
+
 @dataclass
 class ObjectModule:
     def __init__(self):
@@ -319,6 +329,7 @@ def gather_local_labels(sects: list[Section]):
     for sect in sects:
         local_labels |= dict(filter(lambda p: not p[0].startswith('$'), sect.labels.items()))
     return local_labels
+
 
 def eval_rel_expr_seg(seg: ShortExpressionSegment, s: Section,
                       local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
@@ -342,11 +353,14 @@ def eval_rel_expr_seg(seg: ShortExpressionSegment, s: Section,
         elif isinstance(term, TemplateFieldNode):
             val_long += template_fields[term.template_name][term.field_name] * m
 
-    val_lo, val_hi = val_long.to_bytes(2, 'little', signed=(val_long<0))
+    val_lo, val_hi = val_long.to_bytes(2, 'little', signed=(val_long < 0))
     match seg.expr.byte_specifier:
-        case 'low':  val = val_lo
-        case 'high': val = val_hi
-        case _:      val = val_long
+        case 'low':
+            val = val_lo
+        case 'high':
+            val = val_hi
+        case _:
+            val = val_long
 
     used_exts = dict(filter(lambda x: x[1] != 0, used_exts.items()))
     if len(used_exts) > 1:
@@ -365,6 +379,7 @@ def eval_rel_expr_seg(seg: ShortExpressionSegment, s: Section,
             return (val, val_long, None, ext)
 
     _error(seg, 'Result is not a label or a number')
+
 
 def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
                          template_fields: dict[str, dict[str, int]]):
@@ -394,10 +409,10 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
 
                 addr, _, res_sect, ext = eval_rel_expr_seg(goto.seg, goto.sect, labels, template_fields)
                 is_rel = (res_sect == goto.sect.name != '$abs')
-                if (not -2**7 <= addr - goto.pos < 2**7
-                    or (goto.sect.name != '$abs' and not is_rel)
-                    or (goto.seg.expr.byte_specifier is not None and is_rel)
-                    or (ext is not None)):
+                if (not -2 ** 7 <= addr - goto.pos < 2 ** 7
+                        or (goto.sect.name != '$abs' and not is_rel)
+                        or (goto.seg.expr.byte_specifier is not None and is_rel)
+                        or (ext is not None)):
 
                     shift_length = GotoSegment.expanded_size - GotoSegment.base_size
                     goto.seg.is_expanded = True
@@ -421,7 +436,6 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
                 raise CdmException(TAG, goto.location.file, goto.location.line, str(e))
         else:
             break
-
 
 
 def assemble(pn: ProgramNode):
