@@ -3,9 +3,9 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from dataclasses import dataclass
 
 from cocas.location import CodeLocation
-from cocas.targets.cdm8e.MacroLexer import MacroLexer
-from cocas.targets.cdm8e.MacroParser import MacroParser
-from cocas.targets.cdm8e.MacroVisitor import MacroVisitor
+from cocas.generated.MacroLexer import MacroLexer
+from cocas.generated.MacroParser import MacroParser
+from cocas.generated.MacroVisitor import MacroVisitor
 from base64 import b64encode
 import re
 from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException, CdmTempException
@@ -278,7 +278,7 @@ class ExpandMacrosVisitor(MacroVisitor):
 
 
 # filepath should be absolute
-def read_mlb(filepath, isa):
+def read_mlb(filepath):
     input_stream = FileStream(filepath)
     lexer = MacroLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
@@ -288,7 +288,7 @@ def read_mlb(filepath, isa):
 
 
 # filepath should be absolute
-def process_macros(input_stream: InputStream, library_macros, filepath: str, isa):
+def process_macros(input_stream: InputStream, library_macros, filepath: str):
     lexer = MacroLexer(input_stream)  # using generated class
     lexer.removeErrorListeners()
     # Adds a class that will be called somehow from antlr. And it will raise exceptions with MACRO and filepath

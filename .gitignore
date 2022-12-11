@@ -250,8 +250,6 @@ pip-selfcheck.json
 
 
 test.*
-cocas/generated/*
-!cdm_asm/generated/*.py
 logisim/backup
 
 gen

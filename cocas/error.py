@@ -1,7 +1,7 @@
 from antlr4.error.ErrorListener import ErrorListener
 from colorama import Fore, Style
 from enum import Enum
-from cocas.targets.cdm8e import AsmParser
+from cocas.generated import AsmParser
 
 
 class CdmExceptionTag(Enum):

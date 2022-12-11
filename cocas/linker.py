@@ -86,7 +86,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[ObjectModule], isa):
+def link(objects: list[ObjectModule]):
     asects = list(itertools.chain.from_iterable([obj.asects for obj in objects]))
     rsects = list(itertools.chain.from_iterable([obj.rsects for obj in objects]))
 
