@@ -1,11 +1,13 @@
-from cocas.asm_commands import instructions as insset, assembly_directives as dirset
+from typing import Union
+
 from cocas.ast_nodes import *
 from cocas.code_segments import *
-from cocas.command_handlers import assemble_command
-from dataclasses import dataclass
+from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmException, CdmExceptionTag
 
 TAG = CdmExceptionTag.ASM
+
+command_handlers_: Union[TargetInstructionsInterface, None] = None
 
 
 def _error(segment: CodeSegment, message: str):
@@ -33,9 +35,9 @@ class Template:
                     self.labels[label_name] = size
 
             elif isinstance(line, InstructionNode):
-                if line.mnemonic not in dirset:
+                if line.mnemonic not in command_handlers_.assembly_directives:
                     raise Exception('Only "dc" and "ds" allowed in templates')
-                for seg in assemble_command(line):
+                for seg in command_handlers_.target_instructions(line):
                     size += seg.base_size
 
         self.labels['_'] = size
@@ -93,7 +95,7 @@ class CodeBlock:
                 self.ents.add(label_name)
 
     def assemble_instruction(self, line: InstructionNode):
-        for seg in assemble_command(line):
+        for seg in command_handlers_.target_instructions(line):
             self.segments.append(seg)
             self.size += seg.base_size
 
@@ -307,12 +309,12 @@ class ObjectSectionRecord:
     def fill_goto(self, seg: GotoSegment, s: Section,
                   local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         if seg.is_expanded:
-            branch_opcode = insset['branch'][f'bn{seg.branch_mnemonic}']
-            jmp_opcode = insset['long']['jmp']
+            branch_opcode = command_handlers_.instructions['branch'][f'bn{seg.branch_mnemonic}']
+            jmp_opcode = command_handlers_.instructions['long']['jmp']
             self.data += bytearray([branch_opcode, 4, jmp_opcode])
             self.fill_long_expr(LongExpressionSegment(seg.expr), s, local_labels, template_fields)
         else:
-            branch_opcode = insset['branch'][f'b{seg.branch_mnemonic}']
+            branch_opcode = command_handlers_.instructions['branch'][f'b{seg.branch_mnemonic}']
             self.data += bytearray([branch_opcode])
             self.fill_offset_expr(OffsetExpressionSegment(seg.expr), s, local_labels, template_fields)
 
@@ -438,7 +440,9 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
             break
 
 
-def assemble(pn: ProgramNode, isa):
+def assemble(pn: ProgramNode, command_handlers):
+    global command_handlers_
+    command_handlers_ = command_handlers
     templates = [Template(t) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
