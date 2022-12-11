@@ -55,7 +55,7 @@ class OffsetExpressionSegment(RelocatableExpressionSegment):
 
 
 @dataclass
-class GotoSegment(VariableLengthSegment):
+class BranchInstruction(VariableLengthSegment):
     branch_mnemonic: int
     expr: RelocatableExpressionNode
     base_size = 2

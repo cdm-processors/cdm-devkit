@@ -59,9 +59,9 @@ class CodeBlock:
     def append_label(self, label_name):
         self.labels[label_name] = self.address + self.size
 
-    def append_goto(self, mnemonic, label_name, location=CodeLocation()):
-        self.segments.append(GotoSegment(mnemonic, RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)))
-        self.size += GotoSegment.base_size
+    def append_branch_instruction(self, mnemonic, label_name, location=CodeLocation()):
+        self.segments.append(BranchInstruction(mnemonic, RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)))
+        self.size += BranchInstruction.base_size
 
     def assemble_lines(self, lines: list):
         ast_node_handlers = {
@@ -73,7 +73,7 @@ class CodeBlock:
             SaveRestoreStatementNode: self.assemble_save_restore_statement,
             BreakStatementNode: self.assemble_break_statement,
             ContinueStatementNode: self.assemble_continue_statement,
-            GotoStatementNode: self.assemble_goto_statement
+            GotoStatementNode: self.assemble_branch_instructions
         }
         for line in lines:
             if isinstance(line, LocatableNode):
@@ -111,19 +111,19 @@ class CodeBlock:
             self.assemble_lines(cond.lines)
             next_or_label = f'{or_label}{next_or}'
             if cond.conjunction is None:
-                self.append_goto(f'n{cond.branch_mnemonic}', else_label)
+                self.append_branch_instruction(f'n{cond.branch_mnemonic}', else_label)
             elif cond.conjunction == 'or':
-                self.append_goto(cond.branch_mnemonic, then_label)
+                self.append_branch_instruction(cond.branch_mnemonic, then_label)
                 self.append_label(next_or_label)
                 next_or += 1
             elif cond.conjunction == 'and':
-                self.append_goto(f'n{cond.branch_mnemonic}', next_or_label)
+                self.append_branch_instruction(f'n{cond.branch_mnemonic}', next_or_label)
 
         self.append_label(then_label)
         self.assemble_lines(line.then_lines)
 
         if len(line.else_lines) > 0:
-            self.append_goto('anything', finally_label)
+            self.append_branch_instruction('anything', finally_label)
             self.append_label(else_label)
             self.assemble_lines(line.else_lines)
             self.append_label(finally_label)
@@ -138,9 +138,9 @@ class CodeBlock:
         self.loop_stack.append((cond_label, finally_label))
         self.append_label(cond_label)
         self.assemble_lines(line.condition_lines)
-        self.append_goto(f'n{line.branch_mnemonic}', finally_label)
+        self.append_branch_instruction(f'n{line.branch_mnemonic}', finally_label)
         self.assemble_lines(line.lines)
-        self.append_goto('anything', cond_label)
+        self.append_branch_instruction('anything', cond_label)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -154,7 +154,7 @@ class CodeBlock:
         self.append_label(loop_body_label)
         self.assemble_lines(line.lines)
         self.append_label(cond_label)
-        self.append_goto(f'n{line.branch_mnemonic}', loop_body_label)
+        self.append_branch_instruction(f'n{line.branch_mnemonic}', loop_body_label)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -170,18 +170,18 @@ class CodeBlock:
         if len(self.loop_stack) == 0:
             raise Exception('"break" not allowed outside of a loop')
         _, finally_label = self.loop_stack[-1]
-        self.append_goto('anything', finally_label)
+        self.append_branch_instruction('anything', finally_label)
 
     def assemble_continue_statement(self, _: ContinueStatementNode):
         if len(self.loop_stack) == 0:
             raise Exception('"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
-        self.append_goto('anything', cond_label)
+        self.append_branch_instruction('anything', cond_label)
 
-    def assemble_goto_statement(self, line: GotoStatementNode):
-        self.segments.append(GotoSegment(line.branch_mnemonic, line.expr))
+    def assemble_branch_instructions(self, line: GotoStatementNode):
+        self.segments.append(BranchInstruction(line.branch_mnemonic, line.expr))
         self.segments[-1].location = line.location
-        self.size += GotoSegment.base_size
+        self.size += BranchInstruction.base_size
 
 
 @dataclass
@@ -215,7 +215,7 @@ class ObjectSectionRecord:
             LongExpressionSegment: self.fill_long_expr,
             ConstExpressionSegment: self.fill_const_expr,
             OffsetExpressionSegment: self.fill_offset_expr,
-            GotoSegment: self.fill_goto
+            BranchInstruction: self.fill_goto
         }
         for seg in s.segments:
             segment_handlers[type(seg)](seg, s, local_labels, template_fields)
@@ -306,7 +306,7 @@ class ObjectSectionRecord:
 
         self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
-    def fill_goto(self, seg: GotoSegment, s: Section,
+    def fill_goto(self, seg: BranchInstruction, s: Section,
                   local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         if seg.is_expanded:
             branch_opcode = command_handlers_.instructions['branch'][f'bn{seg.branch_mnemonic}']
@@ -383,11 +383,11 @@ def eval_rel_expr_seg(seg: ShortExpressionSegment, s: Section,
     _error(seg, 'Result is not a label or a number')
 
 
-def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
-                         template_fields: dict[str, dict[str, int]]):
+def expand_branch_instructions(sects: list[Section], local_labels: dict[str, int],
+                               template_fields: dict[str, dict[str, int]]):
     @dataclass
     class GotoSegmentEntry:
-        seg: GotoSegment
+        seg: BranchInstruction
         sect: Section
         pos: int
         location: CodeLocation
@@ -399,7 +399,7 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
     for sect in sects:
         pos = sect.address
         for seg in sect.segments:
-            if isinstance(seg, GotoSegment):
+            if isinstance(seg, BranchInstruction):
                 gotos.append(GotoSegmentEntry(seg, sect, pos + 1, seg.location))
             pos += seg.base_size
 
@@ -416,7 +416,7 @@ def expand_goto_segments(sects: list[Section], local_labels: dict[str, int],
                         or (goto.seg.expr.byte_specifier is not None and is_rel)
                         or (ext is not None)):
 
-                    shift_length = GotoSegment.expanded_size - GotoSegment.base_size
+                    shift_length = BranchInstruction.expanded_size - BranchInstruction.base_size
                     goto.seg.is_expanded = True
                     # print("shif")
                     old_locations = goto.sect.code_locations
@@ -450,10 +450,10 @@ def assemble(pn: ProgramNode, command_handlers):
     rsects = [Section(rsect) for rsect in pn.relocatable_sections]
     asects.sort(key=lambda s: s.address)
 
-    expand_goto_segments(asects, dict(), template_fields)
+    expand_branch_instructions(asects, dict(), template_fields)
     local_labels = gather_local_labels(asects)
     for rsect in rsects:
-        expand_goto_segments([rsect], local_labels, template_fields)
+        expand_branch_instructions([rsect], local_labels, template_fields)
 
     obj = ObjectModule()
     obj.asects = [ObjectSectionRecord(asect, local_labels, template_fields) for asect in asects]
