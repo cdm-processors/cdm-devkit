@@ -1,16 +1,24 @@
 [tool.poetry]
-name = "cdm8"
+name = "cdm-devkit"
 version = "0.1.0"
-description = ""
-authors = ["leadpogrommer <ilyamerzlakov@gmail.com>"]
-packages = [
-    { include = "cdm_asm" },
-    { include = "cdm_emu" },
+description = "Developer tools for CdM processors"
+authors = [
+    "leadpogrommer <ilyamerzlakov@gmail.com>",
+    "Nikolay Repin <n.repin@g.nsu.ru>",
+    "Timofey Khrapovitskiy <vuki03@mail.ru>",
+    "Mikhail Krasnikov <m.krasnikov1@g.nsu.ru>",
+    "Nikita Tatarinov <n.tatarinov@g.nsu.ru>",
+    "Nikita Korotkov <n.korotkov@g.nsu.ru>"
 ]
 
-[tool.poetry.scripts]
-cdm-asm = 'cdm_asm.main:main'
-cdm-emu = 'cdm_emu.emulator:main'
+#packages = [
+#    { include = "cdm_asm" },
+#    { include = "cocoemu" },
+#]
+
+#[tool.poetry.scripts]
+#cdm-asm = 'cdm_asm.main:main'
+#cdm-emu = 'cdm_emu.emulator:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
