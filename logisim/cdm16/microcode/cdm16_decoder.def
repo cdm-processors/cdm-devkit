@@ -1,0 +1,244 @@
+# Coco-de-Mer 16 (CdM-16) Processor Secondary Decoder Specification
+
+:3, 8,   # 3-bit Sequencer with 8 phases 
+
+#
+#### Secondary Decoder Output Signal Definition
+#
+
+r_asrtD,
+r_asrt0,
+r_asrt1,
+r_latch,
+
+fp_asrt0,
+
+imm_asrt1,
+imm_asrtD,
+imm_extend_negative,
+imm_shift,
+
+sp_latch,
+sp_asrt0,
+sp_asrtD,
+sp_inc,
+sp_dec,
+
+pc_latch,
+pc_asrt0,
+pc_asrtD,
+pc_inc,
+
+alu_asrtD,
+
+ps_latch_flags,
+ps_latch_word,
+ps_asrtD,
+
+word,
+sign_extend,
+
+mem,
+data,
+read
+
+#####################
+#
+#   INSTRUCTION SET
+#
+#####################
+
+#_0:
+#_1:
+#_2:
+#_3:
+#_4:
+#_5:
+#_6:
+#_7:
+#_8:
+#_9:
+#_A:
+#_B:
+#_C:
+#_D:
+#_E:
+#_F:
+
+# 0 op
+zero:           # Treat 0x0000 op code as invalid
+
+jsr:            mem, data, word, sp_dec, sp_asrt0, pc_asrtD;
+                mem, word, read, pc_asrt0, pc_latch
+
+rts:            mem, data, word, read, sp_asrt0, pc_latch, sp_inc
+
+rti:            mem, data, word, read, sp_asrt0, pc_latch, sp_inc;
+                mem, data, word, read, sp_asrt0, ps_latch_word, sp_inc
+
+pups:           mem, data, word, sp_dec, sp_asrt0, ps_asrtD
+
+pops:           mem, data, word, read, sp_asrt0, ps_latch_word, sp_inc
+
+pupc:           mem, data, word, sp_dec, sp_asrt0, pc_asrtD # with jsr? macro
+
+popc:           mem, data, word, read, sp_asrt0, pc_latch, sp_inc
+                
+halt:           word # Just to put CUT
+wait:           word
+ei:             word
+di:             word
+res_es:
+res_ds:
+
+pusp:           mem, data, word, sp_dec, sp_asrt0, sp_asrtD
+
+posp:           mem, data, word, read, sp_asrt0, sp_latch
+
+# 1 op
+push:           mem, data, word, sp_dec, sp_asrt0, r_asrtD
+
+pop:            mem, data, word, read, sp_asrt0, r_latch, sp_inc
+
+ldi:            mem, word, read, pc_asrt0, r_latch, pc_inc
+
+jsrr:           mem, data, word, sp_dec, sp_asrt0, pc_asrtD;
+                r_asrtD, pc_latch
+
+ldsp:           sp_asrtD, r_latch
+
+stsp:           sp_latch, r_asrtD
+
+ldps:           ps_asrtD, r_latch
+
+stps:           ps_latch_word, r_asrtD
+
+ldpc:           pc_asrtD, r_latch
+
+stpc:           pc_latch, r_asrtD
+
+1op_A:
+1op_B:
+1op_C:
+1op_D:
+1op_E:
+1op_F:
+
+# 2op
+move:           r_asrt0, alu_asrtD, r_latch, ps_latch_flags
+2op_1:
+2op_2:
+2op_3:
+2op_4:
+2op_5:
+2op_6:
+2op_7:
+2op_8:
+2op_9:
+2op_A:
+2op_B:
+2op_C:
+2op_D:
+2op_E:
+2op_F:
+
+# mem2
+ldw_2:          mem, data, read, word, r_asrt0, r_latch
+ldb_2:          mem, data, read, r_asrt0, r_latch
+ldsb_2:         mem, data, read, sign_extend, r_asrt0, r_latch
+
+ldcw_2:         mem, read, word, r_asrt0, r_latch
+ldcb_2:         mem, read, r_asrt0, r_latch
+ldcsb_2:        mem, read, sign_extend, r_asrt0, r_latch
+
+stw_2:          mem, data, word, r_asrt0, r_asrtD
+stb_2:          mem, data, r_asrt0, r_asrtD
+
+mem2_8:
+mem2_9:
+mem2_A:
+mem2_B:
+mem2_C:
+mem2_D:
+mem2_E:
+mem2_F:
+
+# imm6
+ldsw_p:         mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch
+ldsw_n:         mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+
+ldsb_p:         mem, data, read, fp_asrt0, imm_asrt1, imm_shift, r_latch
+ldsb_n:         mem, data, read, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+
+ldssb_p:        mem, data, read, sign_extend, fp_asrt0, imm_asrt1, imm_shift, r_latch
+ldssb_n:        mem, data, read, sign_extend, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+
+stsw_p:         mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD
+stsw_n:         mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD, imm_extend_negative
+
+stsb_p:         mem, data, fp_asrt0, imm_asrt1, imm_shift, r_asrtD
+stsb_n:         mem, data, fp_asrt0, imm_asrt1, imm_shift, r_asrtD, imm_extend_negative
+
+ldi_p:          pc_inc, r_latch, imm_asrtD
+ldi_n:          pc_inc, r_latch, imm_asrtD, imm_extend_negative
+add_p:          r_asrt0, imm_asrt1, alu_asrtD, r_latch, ps_latch_flags
+add_n:          r_asrt0, imm_asrt1, alu_asrtD, r_latch, ps_latch_flags, imm_extend_negative
+cmp_p:          r_asrt0, imm_asrt1, ps_latch_flags
+cmp_n:          r_asrt0, imm_asrt1, ps_latch_flags, imm_extend_negative
+
+# imm9
+int:            mem, data, word, sp_asrt0, sp_dec, ps_asrtD;
+                mem, data, word, sp_asrt0, sp_dec, pc_asrtD;
+                mem, read, word, imm_asrt1, pc_latch;
+                mem, read, word, imm_asrt1, ps_latch_word
+                
+push_p:         mem, data, word, sp_dec, sp_asrt0, imm_asrtD
+
+push_n:         mem, data, word, sp_dec, sp_asrt0, imm_asrtD, imm_extend_negative
+
+addsp_p:        sp_asrt0, imm_asrt1, imm_shift, alu_asrtD, sp_latch
+
+addsp_n:        sp_asrt0, imm_asrt1, imm_shift, alu_asrtD, sp_latch, imm_extend_negative
+
+imm9_5:
+imm9_6:
+imm9_7:
+imm9_8:
+imm9_9:
+imm9_A:
+imm9_B:
+imm9_C:
+imm9_D:
+imm9_E:
+imm9_F:
+
+# mem3
+ldw_3:          mem, data, read, word, r_asrt0, r_asrt1, r_latch
+ldb_3:          mem, data, read, r_asrt0, r_asrt1, r_latch
+ldsb_3:         mem, data, read, sign_extend, r_asrt0, r_asrt1, r_latch
+
+ldcw_3:         mem, read, word, r_asrt0, r_asrt1, r_latch
+ldcb_3:         mem, read, r_asrt0, r_asrt1, r_latch
+ldcsb_3:        mem, read, sign_extend, r_asrt0, r_asrt1, r_latch
+
+stw_3:          mem, data, word, r_asrt0, r_asrt1, r_asrtD
+stb_3:          mem, data, r_asrt0, r_asrt1, r_asrtD
+
+mem3_8:
+mem3_9:
+mem3_A:
+mem3_B:
+mem3_C:
+mem3_D:
+mem3_E:
+mem3_F:
+
+# dir
+br_abs:         mem, read, word, pc_asrt0, pc_latch
+shifts_alu2:    r_asrt0, alu_asrtD, r_latch, ps_latch_flags
+alu3_ind:       r_asrt0, r_asrt1, ps_latch_flags
+alu3:           r_asrt0, r_asrt1, alu_asrtD, r_latch, ps_latch_flags
+br_rel_n:       pc_asrt0, imm_asrt1, imm_extend_negative, imm_shift, alu_asrtD, pc_latch
+br_rel_p:       pc_asrt0, imm_asrt1, imm_shift, alu_asrtD, pc_latch
+br_nop:         pc_inc
+fetch:          word, read, mem, pc_asrt0, pc_inc
