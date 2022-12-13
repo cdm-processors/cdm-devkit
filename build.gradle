@@ -2,14 +2,11 @@ plugins {
     id 'java'
 }
 
-group 'ru.miqqra'
-version '1.0-SNAPSHOT'
+group 'org.cdm.logisim.memory'
+version '0.1'
 
 repositories {
     mavenCentral()
-    flatDir {
-        dir 'libs'
-    }
 }
 
 dependencies {
@@ -28,6 +25,6 @@ compileJava {
 
 jar {
     manifest {
-        attributes 'Library-Class': 'ru.miqqra.Components'
+        attributes 'Library-Class': 'org.cdm.logisim.memory.Components'
     }
 }

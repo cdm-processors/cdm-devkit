@@ -1,4 +1,4 @@
-package ru.miqqra;
+package org.cdm.logisim.memory;
 
 import java.awt.Color;
 import java.awt.Graphics;

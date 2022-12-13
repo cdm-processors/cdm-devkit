@@ -1,4 +1,4 @@
-package ru.miqqra;
+package org.cdm.logisim.memory;
 
 //
 // Source code recreated from a .class file by IntelliJ IDEA

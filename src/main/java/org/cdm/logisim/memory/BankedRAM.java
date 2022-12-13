@@ -1,4 +1,4 @@
-package ru.miqqra;
+package org.cdm.logisim.memory;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

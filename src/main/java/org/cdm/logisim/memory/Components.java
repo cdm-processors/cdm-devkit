@@ -1,4 +1,4 @@
-package ru.miqqra;
+package org.cdm.logisim.memory;
 
 import java.util.Arrays;
 import java.util.List;
