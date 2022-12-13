@@ -12,7 +12,7 @@ This repository contains cdm8e processor implemented in logisim, cdm8e assembler
 3. Install python package (`pip install cdm8-0.1.0-py3-none-any.whl`)
 4. Install [cdm8-asm](https://marketplace.visualstudio.com/items?itemName=leadpogrommer.cdm8-asm) VS Code extension
 5. Go to VS Code preferences, search from `cdm` and set **ABSOLUTE** path to `cdm_asm` and `cdm_emu`
-   ![](readme_images/1.png)
+   ![](resources/1.png)
 6. Next steps are needed only if you want to debug programs in logisim
 7. Download [logisim debug library](https://github.com/leadpogrommer/logisim_debug/releases/download/latest/logisim-debug-1.0-SNAPSHOT-all.jar)
 8. Build you circuit with cdm8e. Circuit must meet following requirements
@@ -27,14 +27,14 @@ This repository contains cdm8e processor implemented in logisim, cdm8e assembler
 2. Open command palette (`Ctrl+Shift+P` by default) and type `Select and start debugging`
 3. Select `Cdm8 debugger`
 4. Select `Emulator current file`
-![](readme_images/2.gif)
+![](resources/2.gif)
 
 
 ### Running `.asm` files in logisim
 1. Open your circuit in logisim
 2. Select `Cdm8e debug -> Debug tool` on tool panel. A message indicating that server has started should appear
 3. Repeat steps from previous paragraph, except on the last step choose `Logisim current file`
-![](readme_images/3.gif)
+![](resources/3.gif)
 
 ## Documentation
 Documentation for cdm8e architecture and assembler is [here](https://github.com/leadpogrommer/Cdm8-asm/raw/master/docs/main.pdf)
