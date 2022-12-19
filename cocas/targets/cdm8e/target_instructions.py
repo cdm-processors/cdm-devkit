@@ -1,16 +1,22 @@
 # from cocas.asm_commands import instructions as insset, assembly_directives as dirset
 from cocas.ast_nodes import *
-from cocas.code_segments import *
+# from cocas.code_segments import *
 from typing import get_origin, get_args
 import bitstruct
 
+from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
+
+code_segments_: CodeSegmentsInterface
 
 
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
-    def target_instructions(line: InstructionNode) -> list[CodeSegment]:
+    def assemble_instruction(line: InstructionNode, code_segments: CodeSegmentsInterface) \
+            -> list[CodeSegmentsInterface.CodeSegment]:
+        global code_segments_
+        code_segments_ = code_segments
         try:
             if line.mnemonic in TargetInstructions.assembly_directives:
                 handler = assembler_directives[line.mnemonic]
@@ -155,32 +161,32 @@ def assert_args(args, *types, single_type=False):
 def binary_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode, RegisterNode)
     data = bitstruct.pack("u4u2u2", opcode // 16, arguments[0].number, arguments[1].number)
-    return [BytesSegment(bytearray(data))]
+    return [code_segments_.BytesSegment(bytearray(data))]
 
 
 def unary_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode)
     data = bitstruct.pack('u6u2', opcode // 4, arguments[0].number)
-    return [BytesSegment(bytearray(data))]
+    return [code_segments_.BytesSegment(bytearray(data))]
 
 
 def zero_handler(opcode: int, arguments: list):
     assert_args(arguments)
-    return [BytesSegment(bytearray([opcode]))]
+    return [code_segments_.BytesSegment(bytearray([opcode]))]
 
 
 def branch_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [BytesSegment(bytearray([opcode])), OffsetExpressionSegment(arg)]
+    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.OffsetExpressionSegment(arg)]
 
 
 def long_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [BytesSegment(bytearray([opcode])), LongExpressionSegment(arg)]
+    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.LongExpressionSegment(arg)]
 
 
 def ldsa_handler(opcode: int, arguments: list):
@@ -188,7 +194,7 @@ def ldsa_handler(opcode: int, arguments: list):
     reg, arg = arguments
     cmd_piece = unary_handler(opcode, [reg])[0]
 
-    return [BytesSegment(cmd_piece.data), ShortExpressionSegment(arg)]
+    return [code_segments_.BytesSegment(cmd_piece.data), code_segments_.ShortExpressionSegment(arg)]
 
 
 def ldi_handler(opcode: int, arguments: list):
@@ -202,23 +208,23 @@ def ldi_handler(opcode: int, arguments: list):
         if len(arg_data) != 1:
             raise CdmTempException('Argument must be a string of length 1')
         cmd_piece.data.extend(arg_data)
-        return [BytesSegment(cmd_piece.data)]
+        return [code_segments_.BytesSegment(cmd_piece.data)]
     elif isinstance(arg, RelocatableExpressionNode):
-        return [BytesSegment(cmd_piece.data), ShortExpressionSegment(arg)]
+        return [code_segments_.BytesSegment(cmd_piece.data), code_segments_.ShortExpressionSegment(arg)]
 
 
 def osix_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [BytesSegment(bytearray([opcode])), ConstExpressionSegment(arg, positive=True)]
+    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.ConstExpressionSegment(arg, positive=True)]
 
 
 def spmove_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [BytesSegment(bytearray([opcode])), ConstExpressionSegment(arg)]
+    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.ConstExpressionSegment(arg)]
 
 
 def dc_handler(arguments: list):
@@ -229,17 +235,17 @@ def dc_handler(arguments: list):
     segments = []
     for arg in arguments:
         if isinstance(arg, str):
-            segments.append(BytesSegment(bytearray(arg, 'utf8')))
+            segments.append(code_segments_.BytesSegment(bytearray(arg, 'utf8')))
         elif isinstance(arg, RelocatableExpressionNode):
             if arg.byte_specifier is None:
                 addedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))
                 subtractedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.sub_terms))
                 if len(addedLabels) == len(subtractedLabels):
-                    segments.append(ShortExpressionSegment(arg))
+                    segments.append(code_segments_.ShortExpressionSegment(arg))
                 else:
-                    segments.append(LongExpressionSegment(arg))
+                    segments.append(code_segments_.LongExpressionSegment(arg))
             else:
-                segments.append(ShortExpressionSegment(arg))
+                segments.append(code_segments_.ShortExpressionSegment(arg))
     return segments
 
 
@@ -251,7 +257,7 @@ def ds_handler(arguments: list):
         raise CdmTempException('Number expected')
     if arg.const_term < 0:
         raise CdmTempException('Cannot specify negative size in "ds"')
-    return [BytesSegment(bytearray(arg.const_term))]
+    return [code_segments_.BytesSegment(bytearray(arg.const_term))]
 
 
 command_handlers = {

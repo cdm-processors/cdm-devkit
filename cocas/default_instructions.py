@@ -1,11 +1,12 @@
 from cocas.ast_nodes import *
-from cocas.code_segments import *
+from cocas.default_code_segments import CodeSegmentsInterface
 
 
 class TargetInstructionsInterface:
     @staticmethod
-    def target_instructions(line: InstructionNode) -> list[CodeSegment]:
+    def assemble_instruction(line: InstructionNode, code_segments: CodeSegmentsInterface) \
+            -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 
-    instructions = {}
-    assembly_directives = {}
+    instructions: dict
+    assembly_directives: dict

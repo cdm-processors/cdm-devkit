@@ -41,7 +41,7 @@ def main():
     colorama.init()
 
     isa_name = 'cdm8e'
-    target_instructions = importlib.import_module(f'targets.{isa_name}.target_instructions', 'cocas').TargetInstructions
+    isa_module = importlib.import_module(f'targets.{isa_name}', 'cocas')
 
     library_macros = read_mlb(
         str(pathlib.Path(__file__).parent.joinpath(f'standard.mlb').absolute()))
@@ -74,7 +74,7 @@ def main():
                                                          str(pathlib.Path(filepath).absolute()))
             # print(macro_expanded_input_stream)
             r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))
-            obj = assemble(r, target_instructions)
+            obj = assemble(r, isa_module)
 
             objects.append(obj)
         except CdmException as e:

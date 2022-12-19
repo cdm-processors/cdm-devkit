@@ -1,16 +1,23 @@
-from typing import Union
+from typing import Union, Type
 
 from cocas.ast_nodes import *
-from cocas.code_segments import *
+from cocas.code_block import Section
+# from cocas.code_segments import *
+from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmException, CdmExceptionTag
 
 TAG = CdmExceptionTag.ASM
 
-command_handlers_: Union[TargetInstructionsInterface, None] = None
+target_instructions_: Union[Type[TargetInstructionsInterface], None] = None
+code_segments_: Union[Type[CodeSegmentsInterface], None] = None
+
+from cocas.targets.cdm8e.code_segments import CodeSegments as c_s
+
+code_segments_ = c_s
 
 
-def _error(segment: CodeSegment, message: str):
+def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):
     raise CdmException(TAG, segment.location.file, segment.location.line, message)
 
 
@@ -35,165 +42,12 @@ class Template:
                     self.labels[label_name] = size
 
             elif isinstance(line, InstructionNode):
-                if line.mnemonic not in command_handlers_.assembly_directives:
+                if line.mnemonic not in target_instructions_.assembly_directives:
                     raise Exception('Only "dc" and "ds" allowed in templates')
-                for seg in command_handlers_.target_instructions(line):
+                for seg in target_instructions_.assemble_instruction(line, code_segments_):
                     size += seg.base_size
 
         self.labels['_'] = size
-
-
-@dataclass
-class CodeBlock:
-    def __init__(self, address: int, lines: list):
-        self.address = address
-        self.size: int = 0
-        self.loop_stack: list = []
-        self.segments: list[CodeSegment] = []
-        self.labels: dict[str, int] = dict()
-        self.ents: set[str] = set()
-        self.exts: set[str] = set()
-        self.code_locations: dict[int, CodeLocation] = dict()
-        self.assemble_lines(lines)
-
-    def append_label(self, label_name):
-        self.labels[label_name] = self.address + self.size
-
-    def append_branch_instruction(self, mnemonic, label_name, location=CodeLocation()):
-        self.segments.append(BranchInstruction(mnemonic, RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)))
-        self.size += BranchInstruction.base_size
-
-    def assemble_lines(self, lines: list):
-        ast_node_handlers = {
-            LabelDeclarationNode: self.assemble_label_declaration,
-            InstructionNode: self.assemble_instruction,
-            ConditionalStatementNode: self.assemble_conditional_statement,
-            WhileLoopNode: self.assemble_while_loop,
-            UntilLoopNode: self.assemble_until_loop,
-            SaveRestoreStatementNode: self.assemble_save_restore_statement,
-            BreakStatementNode: self.assemble_break_statement,
-            ContinueStatementNode: self.assemble_continue_statement,
-            GotoStatementNode: self.assemble_branch_instructions
-        }
-        for line in lines:
-            if isinstance(line, LocatableNode):
-                self.code_locations[self.size] = line.location
-            ast_node_handlers[type(line)](line)
-
-    def assemble_label_declaration(self, line: LabelDeclarationNode):
-        label_name = line.label.name
-        if (label_name in self.labels or
-                label_name in self.ents or
-                label_name in self.exts):
-            raise Exception(f'Duplicate label "{label_name}" declaration')
-
-        if line.external:
-            self.exts.add(label_name)
-        else:
-            self.append_label(label_name)
-            if line.entry:
-                self.ents.add(label_name)
-
-    def assemble_instruction(self, line: InstructionNode):
-        for seg in command_handlers_.target_instructions(line):
-            self.segments.append(seg)
-            self.size += seg.base_size
-
-    def assemble_conditional_statement(self, line: ConditionalStatementNode):
-        nonce = self.address + self.size
-        or_label = f'${nonce}_or'
-        then_label = f'${nonce}_then'
-        else_label = f'${nonce}_else'
-        finally_label = f'${nonce}_finally'
-
-        next_or = 0
-        for cond in line.conditions:
-            self.assemble_lines(cond.lines)
-            next_or_label = f'{or_label}{next_or}'
-            if cond.conjunction is None:
-                self.append_branch_instruction(f'n{cond.branch_mnemonic}', else_label)
-            elif cond.conjunction == 'or':
-                self.append_branch_instruction(cond.branch_mnemonic, then_label)
-                self.append_label(next_or_label)
-                next_or += 1
-            elif cond.conjunction == 'and':
-                self.append_branch_instruction(f'n{cond.branch_mnemonic}', next_or_label)
-
-        self.append_label(then_label)
-        self.assemble_lines(line.then_lines)
-
-        if len(line.else_lines) > 0:
-            self.append_branch_instruction('anything', finally_label)
-            self.append_label(else_label)
-            self.assemble_lines(line.else_lines)
-            self.append_label(finally_label)
-        else:
-            self.append_label(else_label)
-
-    def assemble_while_loop(self, line: WhileLoopNode):
-        nonce = self.address + self.size
-        cond_label = f'${nonce}_cond'
-        finally_label = f'${nonce}_finally'
-
-        self.loop_stack.append((cond_label, finally_label))
-        self.append_label(cond_label)
-        self.assemble_lines(line.condition_lines)
-        self.append_branch_instruction(f'n{line.branch_mnemonic}', finally_label)
-        self.assemble_lines(line.lines)
-        self.append_branch_instruction('anything', cond_label)
-        self.append_label(finally_label)
-        self.loop_stack.pop()
-
-    def assemble_until_loop(self, line: UntilLoopNode):
-        nonce = self.address + self.size
-        loop_body_label = f'${nonce}_loop_body'
-        cond_label = f'${nonce}_cond'
-        finally_label = f'${nonce}_finally'
-
-        self.loop_stack.append((cond_label, finally_label))
-        self.append_label(loop_body_label)
-        self.assemble_lines(line.lines)
-        self.append_label(cond_label)
-        self.append_branch_instruction(f'n{line.branch_mnemonic}', loop_body_label)
-        self.append_label(finally_label)
-        self.loop_stack.pop()
-
-    def assemble_save_restore_statement(self, line: SaveRestoreStatementNode):
-        rn = line.saved_register.number
-        push = InstructionNode('push', [RegisterNode(rn)], None)
-        pop = InstructionNode('pop', [RegisterNode(rn)], None)
-        self.assemble_instruction(push)
-        self.assemble_lines(line.lines)
-        self.assemble_instruction(pop)
-
-    def assemble_break_statement(self, _: BreakStatementNode):
-        if len(self.loop_stack) == 0:
-            raise Exception('"break" not allowed outside of a loop')
-        _, finally_label = self.loop_stack[-1]
-        self.append_branch_instruction('anything', finally_label)
-
-    def assemble_continue_statement(self, _: ContinueStatementNode):
-        if len(self.loop_stack) == 0:
-            raise Exception('"continue" not allowed outside of a loop')
-        cond_label, _ = self.loop_stack[-1]
-        self.append_branch_instruction('anything', cond_label)
-
-    def assemble_branch_instructions(self, line: GotoStatementNode):
-        self.segments.append(BranchInstruction(line.branch_mnemonic, line.expr))
-        self.segments[-1].location = line.location
-        self.size += BranchInstruction.base_size
-
-
-@dataclass
-class Section(CodeBlock):
-    def __init__(self, sn: SectionNode):
-        if isinstance(sn, AbsoluteSectionNode):
-            self.name = '$abs'
-            address = sn.address
-        elif isinstance(sn, RelocatableSectionNode):
-            self.name = sn.name
-            address = 0
-        super().__init__(address, sn.lines)
 
 
 @dataclass
@@ -210,17 +64,17 @@ class ObjectSectionRecord:
         self.code_locations = s.code_locations
 
         segment_handlers = {
-            BytesSegment: self.fill_bytes,
-            ShortExpressionSegment: self.fill_short_expr,
-            LongExpressionSegment: self.fill_long_expr,
-            ConstExpressionSegment: self.fill_const_expr,
-            OffsetExpressionSegment: self.fill_offset_expr,
-            BranchInstruction: self.fill_goto
+            code_segments_.BytesSegment: self.fill_bytes,
+            code_segments_.ShortExpressionSegment: self.fill_short_expr,
+            code_segments_.LongExpressionSegment: self.fill_long_expr,
+            code_segments_.ConstExpressionSegment: self.fill_const_expr,
+            code_segments_.OffsetExpressionSegment: self.fill_offset_expr,
+            code_segments_.BranchInstruction: self.fill_goto
         }
         for seg in s.segments:
             segment_handlers[type(seg)](seg, s, local_labels, template_fields)
 
-    def add_ext_record(self, ext: str, s: Section, val: int, seg: RelocatableExpressionSegment):
+    def add_ext_record(self, ext: str, s: Section, val: int, seg: code_segments_.RelocatableExpressionSegment):
         if ext is None:
             return
 
@@ -234,7 +88,7 @@ class ObjectSectionRecord:
                 self.xtrl.setdefault(ext, []).append(s.address + len(self.data))
                 self.xtrh.setdefault(ext, []).append((s.address + len(self.data) + 1, val_lo))
 
-    def add_rel_record(self, is_rel: bool, s: Section, val: int, seg: RelocatableExpressionSegment):
+    def add_rel_record(self, is_rel: bool, s: Section, val: int, seg: code_segments_.RelocatableExpressionSegment):
         if not is_rel:
             return
 
@@ -248,11 +102,11 @@ class ObjectSectionRecord:
                 self.rell.add(s.address + len(self.data))
                 self.relh.add((s.address + len(self.data) + 1, val_lo))
 
-    def fill_bytes(self, seg: BytesSegment, s: Section,
+    def fill_bytes(self, seg: code_segments_.BytesSegment, s: Section,
                    local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         self.data += seg.data
 
-    def fill_short_expr(self, seg: ShortExpressionSegment, s: Section,
+    def fill_short_expr(self, seg: code_segments_.ShortExpressionSegment, s: Section,
                         local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, val_long, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
@@ -266,7 +120,7 @@ class ObjectSectionRecord:
         self.add_ext_record(ext, s, val_long, seg)
         self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
-    def fill_long_expr(self, seg: LongExpressionSegment, s: Section,
+    def fill_long_expr(self, seg: code_segments_.LongExpressionSegment, s: Section,
                        local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, val_long, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
@@ -277,7 +131,7 @@ class ObjectSectionRecord:
         self.add_ext_record(ext, s, val_long, seg)
         self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
-    def fill_const_expr(self, seg: ConstExpressionSegment, s: Section,
+    def fill_const_expr(self, seg: code_segments_.ConstExpressionSegment, s: Section,
                         local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, _, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
@@ -288,7 +142,7 @@ class ObjectSectionRecord:
 
         self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
-    def fill_offset_expr(self, seg: OffsetExpressionSegment, s: Section,
+    def fill_offset_expr(self, seg: code_segments_.OffsetExpressionSegment, s: Section,
                          local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         val, _, val_sect, ext = eval_rel_expr_seg(seg, s, local_labels, template_fields)
 
@@ -306,17 +160,17 @@ class ObjectSectionRecord:
 
         self.data.extend(val.to_bytes(seg.base_size, 'little', signed=(val < 0)))
 
-    def fill_goto(self, seg: BranchInstruction, s: Section,
+    def fill_goto(self, seg: code_segments_.BranchInstruction, s: Section,
                   local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
         if seg.is_expanded:
-            branch_opcode = command_handlers_.instructions['branch'][f'bn{seg.branch_mnemonic}']
-            jmp_opcode = command_handlers_.instructions['long']['jmp']
+            branch_opcode = target_instructions_.instructions['branch'][f'bn{seg.branch_mnemonic}']
+            jmp_opcode = target_instructions_.instructions['long']['jmp']
             self.data += bytearray([branch_opcode, 4, jmp_opcode])
-            self.fill_long_expr(LongExpressionSegment(seg.expr), s, local_labels, template_fields)
+            self.fill_long_expr(code_segments_.LongExpressionSegment(seg.expr), s, local_labels, template_fields)
         else:
-            branch_opcode = command_handlers_.instructions['branch'][f'b{seg.branch_mnemonic}']
+            branch_opcode = target_instructions_.instructions['branch'][f'b{seg.branch_mnemonic}']
             self.data += bytearray([branch_opcode])
-            self.fill_offset_expr(OffsetExpressionSegment(seg.expr), s, local_labels, template_fields)
+            self.fill_offset_expr(code_segments_.OffsetExpressionSegment(seg.expr), s, local_labels, template_fields)
 
 
 @dataclass
@@ -333,7 +187,7 @@ def gather_local_labels(sects: list[Section]):
     return local_labels
 
 
-def eval_rel_expr_seg(seg: ShortExpressionSegment, s: Section,
+def eval_rel_expr_seg(seg: code_segments_.ShortExpressionSegment, s: Section,
                       local_labels: dict[str, int], template_fields: dict[str, dict[str, int]]):
     val_long = seg.expr.const_term
     used_exts = dict()
@@ -387,7 +241,7 @@ def expand_branch_instructions(sects: list[Section], local_labels: dict[str, int
                                template_fields: dict[str, dict[str, int]]):
     @dataclass
     class GotoSegmentEntry:
-        seg: BranchInstruction
+        seg: code_segments_.BranchInstruction
         sect: Section
         pos: int
         location: CodeLocation
@@ -399,7 +253,7 @@ def expand_branch_instructions(sects: list[Section], local_labels: dict[str, int
     for sect in sects:
         pos = sect.address
         for seg in sect.segments:
-            if isinstance(seg, BranchInstruction):
+            if isinstance(seg, code_segments_.BranchInstruction):
                 gotos.append(GotoSegmentEntry(seg, sect, pos + 1, seg.location))
             pos += seg.base_size
 
@@ -416,7 +270,7 @@ def expand_branch_instructions(sects: list[Section], local_labels: dict[str, int
                         or (goto.seg.expr.byte_specifier is not None and is_rel)
                         or (ext is not None)):
 
-                    shift_length = BranchInstruction.expanded_size - BranchInstruction.base_size
+                    shift_length = code_segments_.BranchInstruction.expanded_size - code_segments_.BranchInstruction.base_size
                     goto.seg.is_expanded = True
                     # print("shif")
                     old_locations = goto.sect.code_locations
@@ -440,14 +294,16 @@ def expand_branch_instructions(sects: list[Section], local_labels: dict[str, int
             break
 
 
-def assemble(pn: ProgramNode, command_handlers):
-    global command_handlers_
-    command_handlers_ = command_handlers
+def assemble(pn: ProgramNode, isa_module):
+    global target_instructions_
+    target_instructions_ = isa_module.TargetInstructions
+    global code_segments_
+    code_segments_ = isa_module.CodeSegments
     templates = [Template(t) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
-    asects = [Section(asect) for asect in pn.absolute_sections]
-    rsects = [Section(rsect) for rsect in pn.relocatable_sections]
+    asects = [Section(asect, target_instructions_, code_segments_) for asect in pn.absolute_sections]
+    rsects = [Section(rsect, target_instructions_, code_segments_) for rsect in pn.relocatable_sections]
     asects.sort(key=lambda s: s.address)
 
     expand_branch_instructions(asects, dict(), template_fields)
@@ -458,4 +314,5 @@ def assemble(pn: ProgramNode, command_handlers):
     obj = ObjectModule()
     obj.asects = [ObjectSectionRecord(asect, local_labels, template_fields) for asect in asects]
     obj.rsects = [ObjectSectionRecord(rsect, local_labels, template_fields) for rsect in rsects]
+
     return obj
