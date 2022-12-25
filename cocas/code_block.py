@@ -69,7 +69,7 @@ class CodeBlock:
     def assemble_instruction(self, line: InstructionNode):
         for seg in self.target_instructions.assemble_instruction(line, self.code_segments):
             self.segments.append(seg)
-            self.size += seg.base_size
+            self.size += seg.size
 
     def assemble_conditional_statement(self, line: ConditionalStatementNode):
         nonce = self.address + self.size
