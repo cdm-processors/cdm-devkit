@@ -1,22 +1,17 @@
-# from cocas.asm_commands import instructions as insset, assembly_directives as dirset
 from cocas.ast_nodes import *
-# from cocas.code_segments import *
 from typing import get_origin, get_args
 import bitstruct
 
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-
-code_segments_: CodeSegmentsInterface
+from .code_segments import CodeSegments
 
 
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
-    def assemble_instruction(line: InstructionNode, code_segments: CodeSegmentsInterface) \
+    def assemble_instruction(line: InstructionNode) \
             -> list[CodeSegmentsInterface.CodeSegment]:
-        global code_segments_
-        code_segments_ = code_segments
         try:
             if line.mnemonic in TargetInstructions.assembly_directives:
                 handler = assembler_directives[line.mnemonic]
@@ -161,32 +156,32 @@ def assert_args(args, *types, single_type=False):
 def binary_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode, RegisterNode)
     data = bitstruct.pack("u4u2u2", opcode // 16, arguments[0].number, arguments[1].number)
-    return [code_segments_.BytesSegment(bytearray(data))]
+    return [CodeSegments.BytesSegment(bytearray(data))]
 
 
 def unary_handler(opcode: int, arguments: list):
     assert_args(arguments, RegisterNode)
     data = bitstruct.pack('u6u2', opcode // 4, arguments[0].number)
-    return [code_segments_.BytesSegment(bytearray(data))]
+    return [CodeSegments.BytesSegment(bytearray(data))]
 
 
 def zero_handler(opcode: int, arguments: list):
     assert_args(arguments)
-    return [code_segments_.BytesSegment(bytearray([opcode]))]
+    return [CodeSegments.BytesSegment(bytearray([opcode]))]
 
 
 def branch_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.OffsetExpressionSegment(arg)]
+    return [CodeSegments.BytesSegment(bytearray([opcode])), CodeSegments.OffsetExpressionSegment(arg)]
 
 
 def long_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.LongExpressionSegment(arg)]
+    return [CodeSegments.BytesSegment(bytearray([opcode])), CodeSegments.LongExpressionSegment(arg)]
 
 
 def ldsa_handler(opcode: int, arguments: list):
@@ -194,7 +189,7 @@ def ldsa_handler(opcode: int, arguments: list):
     reg, arg = arguments
     cmd_piece = unary_handler(opcode, [reg])[0]
 
-    return [code_segments_.BytesSegment(cmd_piece.data), code_segments_.ShortExpressionSegment(arg)]
+    return [CodeSegments.BytesSegment(cmd_piece.data), CodeSegments.ShortExpressionSegment(arg)]
 
 
 def ldi_handler(opcode: int, arguments: list):
@@ -208,23 +203,23 @@ def ldi_handler(opcode: int, arguments: list):
         if len(arg_data) != 1:
             raise CdmTempException('Argument must be a string of length 1')
         cmd_piece.data.extend(arg_data)
-        return [code_segments_.BytesSegment(cmd_piece.data)]
+        return [CodeSegments.BytesSegment(cmd_piece.data)]
     elif isinstance(arg, RelocatableExpressionNode):
-        return [code_segments_.BytesSegment(cmd_piece.data), code_segments_.ShortExpressionSegment(arg)]
+        return [CodeSegments.BytesSegment(cmd_piece.data), CodeSegments.ShortExpressionSegment(arg)]
 
 
 def osix_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.ConstExpressionSegment(arg, positive=True)]
+    return [CodeSegments.BytesSegment(bytearray([opcode])), CodeSegments.ConstExpressionSegment(arg, positive=True)]
 
 
 def spmove_handler(opcode: int, arguments: list):
     assert_args(arguments, RelocatableExpressionNode)
     arg = arguments[0]
 
-    return [code_segments_.BytesSegment(bytearray([opcode])), code_segments_.ConstExpressionSegment(arg)]
+    return [CodeSegments.BytesSegment(bytearray([opcode])), CodeSegments.ConstExpressionSegment(arg)]
 
 
 def dc_handler(arguments: list):
@@ -235,17 +230,17 @@ def dc_handler(arguments: list):
     segments = []
     for arg in arguments:
         if isinstance(arg, str):
-            segments.append(code_segments_.BytesSegment(bytearray(arg, 'utf8')))
+            segments.append(CodeSegments.BytesSegment(bytearray(arg, 'utf8')))
         elif isinstance(arg, RelocatableExpressionNode):
             if arg.byte_specifier is None:
                 addedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))
                 subtractedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.sub_terms))
                 if len(addedLabels) == len(subtractedLabels):
-                    segments.append(code_segments_.ShortExpressionSegment(arg))
+                    segments.append(CodeSegments.ShortExpressionSegment(arg))
                 else:
-                    segments.append(code_segments_.LongExpressionSegment(arg))
+                    segments.append(CodeSegments.LongExpressionSegment(arg))
             else:
-                segments.append(code_segments_.ShortExpressionSegment(arg))
+                segments.append(CodeSegments.ShortExpressionSegment(arg))
     return segments
 
 
@@ -257,7 +252,7 @@ def ds_handler(arguments: list):
         raise CdmTempException('Number expected')
     if arg.const_term < 0:
         raise CdmTempException('Cannot specify negative size in "ds"')
-    return [code_segments_.BytesSegment(bytearray(arg.const_term))]
+    return [CodeSegments.BytesSegment(bytearray(arg.const_term))]
 
 
 command_handlers = {
@@ -276,10 +271,16 @@ command_handlers = {
 }
 
 cpu_instructions = {}
-for category, instructions in TargetInstructions.instructions.items():
-    for mnemonic, opcode in instructions.items():
-        cpu_instructions[mnemonic] = (opcode, command_handlers[category])
-
 assembler_directives = {}
-for directive in TargetInstructions.assembly_directives:
-    assembler_directives[directive] = command_handlers[directive]
+
+
+def initialize():
+    for category, instructions in TargetInstructions.instructions.items():
+        for mnemonic, opcode in instructions.items():
+            cpu_instructions[mnemonic] = (opcode, command_handlers[category])
+
+    for directive in TargetInstructions.assembly_directives:
+        assembler_directives[directive] = command_handlers[directive]
+
+
+initialize()

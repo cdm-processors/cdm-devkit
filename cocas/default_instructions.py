@@ -6,7 +6,7 @@ from cocas.default_code_segments import CodeSegmentsInterface
 
 class TargetInstructionsInterface:
     @staticmethod
-    def assemble_instruction(line: InstructionNode, code_segments: Type[CodeSegmentsInterface]) \
+    def assemble_instruction(line: InstructionNode) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 

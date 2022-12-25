@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cocas.code_block import Section
+    from assembler import ObjectSectionRecord
 
 
 class CodeSegmentsInterface:
@@ -18,7 +19,12 @@ class CodeSegmentsInterface:
             # now this whole project is one big and ugly hack
             self.location: CodeLocation = CodeLocation()
 
-        # noinspection PyMethodMayBeStatic
-        def update_varying_length(self, section: "Section", local_labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            pass
+
+    @dataclass
+    class VaryingLengthSegment(CodeSegment):
+        def update_varying_length(self, pos, section: "Section", labels: dict[str, int],
                                   templates: dict[str, dict[str, int]]):
-            return False
+            pass

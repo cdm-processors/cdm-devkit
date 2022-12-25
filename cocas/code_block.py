@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Type
 
 from cocas.ast_nodes import RelocatableExpressionNode, LabelNode, LabelDeclarationNode, InstructionNode, \
     ConditionalStatementNode, WhileLoopNode, UntilLoopNode, SaveRestoreStatementNode, BreakStatementNode, \
@@ -13,8 +14,8 @@ from cocas.location import CodeLocation
 @dataclass
 class CodeBlock:
     def __init__(self, address: int, lines: list,
-                 target_instructions: default_instructions.TargetInstructionsInterface,
-                 code_segments: default_code_segments.CodeSegmentsInterface):
+                 target_instructions: Type[default_instructions.TargetInstructionsInterface],
+                 code_segments: Type[default_code_segments.CodeSegmentsInterface]):
         self.target_instructions = target_instructions
         self.code_segments = code_segments
         self.address = address
@@ -67,7 +68,7 @@ class CodeBlock:
                 self.ents.add(label_name)
 
     def assemble_instruction(self, line: InstructionNode):
-        for seg in self.target_instructions.assemble_instruction(line, self.code_segments):
+        for seg in self.target_instructions.assemble_instruction(line):
             self.segments.append(seg)
             self.size += seg.size
 
@@ -159,8 +160,8 @@ class CodeBlock:
 @dataclass
 class Section(CodeBlock):
     def __init__(self, sn: SectionNode,
-                 target_instructions: default_instructions.TargetInstructionsInterface,
-                 code_segments: default_code_segments.CodeSegmentsInterface):
+                 target_instructions: Type[default_instructions.TargetInstructionsInterface],
+                 code_segments: Type[default_code_segments.CodeSegmentsInterface]):
         if isinstance(sn, AbsoluteSectionNode):
             self.name = '$abs'
             address = sn.address
