@@ -109,7 +109,7 @@ class CodeSegments(CodeSegmentsInterface):
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
     @dataclass
-    class BranchInstruction(VaryingLengthSegment):
+    class GotoInstruction(VaryingLengthSegment):
         branch_mnemonic: str
         expr: RelocatableExpressionNode
         size = 2

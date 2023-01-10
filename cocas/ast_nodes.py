@@ -49,7 +49,7 @@ class InstructionNode(LocatableNode):
 class ConditionNode:
     lines: list
     branch_mnemonic: str
-    conjunction: str
+    conjunction: str | None
 
 
 @dataclass
@@ -87,12 +87,6 @@ class SaveRestoreStatementNode:
     saved_register: RegisterNode
     lines: list
     restored_register: RegisterNode
-
-
-@dataclass
-class GotoStatementNode(LocatableNode):
-    branch_mnemonic: str
-    expr: RelocatableExpressionNode
 
 
 @dataclass

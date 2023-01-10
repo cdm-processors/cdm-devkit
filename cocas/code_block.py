@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 from typing import Type
 
-from cocas.ast_nodes import RelocatableExpressionNode, LabelNode, LabelDeclarationNode, InstructionNode, \
-    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, SaveRestoreStatementNode, BreakStatementNode, \
-    ContinueStatementNode, GotoStatementNode, LocatableNode, RegisterNode, SectionNode, AbsoluteSectionNode, \
-    RelocatableSectionNode
-# from cocas.code_segments import CodeSegment, BranchInstruction
-
 from cocas import default_instructions, default_code_segments
+from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
+    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, SaveRestoreStatementNode, BreakStatementNode, \
+    ContinueStatementNode, LocatableNode, RegisterNode, SectionNode, AbsoluteSectionNode, \
+    RelocatableSectionNode
 from cocas.location import CodeLocation
 
 
@@ -32,9 +30,9 @@ class CodeBlock:
         self.labels[label_name] = self.address + self.size
 
     def append_branch_instruction(self, mnemonic, label_name):
-        self.segments.append(
-            self.code_segments.BranchInstruction(mnemonic, RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)))
-        self.size += self.code_segments.BranchInstruction.base_size
+        br = self.target_instructions.make_branch_instruction(mnemonic, label_name)
+        self.segments += br
+        self.size += sum(map(lambda x: x.size, br))
 
     def assemble_lines(self, lines: list):
         ast_node_handlers = {
@@ -46,7 +44,6 @@ class CodeBlock:
             SaveRestoreStatementNode: self.assemble_save_restore_statement,
             BreakStatementNode: self.assemble_break_statement,
             ContinueStatementNode: self.assemble_continue_statement,
-            GotoStatementNode: self.assemble_branch_instructions
         }
         for line in lines:
             if isinstance(line, LocatableNode):
@@ -150,11 +147,6 @@ class CodeBlock:
             raise Exception('"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
         self.append_branch_instruction('anything', cond_label)
-
-    def assemble_branch_instructions(self, line: GotoStatementNode):
-        self.segments.append(self.code_segments.BranchInstruction(line.branch_mnemonic, line.expr))
-        self.segments[-1].location = line.location
-        self.size += self.code_segments.BranchInstruction.base_size
 
 
 @dataclass

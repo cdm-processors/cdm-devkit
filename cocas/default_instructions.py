@@ -10,5 +10,10 @@ class TargetInstructionsInterface:
             -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 
+    @staticmethod
+    def make_branch_instruction(branch_mnemonic: str, label_name: str) \
+            -> list[CodeSegmentsInterface.CodeSegment]:
+        pass
+
     instructions: dict
     assembly_directives: dict

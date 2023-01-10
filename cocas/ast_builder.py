@@ -137,7 +137,10 @@ class BuildAstVisitor(AsmParserVisitor):
         return self.visitRegister(ctx.register()) if ctx.register() else None
 
     def visitGoto_statement(self, ctx: AsmParser.Goto_statementContext):
-        return GotoStatementNode(ctx.branch_mnemonic().getText(), self.visitGoto_argument(ctx.goto_argument()))
+        # TODO: remove it from grammar
+        arg1 = RelocatableExpressionNode(None, [LabelNode(ctx.branch_mnemonic().getText())], [], 0)
+        args = [arg1, self.visitGoto_argument(ctx.goto_argument())]
+        return InstructionNode("goto", args)
 
     def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations=False):
         if ctx.children is None:

@@ -35,7 +35,8 @@ class CdmException(Exception):
 
     def log(self):
         print(
-            f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of {Style.BRIGHT}{self.file}{Style.RESET_ALL}')
+            f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of '
+            f'{Style.BRIGHT}{self.file}{Style.RESET_ALL}')
         print(f'{self.description}')
 
 
@@ -50,7 +51,7 @@ class AntlrErrorListener(ErrorListener):
         self.file = file
         self.tag = tag
 
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+    def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
         if isinstance(recognizer, AsmParser.AsmParser):
             line = line - recognizer.current_offset
             self.file = recognizer.current_file

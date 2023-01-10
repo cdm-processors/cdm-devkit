@@ -19,6 +19,14 @@ class TargetInstructions(TargetInstructionsInterface):
             elif line.mnemonic in cpu_instructions:
                 opcode, handler = cpu_instructions[line.mnemonic]
                 segments = handler(opcode, line.arguments)
+            elif line.mnemonic == "goto":
+                assert_args(line.arguments, RelocatableExpressionNode, RelocatableExpressionNode)
+                br_mnemonic: RelocatableExpressionNode
+                br_mnemonic = line.arguments[0]
+                if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
+                        or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
+                    raise CdmTempException(f'Branch mnemonic must be single word')
+                return [CodeSegments.GotoInstruction(br_mnemonic.add_terms[0].name, line.arguments[1])]
             else:
                 raise CdmTempException(f'Unknown instruction "{line.mnemonic}"')
             for segment in segments:
@@ -26,6 +34,12 @@ class TargetInstructions(TargetInstructionsInterface):
             return segments
         except CdmTempException as e:
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line, e.message)
+
+    @staticmethod
+    def make_branch_instruction(branch_mnemonic: str, label_name: str) \
+            -> list[CodeSegmentsInterface.CodeSegment]:
+        arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
+        return [CodeSegments.GotoInstruction(branch_mnemonic, arg2)]
 
     instructions = {
         'zero': {
