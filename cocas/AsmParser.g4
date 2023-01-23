@@ -12,6 +12,8 @@ from base64 import b64decode
     self.current_offset = 0
 }
 
+program_nomacros : NEWLINE* section* End ;
+
 program : NEWLINE* line_mark+ section* End ;
 
 section
@@ -33,7 +35,6 @@ code_block
     | conditional
     | while_loop
     | until_loop
-    | goto_statement
     | line_mark
     )*
     ;
@@ -77,9 +78,6 @@ while_condition : code_block ;
 
 until_loop : Do NEWLINE+ code_block Until branch_mnemonic NEWLINE+ ;
 
-goto_statement : Goto branch_mnemonic COMMA goto_argument NEWLINE+ ;
-goto_argument : addr_expr | byte_expr ;
-
 argument
     : character
     | string
@@ -116,7 +114,6 @@ name
     | End
     | Ext
     | Fi
-    | Goto
     | High
     | If
     | Is

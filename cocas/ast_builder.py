@@ -123,12 +123,6 @@ class BuildAstVisitor(AsmParserVisitor):
         lines = self.visitCode_block(ctx.code_block())
         return UntilLoopNode(lines, ctx.branch_mnemonic().getText())
 
-    def visitGoto_statement(self, ctx: AsmParser.Goto_statementContext):
-        # TODO: remove it from grammar
-        arg1 = RelocatableExpressionNode(None, [LabelNode(ctx.branch_mnemonic().getText())], [], 0)
-        args = [arg1, self.visitGoto_argument(ctx.goto_argument())]
-        return InstructionNode("goto", args)
-
     def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations=False):
         if ctx.children is None:
             if return_locations:
@@ -154,8 +148,6 @@ class BuildAstVisitor(AsmParserVisitor):
                 nodes.append(BreakStatementNode())
             elif isinstance(c, AsmParser.Continue_statementContext):
                 nodes.append(ContinueStatementNode())
-            elif isinstance(c, AsmParser.Goto_statementContext):
-                nodes.append(self.visitGoto_statement(c))
             elif isinstance(c, AsmParser.Line_markContext):
                 self.visit(c)  # visitLine_mark
             for node in nodes:

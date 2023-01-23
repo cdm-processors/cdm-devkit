@@ -152,16 +152,6 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#goto_statement.
-    def visitGoto_statement(self, ctx:AsmParser.Goto_statementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AsmParser#goto_argument.
-    def visitGoto_argument(self, ctx:AsmParser.Goto_argumentContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by AsmParser#argument.
     def visitArgument(self, ctx:AsmParser.ArgumentContext):
         return self.visitChildren(ctx)

@@ -8,7 +8,6 @@ Else : 'else' ;
 End : 'end' ;
 Ext : 'ext' ;
 Fi : 'fi' ;
-Goto : 'goto' ;
 If : 'if' ;
 Is : 'is' ;
 Macro : 'macro' ;
