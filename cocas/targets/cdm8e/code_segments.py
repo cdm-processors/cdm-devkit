@@ -151,13 +151,13 @@ class CodeSegments(CodeSegmentsInterface):
         def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             if self.is_expanded:
-                branch_opcode = target_instructions.TargetInstructions.instructions['branch'][
+                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][
                     f'bn{self.branch_mnemonic}']
-                jmp_opcode = target_instructions.TargetInstructions.instructions['long']['jmp']
+                jmp_opcode = target_instructions.TargetInstructions.simple_instructions['long']['jmp']
                 object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
                 CodeSegments.LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
             else:
-                branch_opcode = target_instructions.TargetInstructions.instructions['branch'][
+                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][
                     f'b{self.branch_mnemonic}']
                 object_record.data += bytearray([branch_opcode])
                 CodeSegments.OffsetExpressionSegment(self.expr).fill(object_record, section, labels, templates)

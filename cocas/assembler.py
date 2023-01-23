@@ -17,6 +17,7 @@ class Template:
         self.labels: dict[str, int] = dict()
 
         size = 0
+        temp_storage = dict()
         for line in sn.lines:
             if isinstance(line, LabelDeclarationNode):
                 label_name = line.label.name
@@ -33,7 +34,7 @@ class Template:
             elif isinstance(line, InstructionNode):
                 if line.mnemonic not in target_instructions.assembly_directives:
                     raise Exception('Only "dc" and "ds" allowed in templates')
-                for seg in target_instructions.assemble_instruction(line):
+                for seg in target_instructions.assemble_instruction(line, temp_storage):
                     size += seg.size
 
         self.labels['_'] = size

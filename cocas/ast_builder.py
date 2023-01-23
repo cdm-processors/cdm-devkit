@@ -126,9 +126,15 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitSave_restore_statement(self, ctx: AsmParser.Save_restore_statementContext):
         saved_register = self.visitSave_statement(ctx.save_statement())
         restored_register = self.visitRestore_statement(ctx.restore_statement())
-        if restored_register is None: restored_register = saved_register
-        lines = self.visitCode_block(ctx.code_block())
-        return SaveRestoreStatementNode(saved_register, lines, restored_register)
+        # if restored_register is None: restored_register = saved_register
+        lines = [InstructionNode("save", [saved_register])]
+        lines += self.visitCode_block(ctx.code_block())
+        if restored_register is None:
+            lines.append(InstructionNode("restore", []))
+        else:
+            lines.append(InstructionNode("restore", [restored_register]))
+        return lines
+        # return SaveRestoreStatementNode(saved_register, lines, restored_register)
 
     def visitSave_statement(self, ctx: AsmParser.Save_statementContext):
         return self.visitRegister(ctx.register())
@@ -164,7 +170,7 @@ class BuildAstVisitor(AsmParserVisitor):
             elif isinstance(c, AsmParser.Until_loopContext):
                 nodes.append(self.visitUntil_loop(c))
             elif isinstance(c, AsmParser.Save_restore_statementContext):
-                nodes.append(self.visitSave_restore_statement(c))
+                nodes += self.visitSave_restore_statement(c)
             elif isinstance(c, AsmParser.Break_statementContext):
                 nodes.append(BreakStatementNode())
             elif isinstance(c, AsmParser.Continue_statementContext):

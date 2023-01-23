@@ -8,9 +8,23 @@ from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 from .code_segments import CodeSegments
 
 
+def assert_args(args, *types, single_type=False):
+    ts = [(t if get_origin(t) is None else get_args(t)) for t in types]
+    if single_type:
+        if len(ts) != 1:
+            raise TypeError('Exactly one type must be specified when single_type is True')
+        ts = ts * len(args)
+    elif len(args) != len(ts):
+        raise CdmTempException(f'Expected {len(ts)} arguments, but found {len(args)}')
+
+    for i in range(len(args)):
+        if not isinstance(args[i], ts[i]):
+            raise CdmTempException(f'Incompatible argument type {type(args[i])}')
+
+
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
-    def assemble_instruction(line: InstructionNode) \
+    def assemble_instruction(line: InstructionNode, temp_storage) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         try:
             if line.mnemonic in TargetInstructions.assembly_directives:
@@ -19,14 +33,8 @@ class TargetInstructions(TargetInstructionsInterface):
             elif line.mnemonic in cpu_instructions:
                 opcode, handler = cpu_instructions[line.mnemonic]
                 segments = handler(opcode, line.arguments)
-            elif line.mnemonic == "goto":
-                assert_args(line.arguments, RelocatableExpressionNode, RelocatableExpressionNode)
-                br_mnemonic: RelocatableExpressionNode
-                br_mnemonic = line.arguments[0]
-                if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
-                        or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
-                    raise CdmTempException(f'Branch mnemonic must be single word')
-                return [CodeSegments.GotoInstruction(br_mnemonic.add_terms[0].name, line.arguments[1])]
+            elif line.mnemonic in TargetInstructions.special_instructions:
+                return TargetInstructions.special_instructions[line.mnemonic](line.arguments, temp_storage)
             else:
                 raise CdmTempException(f'Unknown instruction "{line.mnemonic}"')
             for segment in segments:
@@ -41,7 +49,44 @@ class TargetInstructions(TargetInstructionsInterface):
         arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
         return [CodeSegments.GotoInstruction(branch_mnemonic, arg2)]
 
-    instructions = {
+    @staticmethod
+    def goto_handler(arguments: list, _):
+        assert_args(arguments, RelocatableExpressionNode, RelocatableExpressionNode)
+        br_mnemonic: RelocatableExpressionNode
+        br_mnemonic = arguments[0]
+        if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
+                or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
+            raise CdmTempException(f'Branch mnemonic must be single word')
+        return [CodeSegments.GotoInstruction(br_mnemonic.add_terms[0].name, arguments[1])]
+
+    @staticmethod
+    def save_handler(arguments: list, temp_storage: dict):
+        assert_args(arguments, RegisterNode)
+        save_restore_stack: list[RegisterNode]
+        save_restore_stack = temp_storage.get("save_restore_stack", [])
+        save_restore_stack.append(arguments[0])
+        temp_storage["save_restore_stack"] = save_restore_stack
+        return TargetInstructions.assemble_instruction(InstructionNode("push", [arguments[0]]), temp_storage)
+
+    @staticmethod
+    def restore_handler(arguments: list, temp_storage: dict):
+        save_restore_stack: list[RegisterNode]
+        save_restore_stack = temp_storage.get("save_restore_stack", [])
+        if len(save_restore_stack) == 0:
+            raise CdmTempException("Every restore statement must be preceded by a save statement")
+        reg = save_restore_stack.pop()
+        if len(arguments) > 0:
+            assert_args(arguments, RegisterNode)
+            reg = arguments[0]
+        return TargetInstructions.assemble_instruction(InstructionNode("pop", [reg]), temp_storage)
+
+    special_instructions = {
+        'goto': goto_handler,
+        'save': save_handler,
+        'restore': restore_handler
+    }
+
+    simple_instructions = {
         'zero': {
             'pushall': 0xCE,
             'popall': 0xCF,
@@ -149,22 +194,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'setsp': 0xCD,
         },
     }
-
     assembly_directives = {'ds', 'dc'}
-
-
-def assert_args(args, *types, single_type=False):
-    ts = [(t if get_origin(t) is None else get_args(t)) for t in types]
-    if single_type:
-        if len(ts) != 1:
-            raise TypeError('Exactly one type must be specified when single_type is True')
-        ts = ts * len(args)
-    elif len(args) != len(ts):
-        raise CdmTempException(f'Expected {len(ts)} arguments, but found {len(args)}')
-
-    for i in range(len(args)):
-        if not isinstance(args[i], ts[i]):
-            raise CdmTempException(f'Incompatible argument type {type(args[i])}')
 
 
 def binary_handler(opcode: int, arguments: list):
@@ -289,7 +319,7 @@ assembler_directives = {}
 
 
 def initialize():
-    for category, instructions in TargetInstructions.instructions.items():
+    for category, instructions in TargetInstructions.simple_instructions.items():
         for mnemonic, opcode in instructions.items():
             cpu_instructions[mnemonic] = (opcode, command_handlers[category])
 
