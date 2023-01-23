@@ -44,6 +44,11 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
     @staticmethod
+    def finish(temp_storage: dict):
+        if len(temp_storage.get("save_restore_stack", [])) != 0:
+            raise CdmTempException("Expected restore statement")
+
+    @staticmethod
     def make_branch_instruction(branch_mnemonic: str, label_name: str) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)

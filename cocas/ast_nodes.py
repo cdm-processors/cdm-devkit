@@ -82,12 +82,6 @@ class ContinueStatementNode(LocatableNode):
     pass
 
 
-@dataclass
-class SaveRestoreStatementNode:
-    saved_register: RegisterNode
-    lines: list
-    restored_register: RegisterNode
-
 
 @dataclass
 class SectionNode:

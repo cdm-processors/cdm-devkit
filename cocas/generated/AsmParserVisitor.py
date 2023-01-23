@@ -1,4 +1,4 @@
-# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cocas/AsmParser.g4 by ANTLR 4.10.1
+# Generated from AsmParser.g4 by ANTLR 4.11.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .AsmParser import AsmParser
@@ -149,21 +149,6 @@ class AsmParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AsmParser#until_loop.
     def visitUntil_loop(self, ctx:AsmParser.Until_loopContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AsmParser#save_restore_statement.
-    def visitSave_restore_statement(self, ctx:AsmParser.Save_restore_statementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AsmParser#save_statement.
-    def visitSave_statement(self, ctx:AsmParser.Save_statementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AsmParser#restore_statement.
-    def visitRestore_statement(self, ctx:AsmParser.Restore_statementContext):
         return self.visitChildren(ctx)
 
 

@@ -33,7 +33,6 @@ code_block
     | conditional
     | while_loop
     | until_loop
-    | save_restore_statement
     | goto_statement
     | line_mark
     )*
@@ -77,10 +76,6 @@ while_loop : While NEWLINE+ while_condition Stays branch_mnemonic NEWLINE+ code_
 while_condition : code_block ;
 
 until_loop : Do NEWLINE+ code_block Until branch_mnemonic NEWLINE+ ;
-
-save_restore_statement : save_statement code_block restore_statement ;
-save_statement : Save register NEWLINE+ ;
-restore_statement : Restore register? NEWLINE+ ;
 
 goto_statement : Goto branch_mnemonic COMMA goto_argument NEWLINE+ ;
 goto_argument : addr_expr | byte_expr ;
@@ -127,9 +122,7 @@ name
     | Is
     | Low
     | Macro
-    | Restore
     | Rsect
-    | Save
     | Stays
     | Then
     | Tplate

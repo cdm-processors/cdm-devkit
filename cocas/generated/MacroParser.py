@@ -1,4 +1,4 @@
-# Generated from /home/ilya/work/cdm8e/ORiGinalASM/cocas/Macro.g4 by ANTLR 4.10.1
+# Generated from Macro.g4 by ANTLR 4.11.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -165,7 +165,7 @@ class MacroParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10.1")
+        self.checkVersion("4.11.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -198,14 +198,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_mlb
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMlb" ):
-                listener.enterMlb(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMlb" ):
-                listener.exitMlb(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMlb" ):
                 return visitor.visitMlb(self)
@@ -225,7 +217,7 @@ class MacroParser ( Parser ):
             self.state = 43
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==MacroParser.NEWLINE:
+            while _la==4:
                 self.state = 40
                 self.match(MacroParser.NEWLINE)
                 self.state = 45
@@ -235,7 +227,7 @@ class MacroParser ( Parser ):
             self.state = 49
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==MacroParser.WS or _la==MacroParser.ASTERISK:
+            while _la==3 or _la==6:
                 self.state = 46
                 self.mlb_macro()
                 self.state = 51
@@ -270,14 +262,6 @@ class MacroParser ( Parser ):
 
         def getRuleIndex(self):
             return MacroParser.RULE_mlb_macro
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMlb_macro" ):
-                listener.enterMlb_macro(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMlb_macro" ):
-                listener.exitMlb_macro(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMlb_macro" ):
@@ -338,14 +322,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_mlb_header
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMlb_header" ):
-                listener.enterMlb_header(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMlb_header" ):
-                listener.exitMlb_header(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMlb_header" ):
                 return visitor.visitMlb_header(self)
@@ -365,7 +341,7 @@ class MacroParser ( Parser ):
             self.state = 58
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 57
                 self.match(MacroParser.WS)
 
@@ -375,7 +351,7 @@ class MacroParser ( Parser ):
             self.state = 62
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 61
                 self.match(MacroParser.WS)
 
@@ -385,7 +361,7 @@ class MacroParser ( Parser ):
             self.state = 66
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 65
                 self.match(MacroParser.WS)
 
@@ -395,7 +371,7 @@ class MacroParser ( Parser ):
             self.state = 70
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 69
                 self.match(MacroParser.WS)
 
@@ -405,7 +381,7 @@ class MacroParser ( Parser ):
             self.state = 74
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 73
                 self.match(MacroParser.WS)
 
@@ -448,14 +424,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_program
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterProgram" ):
-                listener.enterProgram(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitProgram" ):
-                listener.exitProgram(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitProgram" ):
                 return visitor.visitProgram(self)
@@ -475,7 +443,7 @@ class MacroParser ( Parser ):
             self.state = 82
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MacroParser.Macro) | (1 << MacroParser.WS) | (1 << MacroParser.NEWLINE) | (1 << MacroParser.COMMA) | (1 << MacroParser.LABEL_END) | (1 << MacroParser.QUESTION_MARK) | (1 << MacroParser.STRING) | (1 << MacroParser.CHAR) | (1 << MacroParser.NAME) | (1 << MacroParser.DIGIT) | (1 << MacroParser.APOSTROPHE) | (1 << MacroParser.DOLLAR_SIGN) | (1 << MacroParser.OTHER))) != 0):
+            while ((_la) & ~0x3f) == 0 and ((1 << _la) & 245658) != 0:
                 self.state = 80
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
@@ -525,14 +493,6 @@ class MacroParser ( Parser ):
 
         def getRuleIndex(self):
             return MacroParser.RULE_macro
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro" ):
-                listener.enterMacro(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro" ):
-                listener.exitMacro(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro" ):
@@ -595,14 +555,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_macro_header
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_header" ):
-                listener.enterMacro_header(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_header" ):
-                listener.exitMacro_header(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_header" ):
                 return visitor.visitMacro_header(self)
@@ -622,7 +574,7 @@ class MacroParser ( Parser ):
             self.state = 92
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 91
                 self.match(MacroParser.WS)
 
@@ -632,7 +584,7 @@ class MacroParser ( Parser ):
             self.state = 96
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 95
                 self.match(MacroParser.WS)
 
@@ -642,7 +594,7 @@ class MacroParser ( Parser ):
             self.state = 100
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 99
                 self.match(MacroParser.WS)
 
@@ -652,7 +604,7 @@ class MacroParser ( Parser ):
             self.state = 104
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 103
                 self.match(MacroParser.WS)
 
@@ -662,7 +614,7 @@ class MacroParser ( Parser ):
             self.state = 108
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 107
                 self.match(MacroParser.WS)
 
@@ -694,14 +646,6 @@ class MacroParser ( Parser ):
 
         def getRuleIndex(self):
             return MacroParser.RULE_macro_body
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_body" ):
-                listener.enterMacro_body(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_body" ):
-                listener.exitMacro_body(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_body" ):
@@ -776,14 +720,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_line
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterLine" ):
-                listener.enterLine(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitLine" ):
-                listener.exitLine(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLine" ):
                 return visitor.visitLine(self)
@@ -805,7 +741,7 @@ class MacroParser ( Parser ):
             self.state = 122
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MacroParser.Macro) | (1 << MacroParser.QUESTION_MARK) | (1 << MacroParser.STRING) | (1 << MacroParser.CHAR) | (1 << MacroParser.NAME) | (1 << MacroParser.DIGIT) | (1 << MacroParser.APOSTROPHE) | (1 << MacroParser.DOLLAR_SIGN) | (1 << MacroParser.OTHER))) != 0):
+            if ((_la) & ~0x3f) == 0 and ((1 << _la) & 245250) != 0:
                 self.state = 119
                 self.instruction()
                 self.state = 120
@@ -815,7 +751,7 @@ class MacroParser ( Parser ):
             self.state = 128
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==MacroParser.COMMA:
+            while _la==7:
                 self.state = 124
                 self.match(MacroParser.COMMA)
                 self.state = 125
@@ -855,14 +791,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_labels
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterLabels" ):
-                listener.enterLabels(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitLabels" ):
-                listener.exitLabels(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLabels" ):
                 return visitor.visitLabels(self)
@@ -893,7 +821,7 @@ class MacroParser ( Parser ):
             self.state = 140
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==MacroParser.WS:
+            if _la==3:
                 self.state = 139
                 self.match(MacroParser.WS)
 
@@ -924,14 +852,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_first_param
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFirst_param" ):
-                listener.enterFirst_param(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFirst_param" ):
-                listener.exitFirst_param(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFirst_param" ):
                 return visitor.visitFirst_param(self)
@@ -949,14 +869,14 @@ class MacroParser ( Parser ):
             self.state = 145
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [MacroParser.WS]:
+            if token in [3]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 142
                 self.match(MacroParser.WS)
                 self.state = 143
                 self.param()
                 pass
-            elif token in [MacroParser.NEWLINE, MacroParser.COMMA]:
+            elif token in [4, 7]:
                 self.enterOuterAlt(localctx, 2)
 
                 pass
@@ -1006,14 +926,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_label
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterLabel" ):
-                listener.enterLabel(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitLabel" ):
-                listener.exitLabel(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLabel" ):
                 return visitor.visitLabel(self)
@@ -1038,11 +950,11 @@ class MacroParser ( Parser ):
                     self.state = 156
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [MacroParser.Macro, MacroParser.STRING, MacroParser.CHAR, MacroParser.NAME, MacroParser.DIGIT, MacroParser.APOSTROPHE, MacroParser.DOLLAR_SIGN]:
+                    if token in [1, 10, 11, 12, 13, 15, 16]:
                         self.state = 147
                         self.macro_piece()
                         pass
-                    elif token in [MacroParser.QUESTION_MARK]:
+                    elif token in [9]:
                         self.state = 149 
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
@@ -1052,13 +964,13 @@ class MacroParser ( Parser ):
                             self.state = 151 
                             self._errHandler.sync(self)
                             _la = self._input.LA(1)
-                            if not (_la==MacroParser.QUESTION_MARK):
+                            if not (_la==9):
                                 break
 
                         self.state = 153
                         self.l_sep()
                         pass
-                    elif token in [MacroParser.WS, MacroParser.COMMA, MacroParser.OTHER]:
+                    elif token in [3, 7, 17]:
                         self.state = 155
                         self.l_sep()
                         pass
@@ -1072,7 +984,7 @@ class MacroParser ( Parser ):
             self.state = 164
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==MacroParser.QUESTION_MARK:
+            while _la==9:
                 self.state = 161
                 self.macro_variable()
                 self.state = 166
@@ -1121,14 +1033,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_param
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterParam" ):
-                listener.enterParam(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitParam" ):
-                listener.exitParam(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitParam" ):
                 return visitor.visitParam(self)
@@ -1153,11 +1057,11 @@ class MacroParser ( Parser ):
                     self.state = 178
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [MacroParser.Macro, MacroParser.STRING, MacroParser.CHAR, MacroParser.NAME, MacroParser.DIGIT, MacroParser.APOSTROPHE, MacroParser.DOLLAR_SIGN]:
+                    if token in [1, 10, 11, 12, 13, 15, 16]:
                         self.state = 169
                         self.macro_piece()
                         pass
-                    elif token in [MacroParser.QUESTION_MARK]:
+                    elif token in [9]:
                         self.state = 171 
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
@@ -1167,13 +1071,13 @@ class MacroParser ( Parser ):
                             self.state = 173 
                             self._errHandler.sync(self)
                             _la = self._input.LA(1)
-                            if not (_la==MacroParser.QUESTION_MARK):
+                            if not (_la==9):
                                 break
 
                         self.state = 175
                         self.p_sep()
                         pass
-                    elif token in [MacroParser.WS, MacroParser.OTHER]:
+                    elif token in [3, 17]:
                         self.state = 177
                         self.p_sep()
                         pass
@@ -1187,7 +1091,7 @@ class MacroParser ( Parser ):
             self.state = 186
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==MacroParser.QUESTION_MARK:
+            while _la==9:
                 self.state = 183
                 self.macro_variable()
                 self.state = 188
@@ -1233,14 +1137,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_instruction
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterInstruction" ):
-                listener.enterInstruction(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitInstruction" ):
-                listener.exitInstruction(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitInstruction" ):
                 return visitor.visitInstruction(self)
@@ -1269,11 +1165,11 @@ class MacroParser ( Parser ):
                         self.state = 198
                         self._errHandler.sync(self)
                         token = self._input.LA(1)
-                        if token in [MacroParser.Macro, MacroParser.STRING, MacroParser.CHAR, MacroParser.NAME, MacroParser.DIGIT, MacroParser.APOSTROPHE, MacroParser.DOLLAR_SIGN]:
+                        if token in [1, 10, 11, 12, 13, 15, 16]:
                             self.state = 189
                             self.macro_piece()
                             pass
-                        elif token in [MacroParser.QUESTION_MARK]:
+                        elif token in [9]:
                             self.state = 191 
                             self._errHandler.sync(self)
                             _la = self._input.LA(1)
@@ -1283,13 +1179,13 @@ class MacroParser ( Parser ):
                                 self.state = 193 
                                 self._errHandler.sync(self)
                                 _la = self._input.LA(1)
-                                if not (_la==MacroParser.QUESTION_MARK):
+                                if not (_la==9):
                                     break
 
                             self.state = 195
                             self.match(MacroParser.OTHER)
                             pass
-                        elif token in [MacroParser.OTHER]:
+                        elif token in [17]:
                             self.state = 197
                             self.match(MacroParser.OTHER)
                             pass
@@ -1306,7 +1202,7 @@ class MacroParser ( Parser ):
                 self.state = 205
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==MacroParser.QUESTION_MARK:
+                while _la==9:
                     self.state = 202
                     self.macro_variable()
                     self.state = 207
@@ -1326,7 +1222,7 @@ class MacroParser ( Parser ):
                     self.state = 211 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==MacroParser.QUESTION_MARK):
+                    if not (_la==9):
                         break
 
                 pass
@@ -1360,14 +1256,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_l_sep
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterL_sep" ):
-                listener.enterL_sep(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitL_sep" ):
-                listener.exitL_sep(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitL_sep" ):
                 return visitor.visitL_sep(self)
@@ -1386,7 +1274,7 @@ class MacroParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 215
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MacroParser.WS) | (1 << MacroParser.COMMA) | (1 << MacroParser.OTHER))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 131208) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1416,14 +1304,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_p_sep
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterP_sep" ):
-                listener.enterP_sep(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitP_sep" ):
-                listener.exitP_sep(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitP_sep" ):
                 return visitor.visitP_sep(self)
@@ -1442,7 +1322,7 @@ class MacroParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 217
             _la = self._input.LA(1)
-            if not(_la==MacroParser.WS or _la==MacroParser.OTHER):
+            if not(_la==3 or _la==17):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1478,14 +1358,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_macro_piece
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_piece" ):
-                listener.enterMacro_piece(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_piece" ):
-                listener.exitMacro_piece(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_piece" ):
                 return visitor.visitMacro_piece(self)
@@ -1503,17 +1375,17 @@ class MacroParser ( Parser ):
             self.state = 222
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [MacroParser.Macro, MacroParser.STRING, MacroParser.CHAR, MacroParser.NAME, MacroParser.DIGIT]:
+            if token in [1, 10, 11, 12, 13]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 219
                 self.macro_text()
                 pass
-            elif token in [MacroParser.DOLLAR_SIGN]:
+            elif token in [16]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 220
                 self.macro_param()
                 pass
-            elif token in [MacroParser.APOSTROPHE]:
+            elif token in [15]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 221
                 self.macro_nonce()
@@ -1550,14 +1422,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_macro_variable
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_variable" ):
-                listener.enterMacro_variable(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_variable" ):
-                listener.exitMacro_variable(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_variable" ):
                 return visitor.visitMacro_variable(self)
@@ -1585,7 +1449,7 @@ class MacroParser ( Parser ):
                 self.state = 228 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MacroParser.Macro) | (1 << MacroParser.STRING) | (1 << MacroParser.CHAR) | (1 << MacroParser.NAME) | (1 << MacroParser.DIGIT) | (1 << MacroParser.APOSTROPHE) | (1 << MacroParser.DOLLAR_SIGN))) != 0)):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 113666) != 0):
                     break
 
         except RecognitionException as re:
@@ -1622,14 +1486,6 @@ class MacroParser ( Parser ):
         def getRuleIndex(self):
             return MacroParser.RULE_macro_text
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_text" ):
-                listener.enterMacro_text(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_text" ):
-                listener.exitMacro_text(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_text" ):
                 return visitor.visitMacro_text(self)
@@ -1648,7 +1504,7 @@ class MacroParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 230
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MacroParser.Macro) | (1 << MacroParser.STRING) | (1 << MacroParser.CHAR) | (1 << MacroParser.NAME) | (1 << MacroParser.DIGIT))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 15362) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1677,14 +1533,6 @@ class MacroParser ( Parser ):
 
         def getRuleIndex(self):
             return MacroParser.RULE_macro_param
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_param" ):
-                listener.enterMacro_param(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_param" ):
-                listener.exitMacro_param(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_param" ):
@@ -1726,14 +1574,6 @@ class MacroParser ( Parser ):
 
         def getRuleIndex(self):
             return MacroParser.RULE_macro_nonce
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMacro_nonce" ):
-                listener.enterMacro_nonce(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMacro_nonce" ):
-                listener.exitMacro_nonce(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMacro_nonce" ):

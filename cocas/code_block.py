@@ -3,9 +3,10 @@ from typing import Type
 
 from cocas import default_instructions, default_code_segments
 from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
-    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, SaveRestoreStatementNode, BreakStatementNode, \
+    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, BreakStatementNode, \
     ContinueStatementNode, LocatableNode, RegisterNode, SectionNode, AbsoluteSectionNode, \
     RelocatableSectionNode
+from cocas.error import CdmTempException, CdmException, CdmExceptionTag
 from cocas.location import CodeLocation
 
 
@@ -26,6 +27,12 @@ class CodeBlock:
         self.code_locations: dict[int, CodeLocation] = dict()
         temp_storage = dict()  # variable to save information for future lines
         self.assemble_lines(lines, temp_storage)
+        try:
+            # check that everything was ok with this block
+            target_instructions.finish(temp_storage)
+        except CdmTempException as e:
+            # if it isn't ok, must be at least one line
+            raise CdmException(CdmExceptionTag.ASM, lines[-1].location.file, lines[-1].location.line, e.message)
 
     def append_label(self, label_name):
         self.labels[label_name] = self.address + self.size
@@ -42,7 +49,6 @@ class CodeBlock:
             ConditionalStatementNode: self.assemble_conditional_statement,
             WhileLoopNode: self.assemble_while_loop,
             UntilLoopNode: self.assemble_until_loop,
-            SaveRestoreStatementNode: self.assemble_save_restore_statement,
             BreakStatementNode: self.assemble_break_statement,
             ContinueStatementNode: self.assemble_continue_statement,
         }
@@ -128,14 +134,6 @@ class CodeBlock:
         self.append_branch_instruction(f'n{line.branch_mnemonic}', loop_body_label)
         self.append_label(finally_label)
         self.loop_stack.pop()
-
-    def assemble_save_restore_statement(self, line: SaveRestoreStatementNode, temp_storage):
-        rn = line.saved_register.number
-        push = InstructionNode('push', [RegisterNode(rn)])
-        pop = InstructionNode('pop', [RegisterNode(rn)])
-        self.assemble_instruction(push, temp_storage)
-        self.assemble_lines(line.lines, temp_storage)
-        self.assemble_instruction(pop, temp_storage)
 
     def assemble_break_statement(self, _: BreakStatementNode, __):
         if len(self.loop_stack) == 0:

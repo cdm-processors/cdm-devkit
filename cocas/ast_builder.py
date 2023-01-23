@@ -123,25 +123,6 @@ class BuildAstVisitor(AsmParserVisitor):
         lines = self.visitCode_block(ctx.code_block())
         return UntilLoopNode(lines, ctx.branch_mnemonic().getText())
 
-    def visitSave_restore_statement(self, ctx: AsmParser.Save_restore_statementContext):
-        saved_register = self.visitSave_statement(ctx.save_statement())
-        restored_register = self.visitRestore_statement(ctx.restore_statement())
-        # if restored_register is None: restored_register = saved_register
-        lines = [InstructionNode("save", [saved_register])]
-        lines += self.visitCode_block(ctx.code_block())
-        if restored_register is None:
-            lines.append(InstructionNode("restore", []))
-        else:
-            lines.append(InstructionNode("restore", [restored_register]))
-        return lines
-        # return SaveRestoreStatementNode(saved_register, lines, restored_register)
-
-    def visitSave_statement(self, ctx: AsmParser.Save_statementContext):
-        return self.visitRegister(ctx.register())
-
-    def visitRestore_statement(self, ctx: AsmParser.Restore_statementContext):
-        return self.visitRegister(ctx.register()) if ctx.register() else None
-
     def visitGoto_statement(self, ctx: AsmParser.Goto_statementContext):
         # TODO: remove it from grammar
         arg1 = RelocatableExpressionNode(None, [LabelNode(ctx.branch_mnemonic().getText())], [], 0)
@@ -169,8 +150,6 @@ class BuildAstVisitor(AsmParserVisitor):
                 nodes.append(self.visitWhile_loop(c))
             elif isinstance(c, AsmParser.Until_loopContext):
                 nodes.append(self.visitUntil_loop(c))
-            elif isinstance(c, AsmParser.Save_restore_statementContext):
-                nodes += self.visitSave_restore_statement(c)
             elif isinstance(c, AsmParser.Break_statementContext):
                 nodes.append(BreakStatementNode())
             elif isinstance(c, AsmParser.Continue_statementContext):

@@ -13,8 +13,7 @@ class TargetInstructionsInterface:
 
     @staticmethod
     def finish(temp_storage: dict):
-        if len(temp_storage.get("save_restore_stack", [])) != 0:
-            raise CdmTempException("Missed restore statement")
+        return
 
     @staticmethod
     def make_branch_instruction(branch_mnemonic: str, label_name: str) \
