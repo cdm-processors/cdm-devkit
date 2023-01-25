@@ -1,0 +1,59 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "define lang",
+	"patterns": [
+        {
+			"include": "#comments"
+        },
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#signals"
+		},
+		{
+			"include": "#setup"
+		}
+	],
+	"repository": {
+        "comments": {
+			"patterns": [{
+				"name": "comment.line",
+				"match": "(#).*$"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.cdm-def",
+				"match": "([^\\s]+)(:{1})"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.cdm-def",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cdm-def",
+					"match": "\\\\."
+				}
+			]
+		},
+        "signals": {
+			"patterns": [{
+				"name": "entity.name.function",
+				"match": "\\b[^\\s]+\\b"
+			}]
+		},
+        "setup": {
+			"patterns": [{
+				"name": "entity.name.type",
+				"match": ":\\s*\\d+\\s*,\\s*\\d+\\s*,"
+			}]
+		}
+	},
+	"scopeName": "source.cdm-def"
+}
