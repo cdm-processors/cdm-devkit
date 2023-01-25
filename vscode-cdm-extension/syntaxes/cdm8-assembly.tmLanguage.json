@@ -101,7 +101,7 @@
         "numbers": {
 			"patterns": [{
 				"name": "constant.numeric.cdm8-assembly",
-				"match": "(\\$[0-9]+|[0-9]+|(0b)+[01]+|(0x)+[0-9|ABCDEF|abcdef]+)\\b"
+				"match": "(\\$[0-9]+|[0-9]+|(0b)[01]+|(0x)[0-9|ABCDEF|abcdef]+)\\b"
 			}]
 		}
 	},
