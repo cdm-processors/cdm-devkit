@@ -7,6 +7,7 @@ from base64 import b64decode
 from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException
 
 
+# noinspection PyPep8Naming
 class BuildAstVisitor(AsmParserVisitor):
     def __init__(self, filepath: str):
         super().__init__()

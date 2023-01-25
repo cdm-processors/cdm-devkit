@@ -90,9 +90,10 @@ def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, va
     label_part = sub_all(line.label_pieces)
     instruction_part = sub_all(line.instruction_pieces)
     parameter_parts = list(map(sub_all, line.parameter_pieces))
-    return (label_part, instruction_part, parameter_parts)
+    return label_part, instruction_part, parameter_parts
 
 
+# noinspection PyPep8Naming
 class ExpandMacrosVisitor(MacroVisitor):
     def __init__(self, rewriter: TokenStreamRewriter, mlb_macros, filepath: str):
         self.nonce = 0
@@ -156,8 +157,9 @@ class ExpandMacrosVisitor(MacroVisitor):
                         else:
                             ret_parts.append('\n')
                         ret_parts.append(expanded_text)
-                        ret_parts.append(
-                            f'\n{self._generate_location_line(macro.location.file, macro.location.line + line_number + 1)}')
+                        location_line = self._generate_location_line(macro.location.file,
+                                                                     macro.location.line + line_number + 1)
+                        ret_parts.append(f'\n{location_line}')
                     else:
                         ret_parts.append(f'{label_part}{instruction_part}{",".join(parameter_parts)}\n')
                 line_number += 1
@@ -235,7 +237,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             parameters.append(param.getText().strip())
         if parameters == ['']:
             parameters = []
-        return (label, instruction, parameters)
+        return label, instruction, parameters
 
     def visitLabels(self, ctx: MacroParser.LabelsContext):
         label_pieces = []
@@ -301,6 +303,6 @@ def process_macros(input_stream: InputStream, library_macros, filepath: str):
     cst = parser.program()  # .children contains lines, their .children are tokens
     rewriter = TokenStreamRewriter(token_stream)
     emv = ExpandMacrosVisitor(rewriter, library_macros, filepath)
-    some_result = emv.visit(cst)  # this кал just calls emv.visitProgram(cst)
+    emv.visit(cst)
     new_test = rewriter.getDefaultText()
     return InputStream(new_test)

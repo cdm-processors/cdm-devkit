@@ -1,8 +1,5 @@
-from typing import Type
-
 from cocas.ast_nodes import *
 from cocas.default_code_segments import CodeSegmentsInterface
-from cocas.error import CdmTempException
 
 
 class TargetInstructionsInterface:

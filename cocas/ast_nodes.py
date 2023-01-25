@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Optional
+
 from cocas.location import CodeLocation
 
 
@@ -26,7 +28,7 @@ class TemplateFieldNode(LocatableNode):
 
 @dataclass
 class RelocatableExpressionNode(LocatableNode):
-    byte_specifier: str | None
+    byte_specifier: Optional[str]
     add_terms: list
     sub_terms: list
     const_term: int
@@ -49,7 +51,7 @@ class InstructionNode(LocatableNode):
 class ConditionNode:
     lines: list
     branch_mnemonic: str
-    conjunction: str | None
+    conjunction: Optional[str]
 
 
 @dataclass
@@ -80,7 +82,6 @@ class BreakStatementNode(LocatableNode):
 @dataclass
 class ContinueStatementNode(LocatableNode):
     pass
-
 
 
 @dataclass

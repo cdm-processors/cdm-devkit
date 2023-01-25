@@ -1,3 +1,5 @@
+from typing import Union
+
 from antlr4.error.ErrorListener import ErrorListener
 from colorama import Fore, Style
 from enum import Enum
@@ -25,7 +27,7 @@ class CdmLinkException(Exception):
 
 
 class CdmException(Exception):
-    def __init__(self, tag: str | CdmExceptionTag, file: str, line: int, description: str):
+    def __init__(self, tag: Union[str, CdmExceptionTag], file: str, line: int, description: str):
         if isinstance(tag, CdmExceptionTag):
             tag = tag.value
         self.tag = tag

@@ -190,13 +190,12 @@ def eval_rel_expr_seg(seg: CodeSegments.ShortExpressionSegment, s: Section,
             val_long += templates[term.template_name][term.field_name] * m
 
     val_lo, val_hi = val_long.to_bytes(2, 'little', signed=(val_long < 0))
-    match seg.expr.byte_specifier:
-        case 'low':
-            val = val_lo
-        case 'high':
-            val = val_hi
-        case _:
-            val = val_long
+    if seg.expr.byte_specifier == 'low':
+        val = val_lo
+    elif seg.expr.byte_specifier == 'high':
+        val = val_hi
+    else:
+        val = val_long
 
     used_exts = dict(filter(lambda x: x[1] != 0, used_exts.items()))
     if len(used_exts) > 1:
@@ -223,14 +222,13 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: in
         return
 
     val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
-    match seg.expr.byte_specifier:
-        case 'low':
-            obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
-        case 'high':
-            obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data), val_lo))
-        case _:
-            obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
-            obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data) + 1, val_lo))
+    if seg.expr.byte_specifier == 'low':
+        obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
+    elif seg.expr.byte_specifier == 'high':
+        obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data), val_lo))
+    else:
+        obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
+        obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data) + 1, val_lo))
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", is_rel: bool, s: Section, val: int,
@@ -239,11 +237,10 @@ def add_rel_record(obj_rec: "ObjectSectionRecord", is_rel: bool, s: Section, val
         return
 
     val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
-    match seg.expr.byte_specifier:
-        case 'low':
-            obj_rec.rell.add(s.address + len(obj_rec.data))
-        case 'high':
-            obj_rec.relh.add((s.address + len(obj_rec.data), val_lo))
-        case _:
-            obj_rec.rell.add(s.address + len(obj_rec.data))
-            obj_rec.relh.add((s.address + len(obj_rec.data) + 1, val_lo))
+    if seg.expr.byte_specifier == 'low':
+        obj_rec.rell.add(s.address + len(obj_rec.data))
+    elif seg.expr.byte_specifier == 'high':
+        obj_rec.relh.add((s.address + len(obj_rec.data), val_lo))
+    else:
+        obj_rec.rell.add(s.address + len(obj_rec.data))
+        obj_rec.relh.add((s.address + len(obj_rec.data) + 1, val_lo))

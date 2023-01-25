@@ -1,5 +1,5 @@
 from cocas.ast_nodes import *
-from typing import get_origin, get_args
+from typing import get_origin, get_args, Union
 import bitstruct
 
 from cocas.default_code_segments import CodeSegmentsInterface
@@ -243,7 +243,7 @@ def ldsa_handler(opcode: int, arguments: list):
 
 def ldi_handler(opcode: int, arguments: list):
     # check types
-    assert_args(arguments, RegisterNode, RelocatableExpressionNode | str)
+    assert_args(arguments, RegisterNode, Union[RelocatableExpressionNode, str])
     reg, arg = arguments
     cmd_piece = unary_handler(opcode, [reg])[0]
 
@@ -272,7 +272,7 @@ def spmove_handler(opcode: int, arguments: list):
 
 
 def dc_handler(arguments: list):
-    assert_args(arguments, RelocatableExpressionNode | str, single_type=True)
+    assert_args(arguments, Union[RelocatableExpressionNode, str], single_type=True)
     if len(arguments) == 0:
         raise CdmTempException('At least one argument must be provided')
 
@@ -282,9 +282,9 @@ def dc_handler(arguments: list):
             segments.append(CodeSegments.BytesSegment(bytearray(arg, 'utf8')))
         elif isinstance(arg, RelocatableExpressionNode):
             if arg.byte_specifier is None:
-                addedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))
-                subtractedLabels = list(filter(lambda t: isinstance(t, LabelNode), arg.sub_terms))
-                if len(addedLabels) == len(subtractedLabels):
+                added_labels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))
+                subtracted_labels = list(filter(lambda t: isinstance(t, LabelNode), arg.sub_terms))
+                if len(added_labels) == len(subtracted_labels):
                     segments.append(CodeSegments.ShortExpressionSegment(arg))
                 else:
                     segments.append(CodeSegments.LongExpressionSegment(arg))

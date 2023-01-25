@@ -13,6 +13,7 @@ TAG = CdmExceptionTag.ASM
 class Template:
     def __init__(self, sn: TemplateSectionNode, code_segments: Type[CodeSegmentsInterface],
                  target_instructions: Type[TargetInstructionsInterface]):
+        self.code_segments = code_segments
         self.name: str = sn.name
         self.labels: dict[str, int] = dict()
 

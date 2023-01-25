@@ -4,7 +4,7 @@ from typing import Type
 from cocas import default_instructions, default_code_segments
 from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
     ConditionalStatementNode, WhileLoopNode, UntilLoopNode, BreakStatementNode, \
-    ContinueStatementNode, LocatableNode, RegisterNode, SectionNode, AbsoluteSectionNode, \
+    ContinueStatementNode, LocatableNode, SectionNode, AbsoluteSectionNode, \
     RelocatableSectionNode
 from cocas.error import CdmTempException, CdmException, CdmExceptionTag
 from cocas.location import CodeLocation
