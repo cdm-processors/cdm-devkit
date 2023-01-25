@@ -14,6 +14,8 @@ from cocas.error import CdmException, log_error, CdmLinkException, CdmExceptionT
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
 
+available_targets = ['cdm8e']
+
 
 def write_image(filename: str, arr: list):
     """
@@ -30,22 +32,34 @@ def write_image(filename: str, arr: list):
 
 
 def main():
-    # TODO: enable object file generation (when stand-alone linker will be ready)
-    parser = argparse.ArgumentParser('Cdm8e assembler')
-    # parser.add_argument('-o', '--object', type=str, help='Object file directory (object files will be stored here)')
-    parser.add_argument('-i', '--image', type=str, help='Image file path')
-    parser.add_argument('-d', '--debug', type=str, help='Debug info path')
-    parser.add_argument('sources', type=str, nargs='+', help='Source files')
-    args = parser.parse_args()
-
     colorama.init()
+    parser = argparse.ArgumentParser('cocas')
+    parser.add_argument('-t', '--target', type=str, default='cdm-8e',
+                        help='target processor, CdM-16 is default')
+    parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
+    # TODO: enable object file generation (if stand-alone linker will be ready)
+    # parser.add_argument('-c', '--compile', type=str, help='generate object files without linking')
+    parser.add_argument('-o', '--output', type=str, help='specify output file name')
+    parser.add_argument('--debug', type=str, help=argparse.SUPPRESS)
+    parser.add_argument('sources', type=str, nargs='*', help='source files')
+    args = parser.parse_args()
+    if args.list_targets:
+        print('Available targets: ' + ', '.join(available_targets))
+        return
 
-    isa_name = 'cdm8e'
-    target_instructions = importlib.import_module(f'targets.{isa_name}.target_instructions', 'cocas').TargetInstructions
-    code_segments = importlib.import_module(f'targets.{isa_name}.code_segments', 'cocas').CodeSegments
+    target: str = args.target.replace('-', '').lower()
+    if target not in available_targets:
+        print('Error: unknown target ' + target)
+        print('Available targets: ' + ', '.join(available_targets))
+        return
 
-    library_macros = read_mlb(
-        str(pathlib.Path(__file__).parent.joinpath(f'standard.mlb').absolute()))
+    if len(args.sources) == 0:
+        print('Error: no source files provided')
+
+    target_instructions = importlib.import_module(f'targets.{target}.target_instructions', 'cocas').TargetInstructions
+    code_segments = importlib.import_module(f'targets.{target}.code_segments', 'cocas').CodeSegments
+
+    library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'standard.mlb').absolute()))
     objects = []
 
     for filepath in args.sources:
@@ -64,16 +78,11 @@ def main():
             data += '\n'
 
         try:
-            # InputStream: Vacuum all input from a string and then treat it like a buffer.
             input_stream = antlr4.InputStream(data)
-            # Assembler code but with one tag in the beginning
             # Macros (tst, clr but not if) are replaced to commands and wrapped by tags
-            # Number in tags - begin/end line numbers and macro number
-            # Hash of source file name
             # Remove comments
             macro_expanded_input_stream = process_macros(input_stream, library_macros,
                                                          str(pathlib.Path(filepath).absolute()))
-            # print(macro_expanded_input_stream)
             r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))
             obj = assemble(r, target_instructions, code_segments)
 
@@ -89,8 +98,8 @@ def main():
         return 1
 
     try:
-        if args.image is not None:
-            write_image(args.image, data)
+        if args.output is not None:
+            write_image(args.output, data)
         else:
             write_image("out.img", data)
     except OSError as e:
@@ -117,5 +126,4 @@ def main():
 
 if __name__ == '__main__':
     result = main()
-    result = 0 if result is None else result
     exit(result)
