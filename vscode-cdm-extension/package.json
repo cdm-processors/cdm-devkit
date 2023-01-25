@@ -1,0 +1,63 @@
+{
+    "name": "cdm8-assembly",
+    "displayName": "cdm8 assembly",
+    "description": "Assembler for cdm8 processor",
+    "version": "1.1.2",
+    "engines": {
+        "vscode": "^1.0.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets"
+    ],
+    "author": {
+        "name": "Nikolay Repin"
+    },
+    "icon": "icon.png",
+    "publisher": "intelix",
+    "homepage": "https://github.com/Intelix8996/cdm8-assembly",
+    "bugs": "https://github.com/Intelix8996/cdm8-assembly/issues",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Intelix8996/cdm8-assembly.git"
+    },
+    "license": "BSD",
+    "keywords": [
+        "assembly",
+        "macro",
+        "assembler",
+        "cdm8",
+        "asm"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "cdm8-assembly",
+                "aliases": [
+                    "cdm8 assembly",
+                    "cdm8-assembly"
+                ],
+                "extensions": [
+                    ".asm .h"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "cdm8-assembly",
+                "scopeName": "source.asm.cdm8",
+                "path": "./syntaxes/cdm8-assembly.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "cdm8-assembly",
+                "path": "./snippets/cdm8-assembly-snippets.json"
+            }
+        ]
+    },
+    "__metadata": {
+        "publisherDisplayName": "Intelix"
+    }
+}
