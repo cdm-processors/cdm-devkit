@@ -1,5 +1,6 @@
 from typing import Type
 
+from cocas.object_module import ObjectSectionRecord, ObjectModule
 from cocas.ast_nodes import *
 from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
@@ -39,30 +40,6 @@ class Template:
                     size += seg.size
 
         self.labels['_'] = size
-
-
-@dataclass
-class ObjectSectionRecord:
-    def __init__(self, section: Section, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        self.address: int = section.address
-        self.name: str = section.name
-        self.data = bytearray()
-        self.rell: set[int] = set()
-        self.relh: set[tuple[int, int]] = set()
-        self.ents: dict[str, int] = dict(p for p in section.labels.items() if p[0] in section.ents)
-        self.xtrl: dict[str, list[int]] = dict()
-        self.xtrh: dict[str, list[tuple[int, int]]] = dict()
-        self.code_locations = section.code_locations
-
-        for seg in section.segments:
-            seg.fill(self, section, labels, templates)
-
-
-@dataclass
-class ObjectModule:
-    def __init__(self):
-        self.asects: list[ObjectSectionRecord] = []
-        self.rsects: list[ObjectSectionRecord] = []
 
 
 def gather_local_labels(sects: list[Section]):

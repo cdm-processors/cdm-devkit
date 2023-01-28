@@ -6,6 +6,7 @@ from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
 from . import target_instructions
+from cocas.object_module import ExternalEntry
 
 TAG = CdmExceptionTag.ASM
 
@@ -53,8 +54,10 @@ class CodeSegments(CodeSegmentsInterface):
             if not -2 ** 7 <= val < 2 ** 8:
                 _error(self, 'Number out of range')
 
-            add_rel_record(object_record, is_rel, section, val_long, self)
-            add_ext_record(object_record, ext, section, val_long, self)
+            if is_rel:
+                add_rel_record(object_record, is_rel, section, val_long, self)
+            if ext is not None:
+                add_ext_record(object_record, ext, section, val_long, self)
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
     @dataclass
@@ -82,8 +85,10 @@ class CodeSegments(CodeSegmentsInterface):
             if not -2 ** 15 <= val < 2 ** 16:
                 _error(self, 'Number out of range')
 
-            add_rel_record(object_record, val_sect, section, val_long, self)
-            add_ext_record(object_record, ext, section, val_long, self)
+            if val_sect:
+                add_rel_record(object_record, val_sect, section, val_long, self)
+            if ext is not None:
+                add_ext_record(object_record, ext, section, val_long, self)
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
     @dataclass
@@ -167,7 +172,7 @@ def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):
     raise CdmException(TAG, segment.location.file, segment.location.line, message)
 
 
-def eval_rel_expr_seg(seg: CodeSegments.ShortExpressionSegment, s: Section,
+def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: Section,
                       labels: dict[str, int], templates: dict[str, dict[str, int]]):
     val_long = seg.expr.const_term
     used_exts = dict()
@@ -218,29 +223,27 @@ def eval_rel_expr_seg(seg: CodeSegments.ShortExpressionSegment, s: Section,
 
 def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: int,
                    seg: CodeSegments.RelocatableExpressionSegment):
-    if ext is None:
-        return
-
-    val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
+    val %= 65536
+    val_lo, _ = val.to_bytes(2, 'little', signed=False)
+    offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1)))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data), val_lo))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(1, 2)))
+        obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
     else:
-        obj_rec.xtrl.setdefault(ext, []).append(s.address + len(obj_rec.data))
-        obj_rec.xtrh.setdefault(ext, []).append((s.address + len(obj_rec.data) + 1, val_lo))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2)))
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", is_rel: bool, s: Section, val: int,
                    seg: CodeSegments.RelocatableExpressionSegment):
-    if not is_rel:
-        return
-
-    val_lo, _ = val.to_bytes(2, 'little', signed=(val < 0))
+    val %= 65536
+    val_lo, _ = val.to_bytes(2, 'little', signed=False)
+    offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.rell.add(s.address + len(obj_rec.data))
+        obj_rec.relative.append(ExternalEntry(offset, range(0, 1)))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.relh.add((s.address + len(obj_rec.data), val_lo))
+        obj_rec.relative.append(ExternalEntry(offset, range(1, 2)))
+        obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
     else:
-        obj_rec.rell.add(s.address + len(obj_rec.data))
-        obj_rec.relh.add((s.address + len(obj_rec.data) + 1, val_lo))
+        obj_rec.relative.append(ExternalEntry(offset, range(0, 2)))
