@@ -12,6 +12,11 @@ from base64 import b64decode
 
 class AsmParserVisitor(ParseTreeVisitor):
 
+    # Visit a parse tree produced by AsmParser#program_nomacros.
+    def visitProgram_nomacros(self, ctx:AsmParser.Program_nomacrosContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by AsmParser#program.
     def visitProgram(self, ctx:AsmParser.ProgramContext):
         return self.visitChildren(ctx)

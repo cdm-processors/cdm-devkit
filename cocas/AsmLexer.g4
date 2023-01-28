@@ -19,9 +19,6 @@ Until : 'until' ;
 Wend : 'wend' ;
 While : 'while' ;
 
-Low : 'low' ;
-High : 'high' ;
-
 DOT : '.' ;
 COMMA : ',' ;
 PLUS : '+' ;

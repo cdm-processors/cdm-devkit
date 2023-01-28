@@ -55,7 +55,7 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'Number out of range')
 
             if is_rel:
-                add_rel_record(object_record, is_rel, section, val_long, self)
+                add_rel_record(object_record, section, val_long, self)
             if ext is not None:
                 add_ext_record(object_record, ext, section, val_long, self)
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
@@ -86,7 +86,7 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'Number out of range')
 
             if val_sect:
-                add_rel_record(object_record, val_sect, section, val_long, self)
+                add_rel_record(object_record, section, val_long, self)
             if ext is not None:
                 add_ext_record(object_record, ext, section, val_long, self)
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
@@ -199,6 +199,8 @@ def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: Section
         val = val_lo
     elif seg.expr.byte_specifier == 'high':
         val = val_hi
+    elif seg.expr.byte_specifier is not None:
+        _error(seg, f'Invalid byte specifier "{seg.expr.byte_specifier}". Possible options are "low" and "high"')
     else:
         val = val_long
 
@@ -235,7 +237,7 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: in
         obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2)))
 
 
-def add_rel_record(obj_rec: "ObjectSectionRecord", is_rel: bool, s: Section, val: int,
+def add_rel_record(obj_rec: "ObjectSectionRecord", s: Section, val: int,
                    seg: CodeSegments.RelocatableExpressionSegment):
     val %= 65536
     val_lo, _ = val.to_bytes(2, 'little', signed=False)

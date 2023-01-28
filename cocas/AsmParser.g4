@@ -91,7 +91,7 @@ addr_expr : first_term add_term* ;
 first_term : (PLUS | MINUS)? term ;
 add_term : (PLUS | MINUS) term ;
 term : number | template_field | label ;
-byte_specifier : Low | High ;
+byte_specifier : name;
 
 template_field : name DOT name ;
 label : name ;
@@ -114,10 +114,8 @@ name
     | End
     | Ext
     | Fi
-    | High
     | If
     | Is
-    | Low
     | Macro
     | Rsect
     | Stays
