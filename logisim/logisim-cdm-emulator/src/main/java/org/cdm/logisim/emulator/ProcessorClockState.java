@@ -1,13 +1,18 @@
 package org.cdm.logisim.emulator;
 
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.instance.InstanceData;
 import com.cburch.logisim.instance.StdAttr;
 
-class ProcessorClockState implements Cloneable {
-    private Value lastClock;
+public class ProcessorClockState implements Cloneable, InstanceData {
+    private Value irqLastClock;
+    private Value excLastClock;
+    private Value clkLastClock;
 
     public ProcessorClockState() {
-        this.lastClock = Value.FALSE;
+        this.irqLastClock = Value.FALSE;
+        this.excLastClock = Value.FALSE;
+        this.clkLastClock = Value.FALSE;
     }
 
     public ProcessorClockState clone() {
@@ -18,9 +23,22 @@ class ProcessorClockState implements Cloneable {
         }
     }
 
-    public boolean updateClock(Value newClock, Object trigger) {
-        Value oldClock = this.lastClock;
-        this.lastClock = newClock;
+    public boolean updateClock(Value newClock, Object trigger, Processor.ClockType type) {
+        Value oldClock = null;
+        switch (type){
+            case IRQ -> {
+                oldClock = this.irqLastClock;
+                this.irqLastClock = newClock;
+            }
+            case EXC -> {
+                oldClock = this.excLastClock;
+                this.excLastClock = newClock;
+            }
+            case CLK -> {
+                oldClock = this.clkLastClock;
+                this.clkLastClock = newClock;
+            }
+        }
         if (trigger != null && trigger != StdAttr.TRIG_RISING) {
             if (trigger == StdAttr.TRIG_FALLING) {
                 return oldClock == Value.TRUE && newClock == Value.FALSE;
@@ -36,4 +54,3 @@ class ProcessorClockState implements Cloneable {
         }
     }
 }
-
