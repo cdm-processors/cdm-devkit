@@ -17,7 +17,7 @@ optional_keys = {"r0", "r1", "r2", "r3", "sp", "ps", "pc", "mem"}
 
 # def print_error(name, )
 
-assembler_path = Path(__file__).parent.parent.joinpath('cdm_asm/main.py')
+assembler_path = Path(__file__).parent.parent.joinpath('cocas/main.py')
 
 runners: list[Runner] = [LogisimRunner(), EmulatorRunner()]
 

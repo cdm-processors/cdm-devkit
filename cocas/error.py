@@ -1,8 +1,9 @@
-from antlr4.error.Errors import CancellationException, ParseCancellationException
+from typing import Union
+
 from antlr4.error.ErrorListener import ErrorListener
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from enum import Enum
-from cdm_asm.generated import AsmParser
+from cocas.generated import AsmParser
 
 
 class CdmExceptionTag(Enum):
@@ -24,8 +25,9 @@ class CdmLinkException(Exception):
     def __init__(self, message: str):
         self.message = message
 
+
 class CdmException(Exception):
-    def __init__(self, tag: str | CdmExceptionTag, file: str, line: int, description: str):
+    def __init__(self, tag: Union[str, CdmExceptionTag], file: str, line: int, description: str):
         if isinstance(tag, CdmExceptionTag):
             tag = tag.value
         self.tag = tag
@@ -34,7 +36,9 @@ class CdmException(Exception):
         self.description = description
 
     def log(self):
-        print(f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of {Style.BRIGHT}{self.file}{Style.RESET_ALL}')
+        print(
+            f'[{self.tag}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{self.line}{Style.RESET_ALL} of '
+            f'{Style.BRIGHT}{self.file}{Style.RESET_ALL}')
         print(f'{self.description}')
 
 
@@ -44,17 +48,13 @@ def log_error(tag: str, message: str):
     print(message)
 
 
-
 class AntlrErrorListener(ErrorListener):
     def __init__(self, tag, file):
         self.file = file
         self.tag = tag
 
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+    def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
         if isinstance(recognizer, AsmParser.AsmParser):
             line = line - recognizer.current_offset
             self.file = recognizer.current_file
         raise CdmException(self.tag, self.file, line, msg)
-
-
-

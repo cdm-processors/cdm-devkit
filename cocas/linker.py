@@ -1,8 +1,10 @@
-from cdm_asm.assembler import ObjectSectionRecord, ObjectModule
+from dataclasses import astuple
+
+from cocas.assembler import ObjectSectionRecord, ObjectModule
 import itertools
 
-from cdm_asm.error import CdmLinkException
-from cdm_asm.location import CodeLocation
+from cocas.error import CdmLinkException
+from cocas.location import CodeLocation
 
 
 def init_bins(asects: list[ObjectSectionRecord]):
@@ -25,8 +27,9 @@ def init_bins(asects: list[ObjectSectionRecord]):
 
     return rsect_bins
 
+
 def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
-    sect_addresses = { '$abs': 0 }
+    sect_addresses = {'$abs': 0}
     for rsect in rsects:
         rsect_size = len(rsect.data)
         for i in range(len(rsect_bins)):
@@ -41,28 +44,32 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
             raise CdmLinkException(f'Section "{rsect.name}" exceeds image size limit')
     return sect_addresses
 
+
 def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]):
     ents = dict()
     for sect in sects:
-        for ent_name in sect.ents:
+        for ent_name in sect.entries:
             if ent_name in ents:
                 raise CdmLinkException(f'Duplicate entries "{ent_name}"')
-            ents[ent_name] = sect.ents[ent_name] + sect_addresses[sect.name]
+            ents[ent_name] = sect.entries[ent_name] + sect_addresses[sect.name]
     return ents
+
 
 def find_exts_by_sect(sects: list[ObjectSectionRecord]):
     exts_by_sect = dict()
     for sect in sects:
         exts = exts_by_sect.setdefault(sect.name, set())
-        exts |= set(sect.xtrl.keys()) | set(sect.xtrh.keys())
+        exts |= set(sect.external.keys())
     return exts_by_sect
+
 
 def find_sect_by_ent(sects: list[ObjectSectionRecord]):
     sect_by_ent = dict()
     for sect in sects:
-        for ent_name in sect.ents:
+        for ent_name in sect.entries:
             sect_by_ent[ent_name] = sect.name
     return sect_by_ent
+
 
 def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[str, str]):
     used_sects_queue = ['$abs']
@@ -79,6 +86,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
                     used_sects.add(new_sect)
         i += 1
     return used_sects
+
 
 def link(objects: list[ObjectModule]):
     asects = list(itertools.chain.from_iterable([obj.asects for obj in objects]))
@@ -109,23 +117,30 @@ def link(objects: list[ObjectModule]):
         image_begin = sect_addresses[rsect.name]
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
-        for offset in rsect.rell:
-            image[image_begin + offset] = (image[image_begin + offset] + image_begin) & 0xFF
-        for offset, byte in rsect.relh:
-            image[image_begin + offset] = (image[image_begin + offset] + (image_begin + byte) // 0x100) & 0xFF
-        for loc_offset, location in rsect.code_locations.items():
-            code_locations[loc_offset + image_begin] = location
+        entry_bytes: range
+        for offset, entry_bytes in map(astuple, rsect.relative):
+            pos = image_begin + offset
+            lower_limit = 1 << 8 * entry_bytes.start
+            val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
+            val += rsect.lower_parts.get(offset, 0)
+            val += image_begin
+            val %= (1 << 8 * entry_bytes.stop)
+            if entry_bytes.start > 0:
+                rsect.lower_parts[pos] = val % lower_limit
+            image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little', signed=False)
 
     for sect in asects + rsects:
-        for ext_name in sect.xtrl:
-            for offset in sect.xtrl[ext_name]:
-                image[sect_addresses[sect.name] + offset] = \
-                    (image[sect_addresses[sect.name] + offset] + ents[ext_name]) & 0xFF
-        for ext_name in sect.xtrh:
-            for offset, byte in sect.xtrh[ext_name]:
-                image[sect_addresses[sect.name] + offset] = \
-                    (image[sect_addresses[sect.name] + offset] + (ents[ext_name] + byte) // 0x100) & 0xFF
-
-
+        for ext_name in sect.external:
+            for offset, entry_bytes in map(astuple, sect.external[ext_name]):
+                pos = sect_addresses[sect.name] + offset
+                lower_limit = 1 << 8 * entry_bytes.start
+                val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
+                val += sect.lower_parts.get(offset, 0)
+                val += ents[ext_name]
+                val %= (1 << 8 * entry_bytes.stop)
+                image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little',
+                                                                                  signed=False)
+                if entry_bytes.start > 0:
+                    sect.lower_parts[pos] = val % lower_limit
 
     return image, code_locations

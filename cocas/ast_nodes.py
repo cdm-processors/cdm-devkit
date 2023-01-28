@@ -1,9 +1,13 @@
 from dataclasses import dataclass
-from cdm_asm.location import CodeLocation
+from typing import Optional
+
+from cocas.location import CodeLocation
+
 
 @dataclass
 class RegisterNode:
     number: int
+
 
 @dataclass
 class LabelNode:
@@ -15,17 +19,20 @@ class LocatableNode:
     def __post_init__(self):
         self.location: CodeLocation = CodeLocation()
 
+
 @dataclass
 class TemplateFieldNode(LocatableNode):
     template_name: str
     field_name: str
 
+
 @dataclass
 class RelocatableExpressionNode(LocatableNode):
-    byte_specifier: str | None
+    byte_specifier: Optional[str]
     add_terms: list
     sub_terms: list
     const_term: int
+
 
 @dataclass
 class LabelDeclarationNode(LocatableNode):
@@ -33,16 +40,19 @@ class LabelDeclarationNode(LocatableNode):
     entry: bool
     external: bool
 
+
 @dataclass
 class InstructionNode(LocatableNode):
     mnemonic: str
     arguments: list
 
+
 @dataclass
 class ConditionNode:
     lines: list
     branch_mnemonic: str
-    conjunction: str
+    conjunction: Optional[str]
+
 
 @dataclass
 class ConditionalStatementNode:
@@ -50,35 +60,29 @@ class ConditionalStatementNode:
     then_lines: list
     else_lines: list
 
+
 @dataclass
 class WhileLoopNode:
     condition_lines: list
     branch_mnemonic: str
     lines: list
 
+
 @dataclass
 class UntilLoopNode:
     lines: list
     branch_mnemonic: str
 
+
 @dataclass
 class BreakStatementNode(LocatableNode):
     pass
+
 
 @dataclass
 class ContinueStatementNode(LocatableNode):
     pass
 
-@dataclass
-class SaveRestoreStatementNode:
-    saved_register: RegisterNode
-    lines: list
-    restored_register: RegisterNode
-
-@dataclass
-class GotoStatementNode(LocatableNode):
-    branch_mnemonic: str
-    expr: RelocatableExpressionNode
 
 @dataclass
 class SectionNode:
@@ -94,13 +98,16 @@ class SectionNode:
 class AbsoluteSectionNode(SectionNode):
     address: int
 
+
 @dataclass
 class RelocatableSectionNode(SectionNode):
     name: str
 
+
 @dataclass
 class TemplateSectionNode(SectionNode):
     name: str
+
 
 @dataclass
 class ProgramNode:

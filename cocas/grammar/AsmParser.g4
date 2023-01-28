@@ -12,6 +12,8 @@ from base64 import b64decode
     self.current_offset = 0
 }
 
+program_nomacros : NEWLINE* section* End ;
+
 program : NEWLINE* line_mark+ section* End ;
 
 section
@@ -33,8 +35,6 @@ code_block
     | conditional
     | while_loop
     | until_loop
-    | save_restore_statement
-    | goto_statement
     | line_mark
     )*
     ;
@@ -42,13 +42,13 @@ code_block
 line_mark locals [
 source_file = '',
 source_line = 0
-] : LINE_MARK_MARKER  line_number filepath  WORD? NEWLINE+ {
-    self.current_line = int($line_number.text)
-    self.current_file =  b64decode($filepath.text[3:]).decode()
-    $source_file = self.current_file
-    $source_line = self.current_line
-    self.current_offset = $line_number.start.line - self.current_line + 1
-};
+] : LINE_MARK_MARKER  line_number filepath WORD? NEWLINE+
+    {self.current_line = int($line_number.text)}
+    {self.current_file =  b64decode($filepath.text[3:]).decode()}
+    {$source_file = self.current_file}
+    {$source_line = self.current_line}
+    {self.current_offset = $line_number.start.line - self.current_line + 1}
+    ;
 
 line_number: DECIMAL_NUMBER;
 filepath: BASE64;
@@ -78,13 +78,6 @@ while_condition : code_block ;
 
 until_loop : Do NEWLINE+ code_block Until branch_mnemonic NEWLINE+ ;
 
-save_restore_statement : save_statement code_block restore_statement ;
-save_statement : Save register NEWLINE+ ;
-restore_statement : Restore register? NEWLINE+ ;
-
-goto_statement : Goto branch_mnemonic COMMA goto_argument NEWLINE+ ;
-goto_argument : addr_expr | byte_expr ;
-
 argument
     : character
     | string
@@ -98,7 +91,7 @@ addr_expr : first_term add_term* ;
 first_term : (PLUS | MINUS)? term ;
 add_term : (PLUS | MINUS) term ;
 term : number | template_field | label ;
-byte_specifier : Low | High ;
+byte_specifier : name;
 
 template_field : name DOT name ;
 label : name ;
@@ -121,15 +114,10 @@ name
     | End
     | Ext
     | Fi
-    | Goto
-    | High
     | If
     | Is
-    | Low
     | Macro
-    | Restore
     | Rsect
-    | Save
     | Stays
     | Then
     | Tplate

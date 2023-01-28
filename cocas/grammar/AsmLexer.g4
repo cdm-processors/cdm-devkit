@@ -8,22 +8,16 @@ Else : 'else' ;
 End : 'end' ;
 Ext : 'ext' ;
 Fi : 'fi' ;
-Goto : 'goto' ;
 If : 'if' ;
 Is : 'is' ;
 Macro : 'macro' ;
-Restore : 'restore' ;
 Rsect : 'rsect' ;
-Save : 'save' ;
 Stays : 'stays' ;
 Then : 'then' ;
 Tplate : 'tplate' ;
 Until : 'until' ;
 Wend : 'wend' ;
 While : 'while' ;
-
-Low : 'low' ;
-High : 'high' ;
 
 DOT : '.' ;
 COMMA : ',' ;

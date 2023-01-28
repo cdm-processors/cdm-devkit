@@ -2,13 +2,13 @@ from antlr4 import *
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from dataclasses import dataclass
 
-from cdm_asm.location import CodeLocation
-from cdm_asm.generated.MacroLexer import MacroLexer
-from cdm_asm.generated.MacroParser import MacroParser
-from cdm_asm.generated.MacroVisitor import MacroVisitor
+from cocas.location import CodeLocation
+from cocas.generated.MacroLexer import MacroLexer
+from cocas.generated.MacroParser import MacroParser
+from cocas.generated.MacroVisitor import MacroVisitor
 from base64 import b64encode
 import re
-from cdm_asm.error import AntlrErrorListener, CdmExceptionTag, CdmException, CdmTempException
+from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException, CdmTempException
 
 
 def unique(params: list[str]):
@@ -35,6 +35,7 @@ def unique(params: list[str]):
         defined_vars[param] = f'r{i}'
     return defined_vars
 
+
 macro_instructions = {
     'unique': unique,
 }
@@ -43,19 +44,24 @@ macro_instructions = {
 @dataclass
 class MacroParameter:
     n: int
+
+
 @dataclass
 class MacroNonce:
     pass
 
+
 @dataclass
 class MacroVariable:
     name_pieces: list
+
 
 @dataclass
 class MacroLine:
     label_pieces: list
     instruction_pieces: list
     parameter_pieces: list[list]
+
 
 @dataclass
 class MacroDefinition:
@@ -77,14 +83,17 @@ def substitute_piece(piece, params: list[str], nonce: str, variables: dict[str, 
     else:
         return piece
 
+
 def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, variables: dict[str, str]):
     sub = lambda p: substitute_piece(p, params, nonce, variables)
     sub_all = lambda ps: ''.join(map(sub, ps))
     label_part = sub_all(line.label_pieces)
     instruction_part = sub_all(line.instruction_pieces)
     parameter_parts = list(map(sub_all, line.parameter_pieces))
-    return (label_part, instruction_part, parameter_parts)
+    return label_part, instruction_part, parameter_parts
 
+
+# noinspection PyPep8Naming
 class ExpandMacrosVisitor(MacroVisitor):
     def __init__(self, rewriter: TokenStreamRewriter, mlb_macros, filepath: str):
         self.nonce = 0
@@ -95,7 +104,8 @@ class ExpandMacrosVisitor(MacroVisitor):
     def _generate_location_line(self, filepath: str, line: int, info: str = None) -> str:
         if info is not None:
             info = " " + info
-        else:info = ""
+        else:
+            info = ""
         return f'-| {line} fp-{b64encode(filepath.encode()).decode()} {info}\n'
 
     def add_macro(self, macro: MacroDefinition):
@@ -105,6 +115,8 @@ class ExpandMacrosVisitor(MacroVisitor):
             raise CdmTempException(f'Multiple definitions of macro {macro.name}')
         self.macros[macro.name][macro.arity] = macro
 
+    # Returns a None for things as asect or empty line.
+    # Returns string of macro
     def expand_macro(self, macro_name: str, macro_params: list[str]):
         arity = len(macro_params)
         if macro_name in self.macros and arity in self.macros[macro_name]:
@@ -145,13 +157,14 @@ class ExpandMacrosVisitor(MacroVisitor):
                         else:
                             ret_parts.append('\n')
                         ret_parts.append(expanded_text)
-                        ret_parts.append(f'\n{self._generate_location_line(macro.location.file, macro.location.line + line_number+1)}')
+                        location_line = self._generate_location_line(macro.location.file,
+                                                                     macro.location.line + line_number + 1)
+                        ret_parts.append(f'\n{location_line}')
                     else:
                         ret_parts.append(f'{label_part}{instruction_part}{",".join(parameter_parts)}\n')
                 line_number += 1
             return ''.join(ret_parts)
         return None
-
 
     def visitMlb(self, ctx: MacroParser.MlbContext):
         for child in filter(lambda c: isinstance(c, MacroParser.Mlb_macroContext), ctx.children):
@@ -176,7 +189,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                             expanded_text = f'{label}\n{expanded_text}'
 
                         mstart = self._generate_location_line(self.filepath, child.start.line, "mstart")
-                        mstop = self._generate_location_line(self.filepath, child.stop.line+1, "mstop")
+                        mstop = self._generate_location_line(self.filepath, child.stop.line + 1, "mstop")
                         expanded_text = f'{mstart}{expanded_text}{mstop}'
                         self.rewriter.insertBeforeToken(child.start, expanded_text)
                         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, child.start, child.stop)
@@ -189,7 +202,7 @@ class ExpandMacrosVisitor(MacroVisitor):
         arity = int(header.DIGIT().getText())
         lines = self.visitMacro_body(ctx.macro_body())
         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, ctx.start, ctx.stop)
-        self.rewriter.insertAfterToken(ctx.stop, self._generate_location_line(self.filepath, ctx.stop.line+1))
+        self.rewriter.insertAfterToken(ctx.stop, self._generate_location_line(self.filepath, ctx.stop.line + 1))
         return MacroDefinition(name, arity, lines, CodeLocation(self.filepath, ctx.macro_body().start.line, 0))
 
     def visitMlb_macro(self, ctx: MacroParser.Mlb_macroContext):
@@ -224,7 +237,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             parameters.append(param.getText().strip())
         if parameters == ['']:
             parameters = []
-        return (label, instruction, parameters)
+        return label, instruction, parameters
 
     def visitLabels(self, ctx: MacroParser.LabelsContext):
         label_pieces = []
@@ -278,14 +291,18 @@ def read_mlb(filepath):
 
 # filepath should be absolute
 def process_macros(input_stream: InputStream, library_macros, filepath: str):
-    lexer = MacroLexer(input_stream)
+    lexer = MacroLexer(input_stream)  # using generated class
     lexer.removeErrorListeners()
+    # Adds a class that will be called somehow from antlr. And it will raise exceptions with MACRO and filepath
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
     token_stream = CommonTokenStream(lexer)
-    parser = MacroParser(token_stream)
+
+    parser = MacroParser(token_stream)  # using generated class
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
-    cst = parser.program()
+    cst = parser.program()  # .children contains lines, their .children are tokens
     rewriter = TokenStreamRewriter(token_stream)
-    ExpandMacrosVisitor(rewriter, library_macros, filepath).visit(cst)
-    return InputStream(rewriter.getDefaultText())
+    emv = ExpandMacrosVisitor(rewriter, library_macros, filepath)
+    emv.visit(cst)
+    new_test = rewriter.getDefaultText()
+    return InputStream(new_test)
