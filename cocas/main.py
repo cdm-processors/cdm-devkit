@@ -56,8 +56,8 @@ def main():
     if len(args.sources) == 0:
         print('Error: no source files provided')
 
-    target_instructions = importlib.import_module(f'targets.{target}.target_instructions', 'cocas').TargetInstructions
-    code_segments = importlib.import_module(f'targets.{target}.code_segments', 'cocas').CodeSegments
+    target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions', 'cocas').TargetInstructions
+    code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
 
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
