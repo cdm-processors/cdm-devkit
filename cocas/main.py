@@ -59,7 +59,7 @@ def main():
     target_instructions = importlib.import_module(f'targets.{target}.target_instructions', 'cocas').TargetInstructions
     code_segments = importlib.import_module(f'targets.{target}.code_segments', 'cocas').CodeSegments
 
-    library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'standard.mlb').absolute()))
+    library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
 
     for filepath in args.sources:
