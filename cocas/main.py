@@ -45,6 +45,7 @@ def main():
 
     if len(args.sources) == 0:
         print('Error: no source files provided')
+        return
 
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
