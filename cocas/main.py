@@ -15,7 +15,32 @@ from cocas.ast_builder import build_ast
 from cocas.error import CdmException, log_error, CdmLinkException, CdmExceptionTag
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
-from cocas.write_image import WriteImageInterface
+
+
+def write_image(filename: str, arr: bytearray):
+    """
+    Write the contents or array into file in logisim-compatible format
+
+    :param filename: Path to output file
+    :param arr: Bytearray to be written
+    """
+    f = open(filename, mode='wb')
+    f.write(bytes("v2.0 raw\n", 'UTF-8'))
+    zeroes = 0
+    for i, byte in enumerate(arr):
+        if byte == 0:
+            zeroes += 1
+        else:
+            if zeroes != 0:
+                if zeroes > 4:
+                    f.write(bytes(f'{zeroes}*00\n', 'UTF-8'))
+                    f.write(bytes(f'# {i:#2x}\n', 'UTF-8'))
+                else:
+                    for _ in range(zeroes):
+                        f.write(bytes(f'00\n', 'UTF-8'))
+                zeroes = 0
+            f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
+    f.close()
 
 
 def main():
@@ -50,8 +75,6 @@ def main():
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
     code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
-    write_image: WriteImageInterface
-    write_image = importlib.import_module(f'cocas.targets.{target}.write_image', 'cocas').WriteImage
 
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
@@ -93,9 +116,9 @@ def main():
 
     try:
         if args.output is not None:
-            write_image.write_image(args.output, data)
+            write_image(args.output, data)
         else:
-            write_image.write_image("out.img", data)
+            write_image("out.img", data)
     except OSError as e:
         message = e.strerror
         if e.filename is not None:
