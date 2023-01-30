@@ -1,18 +1,37 @@
 package org.cdm.logisim.emulator;
 
+import com.cburch.logisim.data.BitWidth;
+import com.cburch.logisim.data.Bounds;
+import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.instance.InstanceFactory;
 import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.StringGetter;
+import com.cburch.logisim.util.StringUtil;
 
-public class Processor extends InstanceFactory {
+import java.awt.*;
+
+public class Processor {
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
     public static StringGetter getter(String key) {
         return source.getter(key);
+    }
+
+    public static String get(String key) {
+        return source.get(key);
+    }
+
+    public static String get(String key, String arg0) {
+        return StringUtil.format(source.get(key), arg0);
+    }
+
+    public static String get(String key, String arg0, String arg1) {
+        return StringUtil.format(source.get(key), arg0, arg1);
     }
     public Processor() {
         super("Processor");
@@ -70,7 +89,65 @@ public class Processor extends InstanceFactory {
     }
 
     @Override
-    public void paintInstance(InstancePainter instancePainter) {
+    public void paintInstance(InstancePainter painter) {
+        Graphics g = painter.getGraphics();
+        Bounds bds = painter.getBounds();
+        painter.drawBounds();
+
+        // draw contents
+        if (painter.getShowState()) {
+            MemState state = getState(painter);
+            state.paint(painter.getGraphics(), bds.getX(), bds.getY());
+        } else {
+            BitWidth addr = painter.getAttributeValue(ADDR_ATTR);
+            int addrBits = addr.getWidth();
+            int bytes = 1 << addrBits;
+            String label;
+            if (this instanceof BankedROM) {
+
+                if (addrBits >= 30) {
+                    label = StringUtil.format(get("romGigabyteLabel"), ""
+                            + (bytes >>> 30));
+                } else if (addrBits >= 20) {
+                    label = StringUtil.format(get("romMegabyteLabel"), ""
+                            + (bytes >> 20));
+                } else if (addrBits >= 10) {
+                    label = StringUtil.format(get("romKilobyteLabel"), ""
+                            + (bytes >> 10));
+                } else {
+                    label = StringUtil.format(get("romByteLabel"), ""
+                            + bytes);
+                }
+            } else {
+                if (addrBits >= 30) {
+                    label = StringUtil.format(get("ramGigabyteLabel"), ""
+                            + (bytes >>> 30));
+                } else if (addrBits >= 20) {
+                    label = StringUtil.format(get("ramMegabyteLabel"), ""
+                            + (bytes >> 20));
+                } else if (addrBits >= 10) {
+                    label = StringUtil.format(get("ramKilobyteLabel"), ""
+                            + (bytes >> 10));
+                } else {
+                    label = StringUtil.format(get("ramByteLabel"), ""
+                            + bytes);
+                }
+            }
+            GraphicsUtil.drawCenteredText(g, label, bds.getX() + bds.getWidth()
+                    / 2, bds.getY() + bds.getHeight() / 2);
+        }
+
+        // draw input and output ports
+        painter.drawPort(DATA, BankedStrings.get("ramDataLabel"), Direction.WEST);
+        painter.drawPort(ADDR, BankedStrings.get("ramAddrLabel"), Direction.EAST);
+        g.setColor(Color.GRAY);
+        painter.drawPort(CS, BankedStrings.get("ramCSLabel"), Direction.SOUTH);
+
+        if (this instanceof BankedROM) {
+            painter.drawPort(BankedROM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
+        } else if (this instanceof BankedRAM) {
+            painter.drawPort(BankedRAM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
+        }
 
     }
 
