@@ -1,0 +1,53 @@
+name: Build and publish
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      package-version:
+        description: "Package version"
+        required: true
+
+jobs:
+  build:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Setup vsce
+        run: npm install -g vsce
+      
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Run make
+        run: make VERSION=${{ inputs.package-version }}
+
+      - name: Publish release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ inputs.package-version }}"
+          prerelease: false
+          title: "Release ${{ inputs.package-version }}"
+          files: |
+            build/cdm-devkit-misc-*
+            build/vscode-cdm-extension-*.*.*.vsix
+            build/cdm_devkit-*.whl
