@@ -20,6 +20,8 @@ def assert_args(args, *types, single_type=False):
     for i in range(len(args)):
         if not isinstance(args[i], ts[i]):
             raise CdmTempException(f'Incompatible argument type {type(args[i])}')
+        if isinstance(args[i], RegisterNode) and not 0 <= args[i].number <= 3:
+            raise CdmTempException(f'Invalid register number r{args[i].number}')
 
 
 class TargetInstructions(TargetInstructionsInterface):
