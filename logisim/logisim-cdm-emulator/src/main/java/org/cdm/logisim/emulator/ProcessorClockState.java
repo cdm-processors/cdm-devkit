@@ -17,26 +17,29 @@ public class ProcessorClockState implements Cloneable, InstanceData {
 
     public ProcessorClockState clone() {
         try {
-            return (ProcessorClockState)super.clone();
+            return (ProcessorClockState) super.clone();
         } catch (CloneNotSupportedException var2) {
             return null;
         }
     }
 
-    public boolean updateClock(Value newClock, Object trigger, Processor.ClockType type) {
+    public boolean updateClock(Value newClock, Object trigger, ClockType type) {
         Value oldClock = null;
-        switch (type){
-            case IRQ -> {
+        switch (type) {
+            case IRQ: {
                 oldClock = this.irqLastClock;
                 this.irqLastClock = newClock;
+                break;
             }
-            case EXC -> {
+            case EXC: {
                 oldClock = this.excLastClock;
                 this.excLastClock = newClock;
+                break;
             }
-            case CLK -> {
+            case CLK: {
                 oldClock = this.clkLastClock;
                 this.clkLastClock = newClock;
+                break;
             }
         }
         if (trigger != null && trigger != StdAttr.TRIG_RISING) {
@@ -52,5 +55,9 @@ public class ProcessorClockState implements Cloneable, InstanceData {
         } else {
             return oldClock == Value.FALSE && newClock == Value.TRUE;
         }
+    }
+
+    public enum ClockType {
+        EXC, CLK, IRQ
     }
 }
