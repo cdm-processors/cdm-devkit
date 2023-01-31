@@ -41,8 +41,8 @@ After installation you get several components:
 
 - **cdm-devkit-misc** archive
 
-    - Processor implementations (`logisim/cdm*`)
-    - Logisim libraries (`logisim/`)
+    - Processor implementations (`./`)
+    - Logisim libraries (`jar/`)
         
         - `logisim-banked-memory` - banked memory for `cdm16`
         - `logisim-cdm-emulator` - emulated CdM processors
@@ -109,9 +109,15 @@ You can report a bug with GitHub Issues.
 
 ### Building all projects at once
 
-There is a `Makefile` that will build all projects and prepare files for distribution.
+There is a `Makefile` that will build all projects and prepare files for distribution
 
 - Run `make` to build all projects
+
+<br>
+
+Set `VERSION` variable if you want to specify project version
+- Example: `make VERSION=1.2.3`
+- `VERSION` should be valid SemVer version
 
 <br>
 
