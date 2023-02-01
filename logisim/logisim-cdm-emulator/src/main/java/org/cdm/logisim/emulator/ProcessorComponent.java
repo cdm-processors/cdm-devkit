@@ -7,27 +7,15 @@ import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.StringGetter;
 import com.cburch.logisim.util.StringUtil;
 
+import java.awt.*;
+
 class ProcessorComponent extends InstanceFactory {
     Processor processor;
-
-    static final int DATA_IN = 0;
-    static final int DATA_OUT = 1;
-    static final int ADDRESS = 2;
-    static final int MEM = 3;
-    static final int DATA = 4;
-    static final int READ = 5;
-    static final int WORD = 6;
-    static final int IRQ = 7;
-    static final int INT_NUMBER = 8;
-    static final int EXC = 9;
-    static final int CLK = 10;
-    static final int EXC_NUMBER = 11;
-    static final int HOLD_WAIT = 12;
-    static final int HALTED = 13;
 
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
@@ -36,88 +24,128 @@ class ProcessorComponent extends InstanceFactory {
 
         setOffsetBounds(Bounds.create(0, 0, 120, 120));
 
-        processor = null;
         Port[] ps = new Port[]{
-                new Port(120, 110, "input", 16),
-                new Port(120, 100, "output", 16),
-                new Port(120, 80, "output", 16),
-                new Port(120, 40, "output", 1),
-                new Port(120, 30, "output", 1),
-                new Port(120, 50, "output", 1),
-                new Port(120, 60, "output", 1),
-                new Port(0, 30, "input", 1),
-                new Port(0, 40, "input", 5),
-                new Port(0, 70, "input", 1),
-                new Port(20, 120, "input", 5),
-                new Port(0, 80, "input", 1),
-                new Port(0, 100, "input", 1),
-                new Port(50, 120, "output", 1)};
+                new Port(120, 110, "input", 16), //in
+                new Port(120, 100, "output", 16), //out
+                new Port(120, 80, "output", 16), //addr
+                new Port(120, 40, "output", 1), //mem
+                new Port(120, 30, "output", 1), //data
+                new Port(120, 50, "output", 1), //read
+                new Port(120, 60, "output", 1), //word
+                new Port(0, 30, "input", 1), //irq
+                new Port(0, 40, "input", 5), //intnumber
+                new Port(0, 70, "input", 1), //exc
+                new Port(20, 120, "input", 1), //clk
+                new Port(0, 80, "input", 5), //excnumber
+                new Port(0, 100, "input", 1), //hold
+                new Port(50, 120, "output", 2), //halted (status)
 
-        ps[DATA_IN].setToolTip(getter("dataIn"));
-        ps[DATA_OUT].setToolTip(getter("dataOut"));
-        ps[ADDRESS].setToolTip(getter("address"));
-        ps[MEM].setToolTip(getter("mem"));
-        ps[DATA].setToolTip(getter("data"));
-        ps[READ].setToolTip(getter("read"));
+                new Port(10, 0, "output", 16),
+                new Port(20, 0, "output", 16),
+                new Port(30, 0, "output", 16),
+                new Port(40, 0, "output", 16),
+                new Port(50, 0, "output", 16),
+                new Port(60, 0, "output", 16),
+                new Port(70, 0, "output", 16),
+                new Port(80, 0, "output", 16),
+                new Port(90, 0, "output", 16),
+                new Port(100, 0, "output", 16),
+                new Port(110, 0, "output", 16),
+                new Port(80, 120, "output", 1),
+                new Port(0, 50, "output", 1)};
+
+        ps[DATA_IN].setToolTip(getter("in"));
+        ps[DATA_OUT].setToolTip(getter("out"));
+        ps[ADDRESS].setToolTip(getter("addr"));
+        ps[MEM].setToolTip(getter("memory"));
+        ps[DATA].setToolTip(getter("data/ins'"));
+        ps[READ].setToolTip(getter("read/write'"));
         ps[WORD].setToolTip(getter("word"));
-        ps[IRQ].setToolTip(getter("irq"));
-        ps[INT_NUMBER].setToolTip(getter("intNumber"));
-        ps[EXC].setToolTip(getter("exc"));
+        ps[IRQ].setToolTip(getter("IRQ"));
+        ps[INT_NUMBER].setToolTip(getter("int_vector"));
+        ps[EXC].setToolTip(getter("EXC"));
         ps[CLK].setToolTip(getter("clk"));
-        ps[EXC_NUMBER].setToolTip(getter("excNumber"));
-        ps[HOLD_WAIT].setToolTip(getter("hold/wait"));
-        ps[HALTED].setToolTip(getter("halted"));
+        ps[EXC_NUMBER].setToolTip(getter("exc_vector"));
+        ps[HOLD_WAIT].setToolTip(getter("hold"));
+        ps[HALTED].setToolTip(getter("status"));
+        ps[R0].setToolTip(getter("r0"));
+        ps[R1].setToolTip(getter("r1"));
+        ps[R2].setToolTip(getter("r2"));
+        ps[R3].setToolTip(getter("r3"));
+        ps[R4].setToolTip(getter("r4"));
+        ps[R5].setToolTip(getter("r5"));
+        ps[R6].setToolTip(getter("r6"));
+        ps[FP].setToolTip(getter("fp"));
+        ps[PC].setToolTip(getter("pc"));
+        ps[SP].setToolTip(getter("sp"));
+        ps[PS].setToolTip(getter("ps"));
+        ps[FETCH].setToolTip(getter("fetch"));
+        ps[IAck].setToolTip(getter("IAck"));
+
         this.setPorts(ps);
+        processor = new Processor(this);
     }
 
     @Override
     public void paintInstance(InstancePainter painter) {
+        Graphics g = painter.getGraphics();
+        Bounds bds = painter.getBounds();
         painter.drawBounds();
         painter.drawLabel();
 
         // DATA_IN, DATA_OUT, ADDRESS, MEM, DATA, READ, WORD, IRQ, INT_NUMBER, EXC, CLK , EXC_NUMBER , HOLD_WAIT , HALTED;
-        painter.drawPort(DATA_IN, get("dataIn"), Direction.EAST);
-        painter.drawPort(DATA_OUT, get("dataOut"), Direction.EAST);
-        painter.drawPort(ADDRESS, get("address"), Direction.EAST);
-        painter.drawPort(MEM, get("mem"), Direction.EAST);
-        painter.drawPort(DATA, get("data"), Direction.EAST);
-        painter.drawPort(READ, get("read"), Direction.EAST);
-        painter.drawPort(WORD, get("word"), Direction.EAST);
-        painter.drawPort(IRQ, get("irq"), Direction.WEST);
-        painter.drawPort(INT_NUMBER, get("intNumber"), Direction.WEST);
-        painter.drawPort(EXC, get("exc"), Direction.WEST);
-        painter.drawPort(CLK, get("clk"), Direction.SOUTH);
-        painter.drawPort(EXC_NUMBER, get("excNumber"), Direction.WEST);
-        painter.drawPort(HOLD_WAIT, get("hold/wait"), Direction.WEST);
-        painter.drawPort(HALTED, get("halted"), Direction.SOUTH);
+        painter.drawPort(DATA_IN, get("in"), Direction.WEST);
+        painter.drawPort(DATA_OUT, get("out"), Direction.WEST);
+        painter.drawPort(ADDRESS, get("addr"), Direction.WEST);
+        painter.drawPort(MEM, get("memory"), Direction.WEST);
+        painter.drawPort(DATA, get("data/ins'"), Direction.WEST);
+        painter.drawPort(READ, get("read/write'"), Direction.WEST);
+        painter.drawPort(WORD, get("word"), Direction.WEST);
+        painter.drawPort(IRQ, get("IRQ"), Direction.EAST);
+        painter.drawPort(INT_NUMBER, get("int_vector"), Direction.EAST);
+        painter.drawPort(EXC, get("EXC"), Direction.EAST);
+        painter.drawPort(CLK);
+        painter.drawPort(EXC_NUMBER, get("exc_vector"), Direction.EAST);
+        painter.drawPort(HOLD_WAIT, get("hold"), Direction.EAST);
+
+        painter.drawPort(FETCH, get("fetch"), Direction.SOUTH);
+        painter.drawPort(IAck, get("IAck"), Direction.EAST);
+        painter.drawPort(HALTED, get("status"), Direction.SOUTH);
+
+        painter.drawClock(CLK, Direction.NORTH);
 
 
-        /*
-        g.setColor(Color.GRAY);
-        painter.drawPort(3, "0", Direction.SOUTH);
-        painter.drawPort(4, Strings.get("memEnableLabel"), Direction.EAST);
-        g.setColor(Color.BLACK);
-        painter.drawClock(2, Direction.NORTH);
-        if (b == null) {
-            GraphicsUtil.drawText(g, a, bds.getX() + 15, bds.getY() + 4, 0, -1);
-        } else {
-            GraphicsUtil.drawText(g, a, bds.getX() + 15, bds.getY() + 3, 0, -1);
-            GraphicsUtil.drawText(g, b, bds.getX() + 15, bds.getY() + 15, 0, -1);
-        }
+        g.setFont(
+                increaseFontSize(
+                        makeBoldFont(g.getFont()),
+                        -2
+                )
+        );
 
-        if (this instanceof BankedROM) {
-            painter.drawPort(BankedROM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
-        } else if (this instanceof BankedRAM) {
-            painter.drawPort(BankedRAM.BITS, BankedStrings.get("bit"), Direction.SOUTH);
-        }
+        painter.drawPort(R0, get("r0"), Direction.NORTH);
+        painter.drawPort(R1, get("...."), Direction.NORTH);
+        painter.drawPort(R2, get("...."), Direction.NORTH);
+        painter.drawPort(R3, get("...."), Direction.NORTH);
+        painter.drawPort(R4, get("...."), Direction.NORTH);
+        painter.drawPort(R5, get("...."), Direction.NORTH);
+        painter.drawPort(R6, get("r6"), Direction.NORTH);
+        painter.drawPort(FP, get("fp"), Direction.NORTH);
+        painter.drawPort(PC, get("pc"), Direction.NORTH);
+        painter.drawPort(SP, get("sp"), Direction.NORTH);
+        painter.drawPort(PS, get("ps"), Direction.NORTH);
 
-         */
+        g.setFont(
+                increaseFontSize(
+                        g.getFont(),
+                        6
+                )
+        );
 
+        GraphicsUtil.drawText(g, "Cdm-16", bds.getX() + 65, bds.getY() + 85, 0, -1);
     }
 
     @Override
     public void propagate(InstanceState state) {
-        Processor processor = new Processor(this);
         ProcessorClockState data = (ProcessorClockState) state.getData();
         if (data == null) {
             data = new ProcessorClockState();
@@ -135,18 +163,18 @@ class ProcessorComponent extends InstanceFactory {
 
 
         if (irqTriggered) {
-            Processor.externalInterrupt(state.getPort(8).toIntValue());
+            processor.externalInterrupt(state.getPort(8).toIntValue());
         }
         if (excTriggered) {
-            Processor.externalException(state.getPort(11).toIntValue());
+            processor.externalException(state.getPort(11).toIntValue());
         }
         if (clkTriggered) {
-            Processor.clockRising();
+            processor.clockRising();
         } else {
-            Processor.clockFalling();
+            processor.clockFalling();
         }
 
-        Processor.update();
+        processor.update();
     }
 
     public static StringGetter getter(String key) {
@@ -164,4 +192,49 @@ class ProcessorComponent extends InstanceFactory {
     public static String get(String key, String arg0, String arg1) {
         return StringUtil.format(source.get(key), arg0, arg1);
     }
+
+    public Font increaseFontSize(Font currentFont, int delta) {
+        return new Font(
+                currentFont.getName(),
+                currentFont.getStyle(),
+                currentFont.getSize() + delta
+        );
+    }
+
+    public Font makeBoldFont(Font currentFont) {
+        return new Font(
+                currentFont.getName(),
+                Font.BOLD,
+                currentFont.getSize()
+        );
+    }
+
+    static final int DATA_IN = 0;
+    static final int DATA_OUT = 1;
+    static final int ADDRESS = 2;
+    static final int MEM = 3;
+    static final int DATA = 4;
+    static final int READ = 5;
+    static final int WORD = 6;
+    static final int IRQ = 7;
+    static final int INT_NUMBER = 8;
+    static final int EXC = 9;
+    static final int CLK = 10;
+    static final int EXC_NUMBER = 11;
+    static final int HOLD_WAIT = 12;
+    static final int HALTED = 13;
+    static final int R0 = 14;
+    static final int R1 = 15;
+    static final int R2 = 16;
+    static final int R3 = 17;
+    static final int R4 = 18;
+    static final int R5 = 19;
+    static final int R6 = 20;
+    static final int FP = 21;
+    static final int PC = 22;
+    static final int SP = 23;
+    static final int PS = 24;
+    static final int FETCH = 25;
+    static final int IAck = 26;
+
 }

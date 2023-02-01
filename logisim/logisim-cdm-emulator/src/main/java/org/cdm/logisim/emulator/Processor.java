@@ -7,24 +7,24 @@ public class Processor {
         this.processorComponent = processorComponent;
     }
 
-    public static void externalInterrupt(int interruptNumber) {
-
+    public void externalInterrupt(int interruptNumber) {
+        System.out.println("externalInterrupt");
     }
 
-    public static void externalException(int exceptionNumber) {
-
+    public void externalException(int exceptionNumber) {
+        System.out.println("externalException");
     }
 
-    public static void clockRising() {
-
+    public void clockRising() {
+        System.out.println("clockRising");
     }
 
-    public static void clockFalling() {
-
+    public void clockFalling() {
+        System.out.println("clockFalling");
     }
 
-    public static void update() {
-
+    public void update() {
+        System.out.println("update");
     }
 
 }
