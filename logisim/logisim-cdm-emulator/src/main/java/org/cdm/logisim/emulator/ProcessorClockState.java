@@ -8,6 +8,7 @@ public class ProcessorClockState implements Cloneable, InstanceData {
     private Value irqLastClock;
     private Value excLastClock;
     private Value clkLastClock;
+    private Value clkBeforeLastClock = Value.FALSE;
 
     public ProcessorClockState() {
         this.irqLastClock = Value.FALSE;
@@ -38,23 +39,29 @@ public class ProcessorClockState implements Cloneable, InstanceData {
             }
             case CLK: {
                 oldClock = this.clkLastClock;
+                this.clkBeforeLastClock = this.clkLastClock;
                 this.clkLastClock = newClock;
                 break;
             }
         }
-        if (trigger != null && trigger != StdAttr.TRIG_RISING) {
-            if (trigger == StdAttr.TRIG_FALLING) {
-                return oldClock == Value.TRUE && newClock == Value.FALSE;
-            } else if (trigger == StdAttr.TRIG_HIGH) {
-                return newClock == Value.TRUE;
-            } else if (trigger == StdAttr.TRIG_LOW) {
-                return newClock == Value.FALSE;
-            } else {
-                return oldClock == Value.FALSE && newClock == Value.TRUE;
-            }
+
+        if (trigger == null) {
+            return oldClock == Value.FALSE && newClock == Value.TRUE;
+        }
+
+        if (trigger == StdAttr.TRIG_FALLING) {
+            return oldClock == Value.TRUE && newClock == Value.FALSE;
+        } else if (trigger == StdAttr.TRIG_HIGH) {
+            return newClock == Value.TRUE;
+        } else if (trigger == StdAttr.TRIG_LOW) {
+            return newClock == Value.FALSE;
         } else {
             return oldClock == Value.FALSE && newClock == Value.TRUE;
         }
+    }
+
+    public boolean checkClockFalling(Value newClock) {
+        return clkBeforeLastClock == Value.TRUE && newClock == Value.FALSE;
     }
 
     public enum ClockType {

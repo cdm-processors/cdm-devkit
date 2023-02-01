@@ -40,19 +40,19 @@ class ProcessorComponent extends InstanceFactory {
                 new Port(0, 100, "input", 1), //hold
                 new Port(50, 120, "output", 2), //halted (status)
 
-                new Port(10, 0, "output", 16),
-                new Port(20, 0, "output", 16),
-                new Port(30, 0, "output", 16),
-                new Port(40, 0, "output", 16),
-                new Port(50, 0, "output", 16),
-                new Port(60, 0, "output", 16),
-                new Port(70, 0, "output", 16),
-                new Port(80, 0, "output", 16),
-                new Port(90, 0, "output", 16),
-                new Port(100, 0, "output", 16),
-                new Port(110, 0, "output", 16),
-                new Port(80, 120, "output", 1),
-                new Port(0, 50, "output", 1)};
+                new Port(10, 0, "output", 16), //r0
+                new Port(20, 0, "output", 16), //r1
+                new Port(30, 0, "output", 16), //r2
+                new Port(40, 0, "output", 16), //r3
+                new Port(50, 0, "output", 16), //r4
+                new Port(60, 0, "output", 16), //r5
+                new Port(70, 0, "output", 16), //r6
+                new Port(80, 0, "output", 16), //fp
+                new Port(90, 0, "output", 16), //pc
+                new Port(100, 0, "output", 16), //sp
+                new Port(110, 0, "output", 16), //ps
+                new Port(80, 120, "output", 1), //fetch
+                new Port(0, 50, "output", 1)}; //IAck
 
         ps[DATA_IN].setToolTip(getter("in"));
         ps[DATA_OUT].setToolTip(getter("out"));
@@ -141,7 +141,7 @@ class ProcessorComponent extends InstanceFactory {
                 )
         );
 
-        GraphicsUtil.drawText(g, "Cdm-16", bds.getX() + 65, bds.getY() + 85, 0, -1);
+        GraphicsUtil.drawText(g, "CdM-16", bds.getX() + 65, bds.getY() + 85, 0, -1);
     }
 
     @Override
@@ -153,24 +153,24 @@ class ProcessorComponent extends InstanceFactory {
         }
 
         Object irqTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean irqTriggered = data.updateClock(state.getPort(7), irqTriggerType, ProcessorClockState.ClockType.IRQ);
+        boolean irqTriggered = data.updateClock(state.getPort(IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
 
         Object excTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean excTriggered = data.updateClock(state.getPort(9), excTriggerType, ProcessorClockState.ClockType.EXC);
+        boolean excTriggered = data.updateClock(state.getPort(EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
 
         Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean clkTriggered = data.updateClock(state.getPort(10), clkTriggerType, ProcessorClockState.ClockType.CLK);
-
+        boolean clkTriggered = data.updateClock(state.getPort(CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
 
         if (irqTriggered) {
-            processor.externalInterrupt(state.getPort(8).toIntValue());
+            processor.externalInterrupt(state.getPort(INT_NUMBER).toIntValue());
         }
         if (excTriggered) {
-            processor.externalException(state.getPort(11).toIntValue());
+            processor.externalException(state.getPort(EXC_NUMBER).toIntValue());
         }
+
         if (clkTriggered) {
             processor.clockRising();
-        } else {
+        } else if (data.checkClockFalling(state.getPort(CLK))){
             processor.clockFalling();
         }
 

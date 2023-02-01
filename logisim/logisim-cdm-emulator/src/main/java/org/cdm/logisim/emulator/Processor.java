@@ -8,11 +8,11 @@ public class Processor {
     }
 
     public void externalInterrupt(int interruptNumber) {
-        System.out.println("externalInterrupt");
+        System.out.println("externalInterrupt" + interruptNumber);
     }
 
     public void externalException(int exceptionNumber) {
-        System.out.println("externalException");
+        System.out.println("externalException " + exceptionNumber);
     }
 
     public void clockRising() {
