@@ -1,4 +1,4 @@
-from typing import get_origin, get_args, Union
+from typing import get_origin, get_args
 
 from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode
 from cocas.default_code_segments import CodeSegmentsInterface
@@ -26,7 +26,9 @@ class TargetInstructions(TargetInstructionsInterface):
                 args = line.arguments
                 if len(args) == 2:
                     assert_args(args, RegisterNode, RelocatableExpressionNode)
-                    return [CodeSegments.LdiSegment(*args)]
+                    ldi = CodeSegments.LdiSegment(*args)
+                    ldi.location = line.location
+                    return [ldi]
                 else:
                     raise CdmTempException(f'Expected 2 arguments, found {len(args)}')
             else:

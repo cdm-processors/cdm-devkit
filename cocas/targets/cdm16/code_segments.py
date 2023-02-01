@@ -1,3 +1,4 @@
+from copy import copy
 from dataclasses import dataclass, field
 
 import bitstruct
@@ -50,21 +51,12 @@ class CodeSegments(CodeSegmentsInterface):
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+            parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
             if parsed.external or parsed.relative_additions != 0 or not -64 <= parsed.value_with_relative < 64:
                 object_record.data.extend(pack("u3p6u4u3", 0b001, 2, self.reg))
                 offset = section.address + len(object_record.data)
                 object_record.data.extend((parsed.value_with_relative % 65536).to_bytes(2, 'little'))
-                for label in parsed.external:
-                    if parsed.external[label] != 0:
-                        entry = object_record.external.setdefault(label, [])
-                        n = abs(parsed.external[label])
-                        sign = parsed.external[label] // n
-                        for i in range(n):
-                            entry.append(ExternalEntry(offset, range(0, 2), sign))
-                if parsed.relative_additions != 0:
-                    sign = parsed.relative_additions // abs(parsed.relative_additions)
-                    for i in range(abs(parsed.relative_additions)):
-                        object_record.relative.append(ExternalEntry(offset, range(0, 2), sign))
+                CodeSegments.add_relatives_externals(parsed, offset, object_record)
             else:
                 object_record.data.extend(pack("u3u3s7u3", 0b011, 5, parsed.value_with_relative, self.reg))
                 self.size = 2
@@ -108,3 +100,39 @@ class CodeSegments(CodeSegmentsInterface):
             result.value_with_relative += rel_address * n
             result.relative_additions += n
         return result
+
+    @staticmethod
+    def forbid_multilabel_expressions(parsed: ParsedExpression, segment: CodeSegment):
+        parsed = copy(parsed)
+        parsed.external = {label: n for label, n in parsed.external.items() if n != 0}
+        parsed.relative = {label: n for label, n in parsed.relative.items() if n != 0}
+        if len(parsed.external) > 1:
+            _error(segment, 'Cannot use multiple external labels in an address expression')
+        elif len(parsed.external) == 1:
+            label, n = next(iter(parsed.external.items()))
+            if n < 0:
+                _error(segment, 'Cannot subtract external labels in an address expression')
+            elif n > 1:
+                _error(segment, 'Cannot add external label multiple times in an address expression')
+            elif parsed.relative_additions != 0:
+                _error(segment, 'Cannot add both external and relative section labels')
+        elif parsed.relative_additions < 0:
+            _error(segment, 'Can subtract rsect labels only to get distance from another added rsect label')
+        elif parsed.relative_additions > 1:
+            _error(segment, 'Can add rsect labels multiple times only to find distance '
+                            'from another subtracted rsect label')
+        return parsed
+
+    @staticmethod
+    def add_relatives_externals(parsed: ParsedExpression, offset: int, object_record: ObjectSectionRecord):
+        for label in parsed.external:
+            if parsed.external[label] != 0:
+                entry = object_record.external.setdefault(label, [])
+                n = abs(parsed.external[label])
+                sign = parsed.external[label] // n
+                for i in range(n):
+                    entry.append(ExternalEntry(offset, range(0, 2), sign))
+        if parsed.relative_additions != 0:
+            sign = parsed.relative_additions // abs(parsed.relative_additions)
+            for i in range(abs(parsed.relative_additions)):
+                object_record.relative.append(ExternalEntry(offset, range(0, 2), sign))
