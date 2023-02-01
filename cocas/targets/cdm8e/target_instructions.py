@@ -36,7 +36,8 @@ class TargetInstructions(TargetInstructionsInterface):
                 opcode, handler = cpu_instructions[line.mnemonic]
                 segments = handler(opcode, line.arguments)
             elif line.mnemonic in TargetInstructions.special_instructions:
-                return TargetInstructions.special_instructions[line.mnemonic](line.arguments, temp_storage)
+                return TargetInstructions.special_instructions[line.mnemonic](line.arguments, temp_storage,
+                                                                              line.location)
             else:
                 raise CdmTempException(f'Unknown instruction "{line.mnemonic}"')
             for segment in segments:
@@ -54,20 +55,22 @@ class TargetInstructions(TargetInstructionsInterface):
     def make_branch_instruction(branch_mnemonic: str, label_name: str) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
-        return [CodeSegments.GotoInstruction(branch_mnemonic, arg2)]
+        return [CodeSegments.GotoSegment(branch_mnemonic, arg2)]
 
     @staticmethod
-    def goto_handler(arguments: list, _):
+    def goto_handler(arguments: list, _, location):
         assert_args(arguments, RelocatableExpressionNode, RelocatableExpressionNode)
         br_mnemonic: RelocatableExpressionNode
         br_mnemonic = arguments[0]
         if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
                 or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
             raise CdmTempException(f'Branch mnemonic must be single word')
-        return [CodeSegments.GotoInstruction(br_mnemonic.add_terms[0].name, arguments[1])]
+        goto = CodeSegments.GotoSegment(br_mnemonic.add_terms[0].name, arguments[1])
+        goto.location = location
+        return [goto]
 
     @staticmethod
-    def save_handler(arguments: list, temp_storage: dict):
+    def save_handler(arguments: list, temp_storage: dict, _):
         assert_args(arguments, RegisterNode)
         save_restore_stack: list[RegisterNode]
         save_restore_stack = temp_storage.get("save_restore_stack", [])
@@ -76,7 +79,7 @@ class TargetInstructions(TargetInstructionsInterface):
         return TargetInstructions.assemble_instruction(InstructionNode("push", [arguments[0]]), temp_storage)
 
     @staticmethod
-    def restore_handler(arguments: list, temp_storage: dict):
+    def restore_handler(arguments: list, temp_storage: dict, _):
         save_restore_stack: list[RegisterNode]
         save_restore_stack = temp_storage.get("save_restore_stack", [])
         if len(save_restore_stack) == 0:

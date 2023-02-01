@@ -114,7 +114,7 @@ class CodeSegments(CodeSegmentsInterface):
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
     @dataclass
-    class GotoInstruction(VaryingLengthSegment):
+    class GotoSegment(VaryingLengthSegment):
         branch_mnemonic: str
         expr: RelocatableExpressionNode
         size = 2
@@ -150,6 +150,8 @@ class CodeSegments(CodeSegmentsInterface):
                             section.labels[label_name] += shift_length
                             labels[label_name] += shift_length
 
+            except CdmException as e:
+                raise e
             except Exception as e:
                 raise CdmException(TAG, self.location.file, self.location.line, str(e))
 
