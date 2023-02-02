@@ -117,7 +117,7 @@ class ProcessorComponent extends InstanceFactory {
 
         g.setFont(
                 increaseFontSize(
-                        makeBoldFont(g.getFont()),
+                        makeBoldItalicFont(g.getFont()),
                         -2
                 )
         );
@@ -201,10 +201,10 @@ class ProcessorComponent extends InstanceFactory {
         );
     }
 
-    public Font makeBoldFont(Font currentFont) {
+    public Font makeBoldItalicFont(Font currentFont) {
         return new Font(
                 currentFont.getName(),
-                Font.BOLD,
+                Font.BOLD+Font.ITALIC,
                 currentFont.getSize()
         );
     }

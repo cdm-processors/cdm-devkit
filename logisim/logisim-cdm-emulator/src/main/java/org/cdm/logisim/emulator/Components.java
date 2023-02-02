@@ -3,7 +3,6 @@ package org.cdm.logisim.emulator;
 import java.util.Arrays;
 import java.util.List;
 
-import com.cburch.logisim.std.wiring.Probe;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
 
@@ -32,7 +31,7 @@ public class Components extends Library {
      * Returns the name of the library that the user will see.
      */
     public String getDisplayName() {
-        return "Banked Rom&RAM";
+        return "CdM emulator";
     }
 
     /**
