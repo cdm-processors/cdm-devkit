@@ -129,7 +129,7 @@ class CodeSegments(CodeSegmentsInterface):
 
                 addr, _, res_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
                 is_rel = (res_sect == section.name != '$abs')
-                if (not -2 ** 7 <= addr - pos < 2 ** 7
+                if (not -2 ** 7 <= addr - (pos + 1) < 2 ** 7
                         or (section.name != '$abs' and not is_rel)
                         or (self.expr.byte_specifier is not None and is_rel)
                         or (ext is not None)):
@@ -148,7 +148,7 @@ class CodeSegments(CodeSegmentsInterface):
                         if section.labels[label_name] > pos:
                             section.labels[label_name] += shift_length
                             labels[label_name] += shift_length
-                    return True
+                    return shift_length
             except CdmException as e:
                 raise e
             except Exception as e:
@@ -202,6 +202,7 @@ def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: Section
         val = val_hi
     elif seg.expr.byte_specifier is not None:
         _error(seg, f'Invalid byte specifier "{seg.expr.byte_specifier}". Possible options are "low" and "high"')
+        return
     else:
         val = val_long
 
