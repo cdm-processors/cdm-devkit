@@ -54,10 +54,16 @@ def update_varying_length(section: Section, asects_labels: dict[str, int],
     labels = gather_local_labels([section])
     labels.update(asects_labels)
     pos = section.address
-    for seg in section.segments:
-        if isinstance(seg, CodeSegmentsInterface.VaryingLengthSegment):
-            seg.update_varying_length(pos, section, labels, template_fields)
-        pos += seg.size
+    repeat = True
+    max_repeats = 8
+    while repeat and max_repeats:
+        repeat = False
+        max_repeats -= 1
+        for seg in section.segments:
+            if isinstance(seg, CodeSegmentsInterface.VaryingLengthSegment):
+                res = seg.update_varying_length(pos, section, labels, template_fields)
+                repeat = repeat or res
+            pos += seg.size
 
 
 def assemble(pn: ProgramNode, target_instructions, code_segments):

@@ -134,8 +134,7 @@ class CodeSegments(CodeSegmentsInterface):
                         or (self.expr.byte_specifier is not None and is_rel)
                         or (ext is not None)):
 
-                    shift_length = self.expanded_size - \
-                                   self.base_size
+                    shift_length = self.expanded_size - self.base_size
                     self.is_expanded = True
                     self.size = self.expanded_size
                     old_locations = section.code_locations
@@ -149,7 +148,7 @@ class CodeSegments(CodeSegmentsInterface):
                         if section.labels[label_name] > pos:
                             section.labels[label_name] += shift_length
                             labels[label_name] += shift_length
-
+                    return True
             except CdmException as e:
                 raise e
             except Exception as e:
