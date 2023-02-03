@@ -92,7 +92,6 @@ public class BankedROM extends BankedMem {
         return BankedRomAttributes.getHexFrame(getMemContents(instance), proj);
     }
 
-    // TODO - maybe delete this method?
     BankedMemContents getMemContents(Instance instance) {
         return instance.getAttributeValue(CONTENTS_ATTR);
     }
