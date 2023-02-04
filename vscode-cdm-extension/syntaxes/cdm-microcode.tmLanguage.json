@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "define lang",
+	"name": "CdM Microcode",
 	"patterns": [
         {
 			"include": "#comments"
@@ -27,17 +27,17 @@
 		},
 		"keywords": {
 			"patterns": [{
-				"name": "keyword.control.cdm-def",
+				"name": "keyword.control.cdm-microcode",
 				"match": "([^\\s]+)(:{1})"
 			}]
 		},
 		"strings": {
-			"name": "string.quoted.double.cdm-def",
+			"name": "string.quoted.double.cdm-microcode",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.cdm-def",
+					"name": "constant.character.escape.cdm-microcode",
 					"match": "\\\\."
 				}
 			]
@@ -55,5 +55,5 @@
 			}]
 		}
 	},
-	"scopeName": "source.cdm-def"
+	"scopeName": "source.cdm-microcode"
 }

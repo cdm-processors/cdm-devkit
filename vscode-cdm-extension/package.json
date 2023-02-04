@@ -55,6 +55,17 @@
                     ".asm .h"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "cdm-microcode",
+                "aliases": [
+                    "CdM Microcode",
+                    "cdm-microcode"
+                ],
+                "extensions": [
+                    ".def"
+                ],
+                "configuration": "./languages/microcode-language-configuration.json"
             }
         ],
         "grammars": [
@@ -67,6 +78,11 @@
                 "language": "cdm16-assembly",
                 "scopeName": "source.asm.cdm16",
                 "path": "./syntaxes/cdm16-assembly.tmLanguage.json"
+            },
+            {
+                "language": "cdm-microcode",
+                "scopeName": "source.cdm-microcode",
+                "path": "./syntaxes/cdm-microcode.tmLanguage.json"
             }
         ],
         "snippets": [
