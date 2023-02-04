@@ -18,6 +18,12 @@ def assert_args(args, *types):
             raise CdmTempException(f'Invalid register number r{args[i].number}')
 
 
+def assert_count_args(args, *types):
+    if len(args) != len(types):
+        raise CdmTempException(f'Expected {len(types)} arguments, found {len(args)}')
+    assert_args(args, *types)
+
+
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def assemble_instruction(line: InstructionNode, temp_storage: dict) -> list[CodeSegmentsInterface.CodeSegment]:
@@ -32,14 +38,8 @@ class TargetInstructions(TargetInstructionsInterface):
 
     @staticmethod
     def ldi(line: InstructionNode, _, __) -> list[CodeSegmentsInterface.CodeSegment]:
-        args = line.arguments
-        if len(args) == 2:
-            assert_args(args, RegisterNode, RelocatableExpressionNode)
-            ldi = CodeSegments.LdiSegment(*args)
-            ldi.location = line.location
-            return [ldi]
-        else:
-            raise CdmTempException(f'Expected 2 arguments, found {len(args)}')
+        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+        return [CodeSegments.LdiSegment(line.location, *line.arguments)]
 
     @staticmethod
     def ds(line: InstructionNode, _, __):
@@ -49,38 +49,44 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmTempException('Number expected')
         if arg.const_term < 0:
             raise CdmTempException('Cannot specify negative size in "ds"')
-        return [CodeSegments.BytesSegment(bytes(arg.const_term + arg.const_term % 2))]
+        return [CodeSegments.BytesSegment(bytes(arg.const_term + arg.const_term % 2), line.location)]
 
     @staticmethod
     def dc(line: InstructionNode, _, __):
         if len(line.arguments) == 0:
             raise CdmTempException('At least one argument must be provided')
-        data = []
+        segments = []
         size = 0
         command = line.mnemonic
         for arg in line.arguments:
             if isinstance(arg, RelocatableExpressionNode):
-                if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                    raise CdmTempException('Number expected')
                 if command == 'db':
-                    if -256 < arg.const_term < 256:
-                        data.append(CodeSegments.BytesSegment((arg.const_term % 256).to_bytes(1, 'little')))
-                        size += 1
+                    if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+                        raise CdmTempException('Only constants allowed for 1 byte')
+                    if -128 < arg.const_term < 256:
+                        segments.append(CodeSegments.BytesSegment((arg.const_term % 256).to_bytes(1, 'little'),
+                                                                  line.location))
+                        size += 2
                     else:
                         raise CdmTempException(f'Number is not a byte: {arg.const_term}')
                 else:
-                    if -65536 < arg.const_term < 65536:
-                        data.append(CodeSegments.BytesSegment((arg.const_term % 65536).to_bytes(2, 'little')))
-                        size += 2
-                    else:
-                        raise CdmTempException(f'Number is not a word: {arg.const_term}')
+                    segments.append(CodeSegments.ExpressionSegment(line.location, arg))
             elif isinstance(arg, str):
                 if command == 'dw':
                     raise CdmTempException(f'Currently "dw" doesn\'t support strings')
-                data.append(CodeSegments.BytesSegment(arg.encode('utf-8')))
-        if sum(map(lambda x: x.size, data)) % 2 == 1:
-            data.append(CodeSegments.BytesSegment(bytes(1)))
-        return data
+                encoded = arg.encode('utf-8')
+                if command == 'dc':
+                    if len(encoded) % 2 == 1:
+                        encoded += bytes(1)
+                    segments.append(CodeSegments.AlignedBytesSegment(encoded, line.location))
+                else:
+                    segments.append(CodeSegments.BytesSegment(encoded, line.location))
+                size += len(encoded)
+            else:
+                raise CdmTempException(f'Incompatible argument type: {type(arg)}')
+        if size % 2 == 1:
+            segments.append(CodeSegments.BytesSegment(bytes(1), line.location))
+        return segments
 
     @dataclass
     class Handler:

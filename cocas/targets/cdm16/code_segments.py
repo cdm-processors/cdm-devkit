@@ -28,7 +28,8 @@ class CodeSegments(CodeSegmentsInterface):
     class BytesSegment(CodeSegment):
         data: bytes
 
-        def __init__(self, data: bytes):
+        def __init__(self, data: bytes, location: CodeLocation):
+            self.location = location
             self.data = data
             self.size = len(data)
 
@@ -36,29 +37,53 @@ class CodeSegments(CodeSegmentsInterface):
                  templates: dict[str, dict[str, int]]):
             object_record.data += self.data
 
+    class AlignedBytesSegment(BytesSegment):
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            CodeSegments.assert_2_alignment(section, object_record, self)
+            super().fill(object_record, section, labels, templates)
+
+    class ExpressionSegment(CodeSegment):
+        expr: RelocatableExpressionNode
+
+        def __init__(self, location: CodeLocation, expr: RelocatableExpressionNode):
+            self.location = location
+            self.expr = expr
+            self.size = 2
+
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            CodeSegments.assert_2_alignment(section, object_record, self)
+            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+            parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
+            offset = section.address + len(object_record.data)
+            if not -32768 <= parsed.value_with_relative < 65536:
+                _error(self, 'Number out of range')
+            object_record.data.extend((parsed.value_with_relative % 65536).to_bytes(2, 'little'))
+            CodeSegments.add_relatives_externals(parsed, offset, object_record)
+
     class VaryingLengthSegment(CodeSegment, CodeSegmentsInterface.VaryingLengthSegment):
         pass
 
     class LdiSegment(VaryingLengthSegment):
         expr: RelocatableExpressionNode
 
-        def __init__(self, register: RegisterNode, expr: RelocatableExpressionNode):
+        def __init__(self, location: CodeLocation, register: RegisterNode, expr: RelocatableExpressionNode):
+            self.location = location
             self.reg: int = register.number
             self.expr = expr
             self.size = 2
             self.size_locked = False
-            self.location: CodeLocation = CodeLocation()
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
-            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
+            CodeSegments.assert_2_alignment(section, object_record, self)
             if self.size == 4:
                 object_record.data.extend(pack("u3p6u4u3", 0b001, 2, self.reg))
-                offset = section.address + len(object_record.data)
-                object_record.data.extend((parsed.value_with_relative % 65536).to_bytes(2, 'little'))
-                CodeSegments.add_relatives_externals(parsed, offset, object_record)
+                CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
             else:
+                parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+                parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
                 object_record.data.extend(pack("u3u3s7u3", 0b011, 5, parsed.value_with_relative, self.reg))
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int],
@@ -153,3 +178,10 @@ class CodeSegments(CodeSegmentsInterface):
             sign = parsed.relative_additions // abs(parsed.relative_additions)
             for i in range(abs(parsed.relative_additions)):
                 object_record.relative.append(ExternalEntry(offset, range(0, 2), sign))
+
+    @staticmethod
+    def assert_2_alignment(section: Section, object_record: ObjectSectionRecord, segment: CodeSegment):
+        if section.address % 2 == 1:
+            _error(segment, 'Section must be 2-byte aligned')
+        elif len(object_record.data) % 2 == 1:
+            _error(segment, 'Previous line size somehow is not multiple of two')
