@@ -37,7 +37,7 @@
             {
                 "id": "cdm8-assembly",
                 "aliases": [
-                    "cdm8 assembly",
+                    "CdM-8 Assembly",
                     "cdm8-assembly"
                 ],
                 "extensions": [
@@ -48,7 +48,7 @@
             {
                 "id": "cdm8e-assembly",
                 "aliases": [
-                    "cdm8e assembly",
+                    "CdM-8e Assembly",
                     "cdm8e-assembly"
                 ],
                 "extensions": [
@@ -59,7 +59,7 @@
             {
                 "id": "cdm16-assembly",
                 "aliases": [
-                    "cdm16 assembly",
+                    "CdM-16 Assembly",
                     "cdm16-assembly"
                 ],
                 "extensions": [
