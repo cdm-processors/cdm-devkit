@@ -43,7 +43,7 @@
                 "extensions": [
                     ".asm .h"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./languages/assembly-language-configuration.json"
             },
             {
                 "id": "cdm16-assembly",
@@ -54,7 +54,7 @@
                 "extensions": [
                     ".asm .h"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./languages/assembly-language-configuration.json"
             },
             {
                 "id": "cdm-microcode",
