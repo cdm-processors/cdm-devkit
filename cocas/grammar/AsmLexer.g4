@@ -30,7 +30,7 @@ OPEN_PAREN : '(' ;
 CLOSE_PAREN : ')' ;
 LINE_MARK_MARKER: '-|';
 
-REGISTER : 'r'[0-3] ;
+REGISTER : 'r'DECIMAL_NUMBER ;
 WORD : [a-zA-Z_][a-zA-Z_0-9]* ;
 DECIMAL_NUMBER : [0-9]+  ;
 BINARY_NUMBER : '0b'[01]+ ;

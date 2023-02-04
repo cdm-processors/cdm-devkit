@@ -1,11 +1,13 @@
+from dataclasses import dataclass
 from typing import Type
 
-from cocas.object_module import ObjectSectionRecord, ObjectModule
-from cocas.ast_nodes import *
+from cocas.ast_nodes import TemplateSectionNode, LabelDeclarationNode, InstructionNode, ProgramNode
 from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmExceptionTag
+from cocas.location import CodeLocation
+from cocas.object_module import ObjectSectionRecord, ObjectModule
 
 TAG = CdmExceptionTag.ASM
 
@@ -49,15 +51,38 @@ def gather_local_labels(sects: list[Section]):
     return local_labels
 
 
-def update_varying_length(section: Section, asects_labels: dict[str, int],
+@dataclass
+class VaryingLengthEntry:
+    seg: CodeSegmentsInterface.VaryingLengthSegment
+    sect: Section
+    pos: int
+    location: CodeLocation
+
+
+def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                           template_fields: dict[str, dict[str, int]]):
-    labels = gather_local_labels([section])
-    labels.update(asects_labels)
-    pos = section.address
-    for seg in section.segments:
-        if isinstance(seg, CodeSegmentsInterface.VaryingLengthSegment):
-            seg.update_varying_length(pos, section, labels, template_fields)
-        pos += seg.size
+    labels = gather_local_labels(sections)
+    labels.update(known_labels)
+    var_len_entries: list[VaryingLengthEntry] = []
+    for sect in sections:
+        pos = sect.address
+        for seg in sect.segments:
+            if isinstance(seg, CodeSegmentsInterface.VaryingLengthSegment):
+                a = VaryingLengthEntry(seg, sect, pos, seg.location)
+                var_len_entries.append(a)
+            pos += seg.size
+
+    changed = True
+    while changed:
+        changed = False
+        for vl in var_len_entries:
+            shift = vl.seg.update_varying_length(vl.pos, vl.sect, labels, template_fields)
+            if shift:
+                for other_vl in var_len_entries:
+                    if other_vl.sect is vl.sect and other_vl.pos > vl.pos:
+                        other_vl.pos += shift
+                changed = True
+                break
 
 
 def assemble(pn: ProgramNode, target_instructions, code_segments):
@@ -68,12 +93,10 @@ def assemble(pn: ProgramNode, target_instructions, code_segments):
     rsects = [Section(rsect, target_instructions, code_segments) for rsect in pn.relocatable_sections]
     asects.sort(key=lambda s: s.address)
 
+    update_varying_length(asects, {}, template_fields)
     asects_labels = gather_local_labels(asects)
-    for asect in asects:
-        update_varying_length(asect, asects_labels, template_fields)
-        asects_labels.update(gather_local_labels([asect]))
     for rsect in rsects:
-        update_varying_length(rsect, asects_labels, template_fields)
+        update_varying_length([rsect], asects_labels, template_fields)
 
     obj = ObjectModule()
     obj.asects = [ObjectSectionRecord(asect, asects_labels, template_fields) for asect in asects]

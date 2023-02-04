@@ -26,5 +26,5 @@ class CodeSegmentsInterface:
     @dataclass
     class VaryingLengthSegment(CodeSegment):
         def update_varying_length(self, pos, section: "Section", labels: dict[str, int],
-                                  templates: dict[str, dict[str, int]]):
+                                  templates: dict[str, dict[str, int]]) -> int:
             pass

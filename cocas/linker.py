@@ -118,12 +118,12 @@ def link(objects: list[ObjectModule]):
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         entry_bytes: range
-        for offset, entry_bytes in map(astuple, rsect.relative):
+        for offset, entry_bytes, sign in map(astuple, rsect.relative):
             pos = image_begin + offset
             lower_limit = 1 << 8 * entry_bytes.start
             val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
             val += rsect.lower_parts.get(offset, 0)
-            val += image_begin
+            val += image_begin * sign
             val %= (1 << 8 * entry_bytes.stop)
             if entry_bytes.start > 0:
                 rsect.lower_parts[pos] = val % lower_limit
@@ -131,12 +131,12 @@ def link(objects: list[ObjectModule]):
 
     for sect in asects + rsects:
         for ext_name in sect.external:
-            for offset, entry_bytes in map(astuple, sect.external[ext_name]):
+            for offset, entry_bytes, sign in map(astuple, sect.external[ext_name]):
                 pos = sect_addresses[sect.name] + offset
                 lower_limit = 1 << 8 * entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
                 val += sect.lower_parts.get(offset, 0)
-                val += ents[ext_name]
+                val += ents[ext_name] * sign
                 val %= (1 << 8 * entry_bytes.stop)
                 image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little',
                                                                                   signed=False)

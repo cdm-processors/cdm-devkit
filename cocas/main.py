@@ -2,7 +2,9 @@ import argparse
 import codecs
 import importlib
 import json
+import os
 import pathlib
+import pkgutil
 from dataclasses import asdict
 
 import antlr4
@@ -14,25 +16,38 @@ from cocas.error import CdmException, log_error, CdmLinkException, CdmExceptionT
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
 
-available_targets = ['cdm8e']
 
-
-def write_image(filename: str, arr: list):
+def write_image(filename: str, arr: bytearray):
     """
     Write the contents or array into file in logisim-compatible format
 
     :param filename: Path to output file
-    :param arr: Array to be written
+    :param arr: Bytearray to be written
     """
     f = open(filename, mode='wb')
     f.write(bytes("v2.0 raw\n", 'UTF-8'))
-    for byte in arr:
-        f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
+    zeroes = 0
+    for i, byte in enumerate(arr):
+        if byte == 0:
+            zeroes += 1
+        else:
+            if zeroes != 0:
+                if zeroes > 4:
+                    f.write(bytes(f'{zeroes}*00\n', 'UTF-8'))
+                    f.write(bytes(f'# {i:#2x}\n', 'UTF-8'))
+                else:
+                    for _ in range(zeroes):
+                        f.write(bytes(f'00\n', 'UTF-8'))
+                zeroes = 0
+            f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
     f.close()
 
 
 def main():
     colorama.init()
+    targets_dir = os.path.join(os.path.dirname(__file__), "targets")
+    available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
+
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('-t', '--target', type=str, default='cdm-8e',
                         help='target processor, CdM-16 is default')
@@ -55,6 +70,7 @@ def main():
 
     if len(args.sources) == 0:
         print('Error: no source files provided')
+        return
 
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions

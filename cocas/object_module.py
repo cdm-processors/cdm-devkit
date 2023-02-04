@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from cocas.code_block import Section
 
@@ -7,6 +7,7 @@ from cocas.code_block import Section
 class ExternalEntry:
     offset: int
     entry_bytes: range
+    sign: int = field(default=1)
 
 
 @dataclass
