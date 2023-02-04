@@ -26,9 +26,9 @@ class CodeSegments(CodeSegmentsInterface):
         pass
 
     class BytesSegment(CodeSegment):
-        data: bytearray
+        data: bytes
 
-        def __init__(self, data: bytearray):
+        def __init__(self, data: bytes):
             self.data = data
             self.size = len(data)
 
