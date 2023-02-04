@@ -104,11 +104,15 @@
         "snippets": [
             {
                 "language": "cdm8-assembly",
-                "path": "./snippets/cdm8-assembly-snippets.json"
+                "path": "./snippets/cdm-assembly-snippets.json"
+            },
+            {
+                "language": "cdm8e-assembly",
+                "path": "./snippets/cdm-assembly-snippets.json"
             },
             {
                 "language": "cdm16-assembly",
-                "path": "./snippets/cdm16-assembly-snippets.json"
+                "path": "./snippets/cdm-assembly-snippets.json"
             }
         ]
     },

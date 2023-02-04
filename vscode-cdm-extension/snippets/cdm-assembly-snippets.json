@@ -1,0 +1,85 @@
+{
+    "if": {
+        "prefix": "if",
+        "body": [
+            "if",
+            "\t${1:calc cond}",
+            "is ${2:cond}",
+            "\t${3:body}",
+            "fi"
+        ],
+        "description": "if macro"
+    },
+    "if-else": {
+        "prefix": "if-else",
+        "body": [
+            "if",
+            "\t${1:calc cond}",
+            "is ${2:cond}",
+            "\t${3:body}",
+            "else",
+            "\t${4:body}",
+            "fi"
+        ],
+        "description": "if-else macro"
+    },
+    "while": {
+        "prefix": "while",
+        "body": [
+            "while",
+            "\t${1:calc cond}",
+            "stays ${2:cond}",
+            "\t${3:body}",
+            "wend"
+        ],
+        "description": "while loop macro"
+    },
+    "do-while": {
+        "prefix": "do-while",
+        "body": [
+            "do",
+            "\t${1:body}",
+            "until ${2:cond}"
+        ],
+        "description": "do while loop macro"
+    },
+    "macro": {
+        "prefix": "macro",
+        "body": [
+            "macro ${1:name}/${2:arg count}",
+            "\t${3:body}",
+            "mend"
+        ],
+        "description": "new macro"
+    },
+    "tplate": {
+        "prefix": "tplate",
+        "body": [
+            "tplate ${1:name}"
+        ],
+        "description": "new template"
+    },
+    "asect": {
+        "prefix": "asect",
+        "body": [
+            "asect ${1:address}",
+            "\t"
+        ],
+        "description": "asect"
+    },
+    "rsect": {
+        "prefix": "rsect",
+        "body": [
+            "rsect ${1:name}",
+            "\t"
+        ],
+        "description": "rsect"
+    },
+    "end": {
+        "prefix": "end",
+        "body": [
+            "end."
+        ],
+        "description": "end"
+    }
+}
