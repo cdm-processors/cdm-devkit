@@ -11,24 +11,23 @@ authors = [
     "Nikita Korotkov <n.korotkov@g.nsu.ru>"
 ]
 
-#packages = [
-#    { include = "cdm_asm" },
-#    { include = "cocoemu" },
-#]
+packages = [
+    { include = "cocas" }
+]
 
-#[tool.poetry.scripts]
-#cdm-asm = 'cdm_asm.main:main'
-#cdm-emu = 'cdm_emu.emulator:main'
+[tool.poetry.scripts]
+cocas = 'cocas.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
 bitstruct = "^8.14.1"
-antlr4-python3-runtime = "^4.10"
+antlr4-python3-runtime = "4.11.*"
 websocket-server = "^0.6.4"
 colorama = "^0.4.4"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^5.2"
+antlr4-tools = "^0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
