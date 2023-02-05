@@ -48,6 +48,10 @@ After installation you get several components:
         - `logisim-cdm-emulator` - emulated CdM processors
     - Code and scheme examples (`examples/`)
 
+## Getting started
+
+Check out our [Getting Stated](/docs/getting-started.md) guide.
+
 ## Documentation
 
 We are wokring on documentation, it will be available soon.
