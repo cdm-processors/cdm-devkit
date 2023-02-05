@@ -1,3 +1,4 @@
+from copy import copy
 from dataclasses import dataclass
 from typing import get_origin, get_args, Callable
 import re
@@ -49,7 +50,7 @@ class TargetInstructions(TargetInstructionsInterface):
         assert_args(line.arguments, RelocatableExpressionNode)
         arg = line.arguments[0]
         if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-            raise CdmTempException('Number expected')
+            raise CdmTempException('Const number expected')
         if arg.const_term < 0:
             raise CdmTempException('Cannot specify negative size in "ds"')
         return [CodeSegments.BytesSegment(bytes(arg.const_term + arg.const_term % 2), line.location)]
@@ -141,6 +142,43 @@ class TargetInstructions(TargetInstructionsInterface):
         return [CodeSegments.BytesSegment(pack("u5p7u4", 0b00000, op_number), line.location)]
 
     @staticmethod
+    def const_only(arg: RelocatableExpressionNode):
+        if arg.add_terms or arg.sub_terms:
+            raise CdmTempException(f'Constant number expected as shift value')
+        return arg.const_term
+
+    @staticmethod
+    def shifts(line: InstructionNode, _, op_number: int):
+        args = line.arguments
+        if len(args) == 3:
+            assert_args(args, RegisterNode, RegisterNode, RelocatableExpressionNode)
+            rs = args[0].number
+            rd = args[1].number
+            val = TargetInstructions.const_only(args[2])
+        elif len(args) == 2 and isinstance(args[1], RegisterNode):
+            assert_args(args, RegisterNode, RegisterNode)
+            rs = args[0].number
+            rd = args[1].number
+            val = 1
+        elif len(args) == 2:
+            assert_args(args, RegisterNode, RelocatableExpressionNode)
+            rs = args[0].number
+            rd = args[0].number
+            val = TargetInstructions.const_only(args[1])
+        elif len(args) == 1:
+            assert_args(args, RegisterNode)
+            rs = args[0].number
+            rd = args[0].number
+            val = 1
+        else:
+            raise CdmTempException(f'Expected 1-3 arguments, found {len(args)}')
+        if not 0 <= val <= 8:
+            raise CdmTempException(f'Shift value out of range')
+        if val == 0:
+            return []
+        return [CodeSegments.BytesSegment(pack("u4u3u3u3u3", 0b0001, op_number, val - 1, rs, rd), line.location)]
+
+    @staticmethod
     def op1(line: InstructionNode, _, op_number: int):
         assert_count_args(line.arguments, RegisterNode)
         reg = line.arguments[0].number
@@ -195,6 +233,11 @@ class TargetInstructions(TargetInstructionsInterface):
         return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments)]
 
     @staticmethod
+    def imm9(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
+        assert_count_args(line.arguments, RelocatableExpressionNode)
+        return [CodeSegments.Imm9(line.location, False, op_number, *line.arguments)]
+
+    @staticmethod
     def alu3(line: InstructionNode, _, op_number: int):
         if len(line.arguments) == 3:
             assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
@@ -212,7 +255,7 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
 
     @staticmethod
-    def may_imm(line: InstructionNode, temp_storage: dict, _):
+    def special(line: InstructionNode, temp_storage: dict, _):
         if line.mnemonic == 'add':
             if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
                 assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
@@ -230,14 +273,23 @@ class TargetInstructions(TargetInstructionsInterface):
                 return [CodeSegments.Imm6(line.location, False, 7, *line.arguments)]
             else:
                 return TargetInstructions.alu3_ind(line, temp_storage, 6)
-
-        # n = len(line.arguments)
-        # if n == 3:
-        #     assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
-        # elif n == 2:
-        #     assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-        # else:
-        #     raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
+        elif line.mnemonic == 'int':
+            assert_count_args(line.arguments, RelocatableExpressionNode)
+            arg = line.arguments[0]
+            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+                raise CdmTempException('Const number expected')
+            if arg.const_term < 0:
+                raise CdmTempException('Interrupt number must be positive')
+            return [CodeSegments.Imm9(line.location, False, 0, arg)]
+        elif line.mnemonic == 'addsp':
+            assert_count_args(line.arguments, RelocatableExpressionNode)
+            arg = copy(line.arguments[0])
+            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+                raise CdmTempException('Const number expected')
+            if arg.const_term % 2 == 1:
+                raise CdmTempException('Only even numbers can be added to stack pointer')
+            arg.const_term //= 2
+            return [CodeSegments.Imm9(line.location, False, 2, arg)]
 
     @dataclass
     class Handler:
@@ -253,13 +305,15 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(ldi, {'ldi': -1}),
         Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'jsr': 8, 'rti': 9,
                       'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
-        Handler(op1, {'push': 0, 'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
+        Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'ror': 3, 'rol': 4, 'rcr': 5, 'rcl': 6}),
+        Handler(op1, {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
                       'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
         Handler(op2, {'move': 0}),
         Handler(alu3_ind, {'bit': 0}),
         Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
         Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
         Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
+        Handler(imm9, {'push': 1}),
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(may_imm, {'add': -1, 'sub': -1, 'cmp': -1}),
+        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'addsp': -1}),
     ]

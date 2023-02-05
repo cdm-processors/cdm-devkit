@@ -132,6 +132,29 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'Value is out of bounds for immediate form')
             object_record.data.extend(pack("u3u3s7u3", 0b011, self.op_number, value, self.reg))
 
+    class Imm9(CodeSegment):
+        expr: RelocatableExpressionNode
+
+        def __init__(self, location: CodeLocation, negative: bool, op_number: int, expr: RelocatableExpressionNode):
+            self.op_number = op_number
+            self.sign = -1 if negative else 1
+            self.location = location
+            self.expr = expr
+            self.size = 2
+
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            CodeSegments.assert_2_alignment(section, object_record, self)
+            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+            value = parsed.value_with_relative * self.sign
+            if parsed.external:
+                _error(self, 'No external labels allowed in immediate form')
+            elif parsed.relative_additions != 0:
+                _error(self, 'Can use rsect labels only to find distance in immediate form')
+            elif not -512 <= value < 512:
+                _error(self, 'Value is out of bounds for immediate form')
+            object_record.data.extend(pack("u3u3s10", 0b100, self.op_number, value))
+
     @dataclass
     class ParsedExpression:
         value: int
