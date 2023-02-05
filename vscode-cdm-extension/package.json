@@ -10,11 +10,8 @@
         "Programming Languages",
         "Snippets"
     ],
-    "author": {
-        "name": "CdM Processors"
-    },
     "icon": "icon.png",
-    "publisher": "CdM Processors",
+    "publisher": "cdm-processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
     "bugs": "https://github.com/cdm-processors/cdm-devkit/issues",
     "repository": {
