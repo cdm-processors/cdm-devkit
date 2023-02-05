@@ -1,7 +1,7 @@
 {
-    "name": "cdm-devkit(?)",
-    "displayName": "cdm devkit(?)",
-    "description": "Assembler for cdm processors",
+    "name": "vscode-cdm-extension",
+    "displayName": "CdM Processors",
+    "description": "Tools for CdM Processors",
     "version": "1.0.0",
     "engines": {
         "vscode": "^1.0.0"
@@ -11,17 +11,16 @@
         "Snippets"
     ],
     "author": {
-        "name": "cdm developers(?)"
+        "name": "CdM Processors"
     },
     "icon": "icon.png",
-    "publisher": "cdm developers(?)",
+    "publisher": "CdM Processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
     "bugs": "https://github.com/cdm-processors/cdm-devkit/issues",
     "repository": {
         "type": "git",
         "url": "https://github.com/cdm-processors/cdm-devkit.git"
     },
-    "license": "BSD",
     "keywords": [
         "assembly",
         "macro",
@@ -117,6 +116,6 @@
         ]
     },
     "__metadata": {
-        "publisherDisplayName": "cdm developers(?)"
+        "publisherDisplayName": "CdM Processors"
     }
 }
