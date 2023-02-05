@@ -64,6 +64,8 @@ You can report a bug with GitHub Issues.
 
 - Open new issue [here](https://github.com/cdm-processors/cdm-devkit/issues)
 
+- Use a tempate
+
 - Provide a proper name and description of a problem
 
 - Provide information on how to repoduce a bug
@@ -150,7 +152,7 @@ Set `VERSION` variable if you want to specify project version
 - **General:**
     
     - `docs`
-    - `ci`/`cd`
+    - `ci/cd`
     - `examples`
     - `tests`
 
@@ -170,4 +172,8 @@ Set `VERSION` variable if you want to specify project version
 
 - If you have a proposal or a suggestion you are free to open a GitHub Issue [here](https://github.com/cdm-processors/cdm-devkit/issues).
 
-- For other questions contact *some way of communicating here*
+- For other questions contact:
+    - Email: n.repin@g.nsu.ru
+    - Telegram: [@cdm_updates](https://t.me/cdm_updates)
+
+        *(channel with updates, linked chat for support)*
