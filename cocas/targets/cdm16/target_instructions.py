@@ -136,6 +136,11 @@ class TargetInstructions(TargetInstructionsInterface):
                 CodeSegments.ExpressionSegment(line.location, line.arguments[0])]
 
     @staticmethod
+    def op0(line: InstructionNode, _, op_number: int):
+        assert_count_args(line.arguments)
+        return [CodeSegments.BytesSegment(pack("u5p7u4", 0b00000, op_number), line.location)]
+
+    @staticmethod
     def op1(line: InstructionNode, _, op_number: int):
         assert_count_args(line.arguments, RegisterNode)
         reg = line.arguments[0].number
@@ -184,6 +189,56 @@ class TargetInstructions(TargetInstructionsInterface):
         rs = line.arguments[0].number
         return [CodeSegments.BytesSegment(pack("u5p2u3u3u3", 0b01011, op_number, rs, rd), line.location)]
 
+    @staticmethod
+    def imm6(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
+        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+        return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments)]
+
+    @staticmethod
+    def alu3(line: InstructionNode, _, op_number: int):
+        if len(line.arguments) == 3:
+            assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
+            arg1 = line.arguments[0].number
+            arg2 = line.arguments[1].number
+            dest = line.arguments[2].number
+            return [CodeSegments.BytesSegment(pack("u4u3u3u3u3", 0b1011, op_number, arg2, arg1, dest), line.location)]
+        elif len(line.arguments) == 2:
+            assert_args(line.arguments, RegisterNode, RegisterNode)
+            arg1 = line.arguments[0].number
+            arg2 = line.arguments[1].number
+            return [CodeSegments.BytesSegment(pack("u4u3u3u3u3", 0b1011, op_number, arg2, arg1, arg2),
+                                              line.location)]
+        else:
+            raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
+
+    @staticmethod
+    def may_imm(line: InstructionNode, temp_storage: dict, _):
+        if line.mnemonic == 'add':
+            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
+                assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+                return [CodeSegments.Imm6(line.location, False, 6, *line.arguments)]
+            else:
+                return TargetInstructions.alu3(line, temp_storage, 4)
+        elif line.mnemonic == 'sub':
+            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
+                assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+                return [CodeSegments.Imm6(line.location, True, 6, *line.arguments)]
+            else:
+                return TargetInstructions.alu3(line, temp_storage, 6)
+        elif line.mnemonic == 'cmp':
+            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
+                return [CodeSegments.Imm6(line.location, False, 7, *line.arguments)]
+            else:
+                return TargetInstructions.alu3_ind(line, temp_storage, 6)
+
+        # n = len(line.arguments)
+        # if n == 3:
+        #     assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
+        # elif n == 2:
+        #     assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+        # else:
+        #     raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
+
     @dataclass
     class Handler:
         handler: Callable[[InstructionNode, dict, int], list[CodeSegmentsInterface.CodeSegment]]
@@ -196,10 +251,15 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(save, {'save': -1}),
         Handler(restore, {'restore': -1}),
         Handler(ldi, {'ldi': -1}),
+        Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'jsr': 8, 'rti': 9,
+                      'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
         Handler(op1, {'push': 0, 'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
                       'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
         Handler(op2, {'move': 0}),
-        Handler(alu3_ind, {'bit': 0, 'cmp': 6}),
-        Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'ldcw': 3, 'ldcb': 4, 'ldcsb': 5, 'stw': 6, 'stb': 7}),
-        Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3})
+        Handler(alu3_ind, {'bit': 0}),
+        Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
+        Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
+        Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
+        Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
+        Handler(may_imm, {'add': -1, 'sub': -1, 'cmp': -1}),
     ]
