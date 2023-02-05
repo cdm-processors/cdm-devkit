@@ -274,8 +274,9 @@ public class BankedRAM extends BankedMem {
         public void attributeValueChanged(AttributeEvent e) {
             AttributeSet attrs = e.getSource();
             BitWidth addrBits = attrs.getValue(BankedMem.ADDR_ATTR);
-            BitWidth dataBits = attrs.getValue(BankedMem.DATA_ATTR);
-            getContents().setDimensions(addrBits.getWidth(), dataBits.getWidth());
+            //BitWidth dataBits = attrs.getValue(BankedMem.DATA_ATTR);
+            //todo
+            getContents().setDimensions(addrBits.getWidth(), 8);
         }
     }
 
