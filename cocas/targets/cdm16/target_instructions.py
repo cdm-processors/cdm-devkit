@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import get_origin, get_args, Callable
+import re
 
 from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode
 from cocas.default_code_segments import CodeSegmentsInterface
@@ -31,6 +32,8 @@ class TargetInstructions(TargetInstructionsInterface):
             for h in TargetInstructions.handlers:
                 if line.mnemonic in h.instructions:
                     return h.handler(line, temp_storage, h.instructions[line.mnemonic])
+            if line.mnemonic.startswith('b'):
+                return TargetInstructions.branch(line, temp_storage)
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
                                f'Unknown instruction "{line.mnemonic}"')
         except CdmTempException as e:
@@ -114,6 +117,23 @@ class TargetInstructions(TargetInstructionsInterface):
     def ldi(line: InstructionNode, _, __) -> list[CodeSegmentsInterface.CodeSegment]:
         assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
         return [CodeSegments.LdiSegment(line.location, *line.arguments)]
+
+    branch_codes = {'eq': 0, 'z': 0, 'nne': 0, 'nnz': 0, 'ne': 1, 'nz': 1, 'neq': 1,
+                    'hs': 2, 'cs': 2, 'nlo': 2, 'ncc': 2, 'lo': 3, 'cc': 3, 'nhs': 3, 'ncs': 3,
+                    'mi': 4, 'npl': 4, 'pl': 5, 'nmi': 5, 'vs': 6, 'nvc': 6, 'vc': 7, 'nvs': 7,
+                    'hi': 8, 'nlc': 8, 'ls': 9, 'nhi': 9, 'ge': 10, 'nlt': 10, 'lt': 11, 'nge': 11,
+                    'gt': 12, 'nle': 12, 'le': 13, 'ngt': 13, 'r': 14, 'anything': 14, 'true': 14, 'nfalse': 14,
+                    'op': 15, 'nanything': 15, 'ntrue': 15, 'false': 15}
+
+    @staticmethod
+    def branch(line: InstructionNode, _) -> list[CodeSegmentsInterface.CodeSegment]:
+        cond = re.match(r'b(\w*)', line.mnemonic)[1]
+        if cond not in TargetInstructions.branch_codes:
+            raise CdmTempException(f'Invalid branch condition: {cond}')
+        assert_count_args(line.arguments, RelocatableExpressionNode)
+        code = TargetInstructions.branch_codes[cond]
+        return [CodeSegments.BytesSegment(pack("u5p7u4", 0x00001, code), line.location),
+                CodeSegments.ExpressionSegment(line.location, line.arguments[0])]
 
     @staticmethod
     def op1(line: InstructionNode, _, op_number: int):
