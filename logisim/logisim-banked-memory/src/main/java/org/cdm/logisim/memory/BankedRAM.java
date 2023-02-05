@@ -72,7 +72,6 @@ public class BankedRAM extends BankedMem {
     protected void instanceAttributeChanged(Instance instance, Attribute<?> attr) {
         super.instanceAttributeChanged(instance, attr);
         configurePorts(instance);
-        //throw new IllegalStateException();
     }
 
     @Override
@@ -276,7 +275,8 @@ public class BankedRAM extends BankedMem {
             AttributeSet attrs = e.getSource();
             BitWidth addrBits = attrs.getValue(BankedMem.ADDR_ATTR);
             //BitWidth dataBits = attrs.getValue(BankedMem.DATA_ATTR);
-            getContents().setDimensions(addrBits.getWidth(), addrBits.getWidth());
+            //todo
+            getContents().setDimensions(addrBits.getWidth(), 8);
         }
     }
 
