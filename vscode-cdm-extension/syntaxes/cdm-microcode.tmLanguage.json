@@ -1,0 +1,59 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "CdM Microcode",
+	"patterns": [
+        {
+			"include": "#comments"
+        },
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#signals"
+		},
+		{
+			"include": "#setup"
+		}
+	],
+	"repository": {
+        "comments": {
+			"patterns": [{
+				"name": "comment.line",
+				"match": "(#).*$"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.cdm-microcode",
+				"match": "([^\\s]+)(:{1})"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.cdm-microcode",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cdm-microcode",
+					"match": "\\\\."
+				}
+			]
+		},
+        "signals": {
+			"patterns": [{
+				"name": "entity.name.function",
+				"match": "\\b[^\\s]+\\b"
+			}]
+		},
+        "setup": {
+			"patterns": [{
+				"name": "entity.name.type",
+				"match": ":\\s*\\d+\\s*,\\s*\\d+\\s*,"
+			}]
+		}
+	},
+	"scopeName": "source.cdm-microcode"
+}

@@ -1,0 +1,109 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "cdm8 assembly",
+	"patterns": [
+        {
+			"include": "#preprocessor"
+		},
+		{
+			"include": "#comments"
+		},
+        {
+			"include": "#registers"
+		},
+        {
+			"include": "#macros"
+		},
+        {
+			"include": "#instructions"
+		},
+        {
+			"include": "#numbers"
+		},
+        {
+			"include": "#constants"
+		},
+        {
+			"include": "#directives"
+		},
+        {
+			"include": "#labels"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+        "preprocessor": {
+			"patterns": [{
+				"name": "keyword.control.instruction.cdm8e-assembly",
+				"match": "(#define|#include|#undef|#ifndef|#ifdef|#if|#else|#elif|#endif|#error|#pragma)"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.cdm8e-assembly",
+			"begin": "(\"|\\<)",
+			"end": "(\"|\\>)",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cdm8e-assembly",
+					"match": "\\\\."
+				}
+			]
+		},
+        "instructions": {
+			"patterns": [{
+				"name": "storage.type.struct.cdm8e-assembly",
+				"match": "\\b(ext|ld|st|ldi|ldc|move|add|addc|sub|cmp|and|or|xor|not|neg|dec|inc|shr|shra|shla|rol|push|pop|jsr|rts|osi|osix|rti|crc|br|beq|bz|bne|bnz|bhs|bcs|blo|bcc|bmi|bpl|bvs|bvc|bhi|bls|bge|blt|bgt|ble|ret|nop|wait|halt|pushall|popall|setsp|addsp|ldsa|ioi|osix|rti|jmp)\\b"
+			}]
+		},
+        "comments": {
+			"patterns": [{
+				"name": "comment.line",
+				"match": "(//|#).*$"
+			},
+            {
+				"name": "comment.block",
+				"begin": "/\\*",
+                "end": "\\*/"
+			}]
+		},
+        "macros": {
+			"patterns": [{
+				"name": "keyword.control.instruction.cdm8e-assembly",
+				"match": "\\b(goto|run|else|if|fi|is|gt|lt|le|ge|mi|pl|eq|ne|z|nz|cs|cc|vs|vc|hi|lo|hs|ls|continue|wend|until|while|save|restore|stsp|ldsp|stays|true|break|tst|clr|do|then|unique|first_item|item|last_item|jsrr|shl|banything|bngt|bnge|bneq|bnne|bnlt|bnle|bnhi|bnhs|bncs|bnlo|bnls|bncc|bnmi|bnpl|bnfalse|bntrue|bnvs|bnvc|bnvs|ldv|stv|ei|di)\\b"
+			}]
+		},
+        "labels": {
+			"patterns": [{
+				"name": "entity.name.function.cdm8e-assembly",
+				"match": "([0-9]|[a-z]|[A-Z])+[:|>]*"
+			}]
+		},
+        "registers": {
+			"patterns": [{
+				"name": "variable.readonly.cdm8e-assembly",
+				"match": "\\b(r0|r1|r2|r3)\\b"
+			}]
+		},
+        "constants": {
+			"patterns": [{
+				"name": "keyword.control.instruction.cdm8e-assembly",
+				"match": "\\b([A-Z|0-9|_]+)\\b"
+			}]
+		},
+        "directives": {
+			"patterns": [{
+				"name": "entity.name.type.cdm8e-assembly",
+				"match": "\\b(asect|rsect|dc|ds|tplate|end|end.|macro|mpop|mpush|mend|define)\\b"
+			}]
+		},
+        "numbers": {
+			"patterns": [{
+				"name": "constant.numeric.cdm8e-assembly",
+				"match": "(\\$[0-9]+|[0-9]+|(0b)[01]+|(0x)[0-9|ABCDEF|abcdef]+)\\b"
+			}]
+		}
+	},
+	"scopeName": "source.asm.cdm8e"
+}

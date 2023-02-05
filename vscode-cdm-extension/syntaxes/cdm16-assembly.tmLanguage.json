@@ -1,0 +1,100 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "cdm16 assembly",
+	"patterns": [
+        {
+			"include": "#preprocessor"
+		},
+		{
+			"include": "#comments"
+		},
+        {
+			"include": "#registers"
+		},
+        {
+			"include": "#instructions"
+		},
+        {
+			"include": "#numbers"
+		},
+        {
+			"include": "#constants"
+		},
+        {
+			"include": "#directives"
+		},
+        {
+			"include": "#labels"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+        "preprocessor": {
+			"patterns": [{
+				"name": "keyword.control.instruction.cdm16-assembly",
+				"match": "(#define|#include|#undef|#ifndef|#ifdef|#if|#else|#elif|#endif|#error|#pragma)"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.cdm16-assembly",
+			"begin": "(\"|\\<)",
+			"end": "(\"|\\>)",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cdm16-assembly",
+					"match": "\\\\."
+				}
+			]
+		},
+        "instructions": {
+			"patterns": [{
+				"name": "storage.type.struct.cdm16-assembly",
+				"match": "\\b(beq|bz|bnne|bnnz|bne|bnz|bneq|bhs|bcs|bnlo|bncc|blo|bcc|bnhs|bncs|bmi|bnpl|bpl|bnmi|bvs|bnvc|bvc|bnvs|bhi|bnlc|bls|bnhi|bge|bnlt|blt|bnge|bgt|bnle|ble|bngt|br|banything|btrue|bnfalse|nop|bnanything|bntrue|bfalse|zero|trap|fexc|bad|halt|wait|ei|di|jsr|rti|pupc|popc|pusp|posp|pups|pops|es|ds|push|pop|ldi|jsrr|ldsp|stsp|ldps|stps|ldpc|stpc|shl|shr|shra|ror|rol|rcr|rcl|move|cmp|bit|ldw|ldb|ldsb|ldcw|ldcb|ldcsb|stw|stb|neg|not|sxt|scl|ldsw|ldsb|ldssb|stsw|stsb|ldi|add|cmp|int|push|addsp|jsr|ldw|ldb|ldcw|ldcb|ldcsb|stw|stb|and|or|xor|bic|add|adc|sub|sbc)\\b"
+			}]
+		},
+        "comments": {
+			"patterns": [{
+				"name": "comment.line",
+				"match": "(//|#).*$"
+			},
+            {
+				"name": "comment.block",
+				"begin": "/\\*",
+                "end": "\\*/"
+			}]
+		},
+        "labels": {
+			"patterns": [{
+				"name": "entity.name.function.cdm16-assembly",
+				"match": "([0-9]|[a-z]|[A-Z])+[:|>]*"
+			}]
+		},
+        "registers": {
+			"patterns": [{
+				"name": "variable.readonly.cdm16-assembly",
+				"match": "\\b(r0|r1|r2|r3|r4|r5|r6|fp)\\b"
+			}]
+		},
+        "constants": {
+			"patterns": [{
+				"name": "keyword.control.instruction.cdm16-assembly",
+				"match": "\\b([A-Z|0-9|_]+)\\b"
+			}]
+		},
+        "directives": {
+			"patterns": [{
+				"name": "entity.name.type.cdm16-assembly",
+				"match": "\\b(asect|rsect|dc|ds|tplate|end|end.|macro|mpop|mpush|mend|define)\\b"
+			}]
+		},
+        "numbers": {
+			"patterns": [{
+				"name": "constant.numeric.cdm16-assembly",
+				"match": "(\\$[0-9]+|[0-9]+|(0b)[01]+|(0x)[0-9|ABCDEF|abcdef]+)\\b"
+			}]
+		}
+	},
+	"scopeName": "source.asm.cdm16"
+}
