@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import get_origin, get_args, Callable
 import re
 
-from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode
+from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode, LabelNode
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmTempException, CdmException, CdmExceptionTag
@@ -34,7 +34,7 @@ class TargetInstructions(TargetInstructionsInterface):
                 if line.mnemonic in h.instructions:
                     return h.handler(line, temp_storage, h.instructions[line.mnemonic])
             if line.mnemonic.startswith('b'):
-                return TargetInstructions.branch(line, temp_storage)
+                return TargetInstructions.branch(line)
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
                                f'Unknown instruction "{line.mnemonic}"')
         except CdmTempException as e:
@@ -44,6 +44,13 @@ class TargetInstructions(TargetInstructionsInterface):
     def finish(temp_storage: dict):
         if len(temp_storage.get("save_restore_stack", [])) != 0:
             raise CdmTempException("Expected restore statement")
+
+    @staticmethod
+    def make_branch_instruction(branch_mnemonic: str, label_name: str) \
+            -> list[CodeSegmentsInterface.CodeSegment]:
+        instruction = InstructionNode('b' + branch_mnemonic,
+                                      [RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)])
+        return TargetInstructions.branch(instruction)
 
     @staticmethod
     def ds(line: InstructionNode, _, __):
@@ -127,7 +134,7 @@ class TargetInstructions(TargetInstructionsInterface):
                     'op': 15, 'nanything': 15, 'ntrue': 15, 'false': 15}
 
     @staticmethod
-    def branch(line: InstructionNode, _) -> list[CodeSegmentsInterface.CodeSegment]:
+    def branch(line: InstructionNode) -> list[CodeSegmentsInterface.CodeSegment]:
         cond = re.match(r'b(\w*)', line.mnemonic)[1]
         if cond not in TargetInstructions.branch_codes:
             raise CdmTempException(f'Invalid branch condition: {cond}')

@@ -98,7 +98,8 @@ class CodeSegments(CodeSegmentsInterface):
                 for label_name in section.labels:
                     if section.labels[label_name] > pos:
                         section.labels[label_name] += 2
-                        labels[label_name] += 2
+                        if label_name in labels:
+                            labels[label_name] += 2
                 old_locations = section.code_locations
                 section.code_locations = dict()
                 for PC, location in old_locations.items():
@@ -176,6 +177,9 @@ class CodeSegments(CodeSegmentsInterface):
                     result.external[term.name] = result.external.get(term.name, 0) + sign
                 elif term.name in section.labels and section.name != '$abs':
                     result.relative[term.name] = result.relative.get(term.name, 0) + sign
+                elif term.name in section.labels:
+                    result.value += section.labels[term.name] * sign
+                    result.asect[term.name] = result.asect.get(term.name, 0) + sign
                 elif term.name in labels:
                     result.value += labels[term.name] * sign
                     result.asect[term.name] = result.asect.get(term.name, 0) + sign
