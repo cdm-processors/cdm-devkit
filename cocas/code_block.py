@@ -37,8 +37,8 @@ class CodeBlock:
     def append_label(self, label_name):
         self.labels[label_name] = self.address + self.size
 
-    def append_branch_instruction(self, mnemonic, label_name):
-        br = self.target_instructions.make_branch_instruction(mnemonic, label_name)
+    def append_branch_instruction(self, location, mnemonic, label_name, inverse):
+        br = self.target_instructions.make_branch_instruction(location, mnemonic, label_name, inverse)
         self.segments += br
         self.size += sum(map(lambda x: x.size, br))
 
@@ -88,19 +88,19 @@ class CodeBlock:
             self.assemble_lines(cond.lines, temp_storage)
             next_or_label = f'{or_label}{next_or}'
             if cond.conjunction is None:
-                self.append_branch_instruction(f'n{cond.branch_mnemonic}', else_label)
+                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, else_label, True)
             elif cond.conjunction == 'or':
-                self.append_branch_instruction(cond.branch_mnemonic, then_label)
+                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, then_label, False)
                 self.append_label(next_or_label)
                 next_or += 1
             elif cond.conjunction == 'and':
-                self.append_branch_instruction(f'n{cond.branch_mnemonic}', next_or_label)
+                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, next_or_label, True)
 
         self.append_label(then_label)
         self.assemble_lines(line.then_lines, temp_storage)
 
         if len(line.else_lines) > 0:
-            self.append_branch_instruction('anything', finally_label)
+            self.append_branch_instruction(CodeLocation(), 'anything', finally_label, False)
             self.append_label(else_label)
             self.assemble_lines(line.else_lines, temp_storage)
             self.append_label(finally_label)
@@ -115,9 +115,9 @@ class CodeBlock:
         self.loop_stack.append((cond_label, finally_label))
         self.append_label(cond_label)
         self.assemble_lines(line.condition_lines, temp_storage)
-        self.append_branch_instruction(f'n{line.branch_mnemonic}', finally_label)
+        self.append_branch_instruction(CodeLocation(), line.branch_mnemonic, finally_label, True)
         self.assemble_lines(line.lines, temp_storage)
-        self.append_branch_instruction('anything', cond_label)
+        self.append_branch_instruction(CodeLocation(), 'anything', cond_label, False)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -131,7 +131,7 @@ class CodeBlock:
         self.append_label(loop_body_label)
         self.assemble_lines(line.lines, temp_storage)
         self.append_label(cond_label)
-        self.append_branch_instruction(f'n{line.branch_mnemonic}', loop_body_label)
+        self.append_branch_instruction(CodeLocation(), line.branch_mnemonic, loop_body_label, True)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -139,13 +139,13 @@ class CodeBlock:
         if len(self.loop_stack) == 0:
             raise Exception('"break" not allowed outside of a loop')
         _, finally_label = self.loop_stack[-1]
-        self.append_branch_instruction('anything', finally_label)
+        self.append_branch_instruction(CodeLocation(), 'anything', finally_label, False)
 
     def assemble_continue_statement(self, _: ContinueStatementNode, __):
         if len(self.loop_stack) == 0:
             raise Exception('"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
-        self.append_branch_instruction('anything', cond_label)
+        self.append_branch_instruction(CodeLocation(), 'anything', cond_label, False)
 
 
 @dataclass

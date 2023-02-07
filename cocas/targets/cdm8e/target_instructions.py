@@ -52,9 +52,11 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmTempException("Expected restore statement")
 
     @staticmethod
-    def make_branch_instruction(branch_mnemonic: str, label_name: str) \
+    def make_branch_instruction(location, branch_mnemonic: str, label_name: str, inverse: bool) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
+        if inverse:
+            branch_mnemonic = 'n' + branch_mnemonic
         return [CodeSegments.GotoSegment(branch_mnemonic, arg2)]
 
     @staticmethod
