@@ -141,7 +141,7 @@ class TargetInstructions(TargetInstructionsInterface):
                                       BranchCode(['hi'], 8, ['ls'], 9),
                                       BranchCode(['ge'], 10, ['lt'], 11),
                                       BranchCode(['gt'], 12, ['le'], 13),
-                                      BranchCode(['anything', 'true', 'r'], 0, ['false'], 1)]
+                                      BranchCode(['anything', 'true', 'r'], 14, ['false'], 15)]
 
     @staticmethod
     def branch(line: InstructionNode, inverse=False) -> list[CodeSegmentsInterface.CodeSegment]:
