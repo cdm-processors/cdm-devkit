@@ -15,7 +15,7 @@ import com.cburch.logisim.proj.Project;
 
 class BankedRomAttributes extends AbstractAttributeSet {
     private static List<Attribute<?>> ATTRIBUTES = Arrays.asList(new Attribute<?>[]{
-            BankedMem.ADDR_ATTR, BankedROM.CONTENTS_ATTR
+            BankedMem.ADDR_ATTR, BankedROM.CONTENTS_ATTR, BankedMem.PATH_ATTRIBUTE
     });
 
     private static WeakHashMap<BankedMemContents, BankedRomContentsListener> listenerRegistry
@@ -44,6 +44,7 @@ class BankedRomAttributes extends AbstractAttributeSet {
     private BitWidth addrBits = BitWidth.create(8);
     private BitWidth dataBits = BitWidth.create(8);
     private BankedMemContents contents;
+    private String autoRom = "";
 
     BankedRomAttributes() {
         contents = BankedMemContents.create(addrBits.getWidth(), dataBits.getWidth());
@@ -59,6 +60,7 @@ class BankedRomAttributes extends AbstractAttributeSet {
         d.addrBits = addrBits;
         d.dataBits = dataBits;
         d.contents = contents.clone();
+        d.autoRom = autoRom;
     }
 
     @Override
@@ -72,6 +74,7 @@ class BankedRomAttributes extends AbstractAttributeSet {
         if (attr == BankedMem.ADDR_ATTR) return (V) addrBits;
         if (attr == BankedMem.DATA_ATTR) return (V) dataBits;
         if (attr == BankedROM.CONTENTS_ATTR) return (V) contents;
+        if (attr == BankedMem.PATH_ATTRIBUTE) return (V) autoRom;
         return null;
     }
 
@@ -85,6 +88,8 @@ class BankedRomAttributes extends AbstractAttributeSet {
             contents.setDimensions(addrBits.getWidth(), dataBits.getWidth());
         } else if (attr == BankedROM.CONTENTS_ATTR) {
             contents = (BankedMemContents) value;
+        } else if (attr == BankedMem.PATH_ATTRIBUTE) {
+            autoRom = (String) value;
         }
         fireAttributeValueChanged(attr, value);
     }

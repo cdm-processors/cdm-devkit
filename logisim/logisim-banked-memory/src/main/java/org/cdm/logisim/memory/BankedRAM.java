@@ -2,6 +2,10 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.data.Attribute;
@@ -15,6 +19,7 @@ import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.gui.hex.HexFile;
 import com.cburch.logisim.gui.hex.HexFrame;
 import com.cburch.logisim.instance.Instance;
 import com.cburch.logisim.instance.InstanceData;
@@ -26,6 +31,34 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.proj.Project;
 
 public class BankedRAM extends BankedMem {
+
+    //todo ram memcontent attribute
+    public static Attribute<BankedMemContents> CONTENTS_ATTR = new Attribute<BankedMemContents>
+            ("contents", BankedStrings.getter("ramContentsAttr")) {
+        @Override
+        public BankedMemContents parse(String value) {
+            int lineBreak = value.indexOf('\n');
+            String first = lineBreak < 0 ? value : value.substring(0, lineBreak);
+            String rest = lineBreak < 0 ? "" : value.substring(lineBreak + 1);
+            StringTokenizer toks = new StringTokenizer(first);
+            try {
+                String header = toks.nextToken();
+                if (!header.equals("addr/data:")) return null;
+                int addr = Integer.parseInt(toks.nextToken());
+                int data = Integer.parseInt(toks.nextToken());
+                BankedMemContents ret = BankedMemContents.create(addr, data);
+                HexFile.open(ret, new StringReader(rest));
+                return ret;
+            } catch (IOException e) {
+                return null;
+            } catch (NumberFormatException e) {
+                return null;
+            } catch (NoSuchElementException e) {
+                return null;
+            }
+        }
+    };
+
     static final AttributeOption BUS_COMBINED
             = new AttributeOption("combined", BankedStrings.getter("ramBusSynchCombined"));
     static final Attribute<AttributeOption> ATTR_BUS = Attributes.forOption("bus",
@@ -33,10 +66,10 @@ public class BankedRAM extends BankedMem {
             new AttributeOption[]{BUS_COMBINED});
 
     private static Attribute<?>[] ATTRIBUTES = {
-            BankedMem.ADDR_ATTR
+            BankedMem.ADDR_ATTR, PATH_ATTRIBUTE
     };
     private static Object[] DEFAULTS = {
-            BitWidth.create(8), BitWidth.create(8)
+            BitWidth.create(8), ""
     };
 
     private static final int OE = MEM_INPUTS + 0;
@@ -60,6 +93,10 @@ public class BankedRAM extends BankedMem {
         super("RAM", BankedStrings.getter("ramComponent"), 3);
         setIconName("ram.gif");
         setInstanceLogger(Logger.class);
+    }
+
+    BankedMemContents getMemContents(Instance instance) {
+        return instance.getAttributeValue(CONTENTS_ATTR);
     }
 
     @Override
@@ -144,6 +181,7 @@ public class BankedRAM extends BankedMem {
 
     @Override
     public void propagate(InstanceState state) {
+        super.autoLoadImage(state);
         BankedRamState myState = (BankedRamState) getState(state);
         BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
         Object busVal = state.getAttributeValue(ATTR_BUS);

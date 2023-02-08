@@ -98,6 +98,7 @@ public class BankedROM extends BankedMem {
 
     @Override
     public void propagate(InstanceState state) {
+        super.autoLoadImage(state);
         BankedMemState myState = this.getState(state);
         Value addrValue = state.getPort(1);
         Value bits = state.getPort(3);
