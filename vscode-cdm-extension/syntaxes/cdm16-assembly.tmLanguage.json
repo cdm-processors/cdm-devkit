@@ -83,7 +83,7 @@
         "registers": {
 			"patterns": [{
 				"name": "variable.readonly.cdm16-assembly",
-				"match": "\\b(r0|r1|r2|r3|r4|r5|r6|fp)\\b"
+				"match": "\\b(r0|r1|r2|r3|r4|r5|r6|r7|fp)\\b"
 			}]
 		},
         "constants": {
