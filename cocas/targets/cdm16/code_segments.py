@@ -25,6 +25,19 @@ class CodeSegments(CodeSegmentsInterface):
     class CodeSegment(CodeSegmentsInterface.CodeSegment):
         pass
 
+    @dataclass
+    class AlignedSegment(CodeSegment):
+        alignment: int
+
+        def __init__(self, alignment: int):
+            self.alignment = alignment
+
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            if (section.address + len(object_record.data)) % self.alignment != 0:
+                _error(self, f'Segment must be {self.alignment}-byte aligned')
+            super().fill(object_record, section, labels, templates)
+
     class BytesSegment(CodeSegment):
         data: bytes
 
@@ -35,13 +48,13 @@ class CodeSegments(CodeSegmentsInterface):
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
+            super().fill(object_record, section, labels, templates)
             object_record.data += self.data
 
-    class AlignedBytesSegment(BytesSegment):
-        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            CodeSegments.assert_2_alignment(section, object_record, self)
-            super().fill(object_record, section, labels, templates)
+    class AlignedBytesSegment(AlignedSegment, BytesSegment):
+        def __init__(self, alignment: int, data: bytes, location: CodeLocation):
+            CodeSegments.AlignedSegment.__init__(self, alignment)
+            CodeSegments.BytesSegment.__init__(self, data, location)
 
     class ExpressionSegment(CodeSegment):
         expr: RelocatableExpressionNode
@@ -53,7 +66,6 @@ class CodeSegments(CodeSegmentsInterface):
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
-            CodeSegments.assert_2_alignment(section, object_record, self)
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
             parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
             offset = section.address + len(object_record.data)
@@ -65,10 +77,11 @@ class CodeSegments(CodeSegmentsInterface):
     class VaryingLengthSegment(CodeSegment, CodeSegmentsInterface.VaryingLengthSegment):
         pass
 
-    class LdiSegment(VaryingLengthSegment):
+    class LdiSegment(AlignedSegment, VaryingLengthSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, register: RegisterNode, expr: RelocatableExpressionNode):
+            CodeSegments.AlignedSegment.__init__(self, 2)
             self.location = location
             self.reg: int = register.number
             self.expr = expr
@@ -77,7 +90,7 @@ class CodeSegments(CodeSegmentsInterface):
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
-            CodeSegments.assert_2_alignment(section, object_record, self)
+            super().fill(object_record, section, labels, templates)
             if self.size == 4:
                 object_record.data.extend(pack("u3p6u4u3", 0b001, 2, self.reg))
                 CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
@@ -108,11 +121,12 @@ class CodeSegments(CodeSegmentsInterface):
                     section.code_locations[PC] = location
                 return 2
 
-    class Imm6(CodeSegment):
+    class Imm6(AlignedSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, negative: bool, op_number: int, register: RegisterNode,
                      expr: RelocatableExpressionNode):
+            CodeSegments.AlignedSegment.__init__(self, 2)
             self.op_number = op_number
             self.sign = -1 if negative else 1
             self.location = location
@@ -122,7 +136,7 @@ class CodeSegments(CodeSegmentsInterface):
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
-            CodeSegments.assert_2_alignment(section, object_record, self)
+            super().fill(object_record, section, labels, templates)
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
             value = parsed.value_with_relative * self.sign
             if parsed.external:
@@ -133,10 +147,11 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'Value is out of bounds for immediate form')
             object_record.data.extend(pack("u3u3s7u3", 0b011, self.op_number, value, self.reg))
 
-    class Imm9(CodeSegment):
+    class Imm9(AlignedSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, negative: bool, op_number: int, expr: RelocatableExpressionNode):
+            CodeSegments.AlignedSegment.__init__(self, 2)
             self.op_number = op_number
             self.sign = -1 if negative else 1
             self.location = location
@@ -145,7 +160,7 @@ class CodeSegments(CodeSegmentsInterface):
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
-            CodeSegments.assert_2_alignment(section, object_record, self)
+            super().fill(object_record, section, labels, templates)
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
             value = parsed.value_with_relative * self.sign
             if parsed.external:
@@ -230,10 +245,3 @@ class CodeSegments(CodeSegmentsInterface):
             sign = parsed.relative_additions // abs(parsed.relative_additions)
             for i in range(abs(parsed.relative_additions)):
                 object_record.relative.append(ExternalEntry(offset, range(0, 2), sign))
-
-    @staticmethod
-    def assert_2_alignment(section: Section, object_record: ObjectSectionRecord, segment: CodeSegment):
-        if section.address % 2 == 1:
-            _error(segment, 'Section must be 2-byte aligned')
-        elif len(object_record.data) % 2 == 1:
-            _error(segment, 'Previous line size somehow is not multiple of two')

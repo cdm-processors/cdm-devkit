@@ -61,7 +61,7 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmTempException('Const number expected')
         if arg.const_term < 0:
             raise CdmTempException('Cannot specify negative size in "ds"')
-        return [CodeSegments.BytesSegment(bytes(arg.const_term + arg.const_term % 2), line.location)]
+        return [CodeSegments.BytesSegment(bytes(arg.const_term), line.location)]
 
     @staticmethod
     def dc(line: InstructionNode, _, __):
@@ -87,17 +87,10 @@ class TargetInstructions(TargetInstructionsInterface):
                 if command == 'dw':
                     raise CdmTempException(f'Currently "dw" doesn\'t support strings')
                 encoded = arg.encode('utf-8')
-                if command == 'dc':
-                    if len(encoded) % 2 == 1:
-                        encoded += bytes(1)
-                    segments.append(CodeSegments.AlignedBytesSegment(encoded, line.location))
-                else:
-                    segments.append(CodeSegments.BytesSegment(encoded, line.location))
+                segments.append(CodeSegments.BytesSegment(encoded, line.location))
                 size += len(encoded)
             else:
                 raise CdmTempException(f'Incompatible argument type: {type(arg)}')
-        if size % 2 == 1:
-            segments.append(CodeSegments.BytesSegment(bytes(1), line.location))
         return segments
 
     @staticmethod
