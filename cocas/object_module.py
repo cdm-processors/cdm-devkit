@@ -21,6 +21,7 @@ class ObjectSectionRecord:
         self.relative: list[ExternalEntry] = []
         self.lower_parts: dict[int, int] = dict()
         self.code_locations = section.code_locations
+        self.alignment = 1
 
         for seg in section.segments:
             seg.fill(self, section, labels, templates)

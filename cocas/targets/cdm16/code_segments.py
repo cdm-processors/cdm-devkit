@@ -1,5 +1,6 @@
 from copy import copy
 from dataclasses import dataclass, field
+from math import lcm
 
 import bitstruct
 
@@ -49,9 +50,11 @@ class CodeSegments(CodeSegmentsInterface):
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             object_record.data += bytes(self.size)
+            if section.name != '$abs':
+                object_record.alignment = lcm(object_record.alignment, self.alignment)
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int], _):
-            new_size = self.alignment - (section.address + pos) % self.alignment
+            new_size = (-section.address - pos) % self.alignment
             if new_size == self.alignment:
                 new_size = 0
             diff = new_size - self.size
@@ -70,6 +73,8 @@ class CodeSegments(CodeSegmentsInterface):
             if (section.address + len(object_record.data)) % self.alignment != 0:
                 _error(self, f'Segment must be {self.alignment}-byte aligned')
             super().fill(object_record, section, labels, templates)
+            if section.name != '$abs':
+                object_record.alignment = lcm(object_record.alignment, self.alignment)
 
     class InstructionSegment(AlignedSegment):
         def __init__(self, location: CodeLocation):
