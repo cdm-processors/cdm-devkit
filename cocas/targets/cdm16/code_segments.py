@@ -25,7 +25,40 @@ class CodeSegments(CodeSegmentsInterface):
     class CodeSegment(CodeSegmentsInterface.CodeSegment):
         pass
 
-    @dataclass
+    class VaryingLengthSegment(CodeSegment, CodeSegmentsInterface.VaryingLengthSegment):
+        @staticmethod
+        def update_surroundings(diff: int, pos: int, section: Section, labels: dict[str, int]):
+            for label_name in section.labels:
+                if section.labels[label_name] > pos:
+                    section.labels[label_name] += diff
+                    if label_name in labels:
+                        labels[label_name] += diff
+            old_locations = section.code_locations
+            section.code_locations = dict()
+            for PC, location in old_locations.items():
+                if PC > pos:
+                    PC += diff
+                section.code_locations[PC] = location
+
+    class AlignmentPaddingSegment(VaryingLengthSegment):
+        def __init__(self, alignment: int, location: CodeLocation):
+            self.location = location
+            self.alignment = alignment
+            self.size = alignment
+
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            object_record.data += bytes(self.size)
+
+        def update_varying_length(self, pos, section: Section, labels: dict[str, int], _):
+            new_size = self.alignment - (section.address + pos) % self.alignment
+            if new_size == self.alignment:
+                new_size = 0
+            diff = new_size - self.size
+            self.size = new_size
+            self.__class__.update_surroundings(diff, pos, section, labels)
+            return diff
+
     class AlignedSegment(CodeSegment):
         alignment: int
 
@@ -37,6 +70,11 @@ class CodeSegments(CodeSegmentsInterface):
             if (section.address + len(object_record.data)) % self.alignment != 0:
                 _error(self, f'Segment must be {self.alignment}-byte aligned')
             super().fill(object_record, section, labels, templates)
+
+    class InstructionSegment(AlignedSegment):
+        def __init__(self, location: CodeLocation):
+            super().__init__(2)
+            self.location = location
 
     class BytesSegment(CodeSegment):
         data: bytes
@@ -51,9 +89,9 @@ class CodeSegments(CodeSegmentsInterface):
             super().fill(object_record, section, labels, templates)
             object_record.data += self.data
 
-    class AlignedBytesSegment(AlignedSegment, BytesSegment):
-        def __init__(self, alignment: int, data: bytes, location: CodeLocation):
-            CodeSegments.AlignedSegment.__init__(self, alignment)
+    class InstructionBytesSegment(InstructionSegment, BytesSegment):
+        def __init__(self, data: bytes, location: CodeLocation):
+            CodeSegments.InstructionSegment.__init__(self, location)
             CodeSegments.BytesSegment.__init__(self, data, location)
 
     class ExpressionSegment(CodeSegment):
@@ -74,14 +112,11 @@ class CodeSegments(CodeSegmentsInterface):
             object_record.data.extend((parsed.value_with_relative % 65536).to_bytes(2, 'little'))
             CodeSegments.add_relatives_externals(parsed, offset, object_record)
 
-    class VaryingLengthSegment(CodeSegment, CodeSegmentsInterface.VaryingLengthSegment):
-        pass
-
-    class LdiSegment(AlignedSegment, VaryingLengthSegment):
+    class LdiSegment(InstructionSegment, VaryingLengthSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, register: RegisterNode, expr: RelocatableExpressionNode):
-            CodeSegments.AlignedSegment.__init__(self, 2)
+            CodeSegments.InstructionSegment.__init__(self, location)
             self.location = location
             self.reg: int = register.number
             self.expr = expr
@@ -108,28 +143,17 @@ class CodeSegments(CodeSegmentsInterface):
             if parsed.external or parsed.relative_additions != 0 or not -64 <= parsed.value_with_relative < 64:
                 self.size = 4
                 self.size_locked = True
-                for label_name in section.labels:
-                    if section.labels[label_name] > pos:
-                        section.labels[label_name] += 2
-                        if label_name in labels:
-                            labels[label_name] += 2
-                old_locations = section.code_locations
-                section.code_locations = dict()
-                for PC, location in old_locations.items():
-                    if PC > pos:
-                        PC += 2
-                    section.code_locations[PC] = location
+                self.__class__.update_surroundings(2, pos, section, labels)
                 return 2
 
-    class Imm6(AlignedSegment):
+    class Imm6(InstructionSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, negative: bool, op_number: int, register: RegisterNode,
                      expr: RelocatableExpressionNode):
-            CodeSegments.AlignedSegment.__init__(self, 2)
+            super().__init__(location)
             self.op_number = op_number
             self.sign = -1 if negative else 1
-            self.location = location
             self.reg: int = register.number
             self.expr = expr
             self.size = 2
@@ -147,14 +171,13 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'Value is out of bounds for immediate form')
             object_record.data.extend(pack("u3u3s7u3", 0b011, self.op_number, value, self.reg))
 
-    class Imm9(AlignedSegment):
+    class Imm9(InstructionSegment):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, negative: bool, op_number: int, expr: RelocatableExpressionNode):
-            CodeSegments.AlignedSegment.__init__(self, 2)
+            super().__init__(location)
             self.op_number = op_number
             self.sign = -1 if negative else 1
-            self.location = location
             self.expr = expr
             self.size = 2
 
