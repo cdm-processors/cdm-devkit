@@ -157,17 +157,16 @@ class TargetInstructions(TargetInstructionsInterface):
         cond = re.match(r'b(\w*)', line.mnemonic)[1]
         for pair in TargetInstructions.branch_codes:
             if cond in pair.condition:
-                code = pair.code if not inverse else pair.inv_code
+                branch_code = pair.code if not inverse else pair.inv_code
                 break
             elif cond in pair.inverse:
-                code = pair.inv_code if not inverse else pair.code
+                branch_code = pair.inv_code if not inverse else pair.code
                 break
         else:
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
                                f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
-        return [CodeSegments.InstructionBytesSegment(pack("u5p7u4", 0x00001, code), line.location),
-                CodeSegments.ExpressionSegment(line.location, line.arguments[0])]
+        return [CodeSegments.Branch(line.location, branch_code, line.arguments[0])]
 
     @staticmethod
     def op0(line: InstructionNode, _, op_number: int):

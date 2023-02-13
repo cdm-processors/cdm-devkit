@@ -151,6 +151,53 @@ class CodeSegments(CodeSegmentsInterface):
                 self.__class__.update_surroundings(2, pos, section, labels)
                 return 2
 
+    class Branch(InstructionSegment, VaryingLengthSegment):
+        expr: RelocatableExpressionNode
+
+        def __init__(self, location: CodeLocation, branch_code: int, expr: RelocatableExpressionNode):
+            CodeSegments.InstructionSegment.__init__(self, location)
+            self.branch_code = branch_code
+            self.expr = expr
+            self.size = 2
+            self.size_locked = False
+            self.checked_possible = False
+
+        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+                 templates: dict[str, dict[str, int]]):
+            super().fill(object_record, section, labels, templates)
+            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+            if parsed.value_with_relative % 2 != 0:
+                _error(self, "Destination address must be 2-byte aligned")
+            if self.size == 4:
+                object_record.data.extend(pack("u5p7u4", 0x00001, self.branch_code))
+                CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
+            else:
+                dist = parsed.value_with_relative - (section.address + len(object_record.data) + 2)
+                value = dist // 2 % 512
+                sign = 0 if dist < 0 else 1
+                object_record.data.extend(pack("u2u1u4u9", 0b11, sign, self.branch_code, value))
+
+        def update_varying_length(self, pos, section: Section, labels: dict[str, int],
+                                  templates: dict[str, dict[str, int]]):
+            if self.size_locked:
+                return
+            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+            external = False
+            if not self.checked_possible:
+                if self.expr.sub_terms:
+                    _error(self, 'Cannot subtract labels in branch value expressions')
+                elif len(self.expr.add_terms) > 1:
+                    _error(self, 'Cannot use multiple labels in branch value expressions')
+                if parsed.external or parsed.asect and section.name != '$abs':
+                    external = True
+                self.checked_possible = True
+            dist = parsed.value_with_relative - pos - 2
+            if external or not -1024 <= dist < 1024:
+                self.size = 4
+                self.size_locked = True
+                self.__class__.update_surroundings(2, pos, section, labels)
+                return 2
+
     class Imm6(InstructionSegment):
         expr: RelocatableExpressionNode
 
