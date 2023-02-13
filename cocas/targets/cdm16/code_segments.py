@@ -1,6 +1,6 @@
-from copy import copy
 from dataclasses import dataclass, field
 from math import lcm
+from typing import Optional
 
 import bitstruct
 
@@ -110,11 +110,12 @@ class CodeSegments(CodeSegmentsInterface):
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
+            CodeSegments.forbid_multilabel_expressions(parsed, self)
+            value = CodeSegments.calculate_expression(parsed, section, labels)
             offset = section.address + len(object_record.data)
-            if not -32768 <= parsed.value_with_relative < 65536:
+            if not -32768 <= value < 65536:
                 _error(self, 'Number out of range')
-            object_record.data.extend((parsed.value_with_relative % 65536).to_bytes(2, 'little'))
+            object_record.data.extend((value % 65536).to_bytes(2, 'little'))
             CodeSegments.add_relatives_externals(parsed, offset, object_record)
 
     class LdiSegment(InstructionSegment, VaryingLengthSegment):
@@ -122,11 +123,12 @@ class CodeSegments(CodeSegmentsInterface):
 
         def __init__(self, location: CodeLocation, register: RegisterNode, expr: RelocatableExpressionNode):
             CodeSegments.InstructionSegment.__init__(self, location)
-            self.location = location
             self.reg: int = register.number
             self.expr = expr
             self.size = 2
             self.size_locked = False
+            self.checked = False
+            self.parsed: Optional[CodeSegments.ParsedExpression] = None
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
@@ -135,17 +137,21 @@ class CodeSegments(CodeSegmentsInterface):
                 object_record.data.extend(pack("u3p6u4u3", 0b001, 2, self.reg))
                 CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
             else:
-                parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-                parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
-                object_record.data.extend(pack("u3u3s7u3", 0b011, 5, parsed.value_with_relative, self.reg))
+                value = CodeSegments.calculate_expression(self.parsed, section, labels)
+                object_record.data.extend(pack("u3u3s7u3", 0b011, 5, value, self.reg))
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int],
                                   templates: dict[str, dict[str, int]]):
             if self.size_locked:
                 return
-            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            parsed = CodeSegments.forbid_multilabel_expressions(parsed, self)
-            if parsed.external or parsed.relative_additions != 0 or not -64 <= parsed.value_with_relative < 64:
+            bad = False
+            if not self.checked:
+                self.parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
+                CodeSegments.forbid_multilabel_expressions(self.parsed, self)
+                bad = self.parsed.external or self.parsed.relative_additions != 0
+                self.checked = True
+            value = CodeSegments.calculate_expression(self.parsed, section, labels)
+            if bad or not -64 <= value < 64:
                 self.size = 4
                 self.size_locked = True
                 self.__class__.update_surroundings(2, pos, section, labels)
@@ -160,39 +166,40 @@ class CodeSegments(CodeSegmentsInterface):
             self.expr = expr
             self.size = 2
             self.size_locked = False
-            self.checked_possible = False
+            self.checked = False
+            self.parsed: Optional[CodeSegments.ParsedExpression] = None
 
         def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             super().fill(object_record, section, labels, templates)
-            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            if parsed.value_with_relative % 2 != 0:
+            value = CodeSegments.calculate_expression(self.parsed, section, labels)
+            if value % 2 != 0:
                 _error(self, "Destination address must be 2-byte aligned")
             if self.size == 4:
                 object_record.data.extend(pack("u5p7u4", 0x00001, self.branch_code))
                 CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
             else:
-                dist = parsed.value_with_relative - (section.address + len(object_record.data) + 2)
-                value = dist // 2 % 512
+                dist = value - (section.address + len(object_record.data) + 2)
+                val = dist // 2 % 512
                 sign = 0 if dist < 0 else 1
-                object_record.data.extend(pack("u2u1u4u9", 0b11, sign, self.branch_code, value))
+                object_record.data.extend(pack("u2u1u4u9", 0b11, sign, self.branch_code, val))
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int],
                                   templates: dict[str, dict[str, int]]):
             if self.size_locked:
                 return
-            parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            external = False
-            if not self.checked_possible:
+            bad = False
+            if not self.checked:
+                self.parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
                 if self.expr.sub_terms:
                     _error(self, 'Cannot subtract labels in branch value expressions')
                 elif len(self.expr.add_terms) > 1:
                     _error(self, 'Cannot use multiple labels in branch value expressions')
-                if parsed.external or parsed.asect and section.name != '$abs':
-                    external = True
-                self.checked_possible = True
-            dist = parsed.value_with_relative - pos - 2
-            if external or not -1024 <= dist < 1024:
+                bad = self.parsed.external or self.parsed.asect and section.name != '$abs'
+                self.checked = True
+            value = CodeSegments.calculate_expression(self.parsed, section, labels)
+            dist = value - pos - 2
+            if bad or not -1024 <= dist < 1024:
                 self.size = 4
                 self.size_locked = True
                 self.__class__.update_surroundings(2, pos, section, labels)
@@ -214,7 +221,7 @@ class CodeSegments(CodeSegmentsInterface):
                  templates: dict[str, dict[str, int]]):
             super().fill(object_record, section, labels, templates)
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            value = parsed.value_with_relative * self.sign
+            value = CodeSegments.calculate_expression(parsed, section, labels) * self.sign
             if parsed.external:
                 _error(self, 'No external labels allowed in immediate form')
             elif parsed.relative_additions != 0:
@@ -237,7 +244,7 @@ class CodeSegments(CodeSegmentsInterface):
                  templates: dict[str, dict[str, int]]):
             super().fill(object_record, section, labels, templates)
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
-            value = parsed.value_with_relative * self.sign
+            value = CodeSegments.calculate_expression(parsed, section, labels) * self.sign
             if parsed.external:
                 _error(self, 'No external labels allowed in immediate form')
             elif parsed.relative_additions != 0:
@@ -249,7 +256,6 @@ class CodeSegments(CodeSegmentsInterface):
     @dataclass
     class ParsedExpression:
         value: int
-        value_with_relative: int = field(init=False)
         relative_additions: int = field(default=0)
         asect: dict[str, int] = field(default_factory=dict)
         relative: dict[str, int] = field(default_factory=dict)
@@ -257,7 +263,7 @@ class CodeSegments(CodeSegmentsInterface):
 
     @staticmethod
     def parse_expression(expr: RelocatableExpressionNode, section: Section, labels: dict[str, int],
-                         templates: dict[str, dict[str, int]], segment: CodeSegment):
+                         templates: dict[str, dict[str, int]], segment: CodeSegment) -> ParsedExpression:
         if expr.byte_specifier is not None:
             _error(segment, f'No byte specifiers allowed in CdM-16')
         result = CodeSegments.ParsedExpression(expr.const_term)
@@ -268,28 +274,35 @@ class CodeSegments(CodeSegmentsInterface):
                 elif term.name in section.labels and section.name != '$abs':
                     result.relative[term.name] = result.relative.get(term.name, 0) + sign
                 elif term.name in section.labels:
-                    result.value += section.labels[term.name] * sign
                     result.asect[term.name] = result.asect.get(term.name, 0) + sign
                 elif term.name in labels:
-                    result.value += labels[term.name] * sign
                     result.asect[term.name] = result.asect.get(term.name, 0) + sign
                 else:
                     _error(segment, f'Label "{term.name}" not found')
             elif isinstance(term, TemplateFieldNode):
                 result.value += templates[term.template_name][term.field_name] * sign
-
-        result.value_with_relative = result.value
         for label, n in result.relative.items():
-            rel_address = section.labels[label]
-            result.value_with_relative += rel_address * n
             result.relative_additions += n
+        result.asect = {label: n for label, n in result.asect.items() if n != 0}
+        result.external = {label: n for label, n in result.external.items() if n != 0}
+        result.relative = {label: n for label, n in result.relative.items() if n != 0}
         return result
 
     @staticmethod
+    def calculate_expression(parsed: ParsedExpression, section: Section, labels: dict[str, int]) -> int:
+        value = parsed.value
+        for label, n in parsed.asect.items():
+            if label in section.labels:
+                value += section.labels[label] * n
+            else:
+                value += labels[label] * n
+        for label, n in parsed.relative.items():
+            rel_address = section.labels[label]
+            value += rel_address * n
+        return value
+
+    @staticmethod
     def forbid_multilabel_expressions(parsed: ParsedExpression, segment: CodeSegment):
-        parsed = copy(parsed)
-        parsed.external = {label: n for label, n in parsed.external.items() if n != 0}
-        parsed.relative = {label: n for label, n in parsed.relative.items() if n != 0}
         if len(parsed.external) > 1:
             _error(segment, 'Cannot use multiple external labels in an address expression')
         elif len(parsed.external) == 1:
@@ -305,7 +318,6 @@ class CodeSegments(CodeSegmentsInterface):
         elif parsed.relative_additions > 1:
             _error(segment, 'Can add rsect labels multiple times only to find distance '
                             'from another subtracted rsect label')
-        return parsed
 
     @staticmethod
     def add_relatives_externals(parsed: ParsedExpression, offset: int, object_record: ObjectSectionRecord):
