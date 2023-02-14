@@ -2,6 +2,7 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -96,16 +97,27 @@ public class BankedROM extends BankedMem {
         return instance.getAttributeValue(CONTENTS_ATTR);
     }
 
+    void autoLoadImage(InstanceState state) {
+        String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
+        try {
+            File file = new File(filename);
+            loadImage(state, file);
+        } catch (IOException e) {
+        }
+    }
+
     @Override
     public void propagate(InstanceState state) {
-        super.autoLoadImage(state);
         BankedMemState myState = this.getState(state);
         Value addrValue = state.getPort(1);
         Value bits = state.getPort(3);
         boolean chipSelect = state.getPort(2) != Value.FALSE;
-
         //state.setPort(BITS, Value.createKnown(BitWidth.create(BankedMem.DEFAULT_BITS_SIZE), BankedMem.DEFAULT_BITS_VALUE), DELAY);
 
+        if (myState.isNewlyCreated()){
+            myState.markLoaded();
+            autoLoadImage(state);
+        }
         if (!chipSelect) {
             myState.setCurrent(-1L);
             state.setPort(0, Value.createUnknown(BitWidth.create(16)), 10);

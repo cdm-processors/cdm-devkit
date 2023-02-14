@@ -99,21 +99,6 @@ abstract class BankedMem extends InstanceFactory {
         ps[CS].setToolTip(BankedStrings.getter("memCSTip"));
     }
 
-    void autoLoadImage(InstanceState state) {
-        if (state.getData() == null) {
-            //System.out.println("newly created");
-            String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
-            //System.out.println(filename);
-            try {
-                File file = new File(filename);
-                loadImage(state, file);
-                //System.out.printf("Loaded image file %s \n", filename);
-            } catch (IOException e) {
-                //System.out.println("Image file not found");
-            }
-        }
-    }
-
     @Override
     public void paintInstance(InstancePainter painter) {
         Graphics g = painter.getGraphics();

@@ -2,6 +2,7 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.NoSuchElementException;
@@ -11,10 +12,8 @@ import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeEvent;
 import com.cburch.logisim.data.AttributeListener;
-import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.AttributeSets;
-import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Location;
@@ -59,11 +58,16 @@ public class BankedRAM extends BankedMem {
         }
     };
 
-    static final AttributeOption BUS_COMBINED
-            = new AttributeOption("combined", BankedStrings.getter("ramBusSynchCombined"));
-    static final Attribute<AttributeOption> ATTR_BUS = Attributes.forOption("bus",
+    /*
+    static final AttributeOption HAS_IMAGE_FILE
+            = new AttributeOption("with image file", BankedStrings.getter("ramImageFile"));
+    static final AttributeOption NO_IMAGE_FILE
+            = new AttributeOption("no image file", BankedStrings.getter("ramNoImageFile"));
+
+    static final Attribute<AttributeOption> ATTR_IMG_FILE = Attributes.forOption("bus",
             BankedStrings.getter("ramBusAttr"),
-            new AttributeOption[]{BUS_COMBINED});
+            new AttributeOption[]{NO_IMAGE_FILE, HAS_IMAGE_FILE});
+     */
 
     private static Attribute<?>[] ATTRIBUTES = {
             BankedMem.ADDR_ATTR, PATH_ATTRIBUTE
@@ -107,7 +111,6 @@ public class BankedRAM extends BankedMem {
 
     @Override
     protected void instanceAttributeChanged(Instance instance, Attribute<?> attr) {
-        super.instanceAttributeChanged(instance, attr);
         configurePorts(instance);
     }
 
@@ -179,21 +182,32 @@ public class BankedRAM extends BankedMem {
         return state.getHexFrame(proj);
     }
 
+    void autoLoadImage(InstanceState state) {
+        String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
+        try {
+            File file = new File(filename);
+            loadImage(state, file);
+        } catch (IOException e) {
+        }
+    }
+
     @Override
     public void propagate(InstanceState state) {
-        super.autoLoadImage(state);
         BankedRamState myState = (BankedRamState) getState(state);
-        BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
-        Object busVal = state.getAttributeValue(ATTR_BUS);
-
+        //BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
+        //Object busVal = state.getAttributeValue(ATTR_BUS);
         // state.setPort(BITS, Value.createKnown(BitWidth.create(BankedMem.DEFAULT_BITS_SIZE), BankedMem.DEFAULT_BITS_VALUE), DELAY);
-
         Value addrValue = state.getPort(ADDR);
         Value bits = state.getPort(BITS);
         boolean chipSelect = state.getPort(CS) != Value.FALSE;
         boolean triggered = myState.setClock(state.getPort(CLK), StdAttr.TRIG_RISING);
         boolean outputEnabled = state.getPort(OE) != Value.FALSE;
         boolean shouldClear = state.getPort(CLR) == Value.TRUE;
+
+        if (myState.isNewlyCreated()) {
+            myState.markLoaded();
+            autoLoadImage(state);
+        }
 
         if (shouldClear) {
             myState.getContents().clear();
@@ -259,6 +273,7 @@ public class BankedRAM extends BankedMem {
         private MemListener listener;
         private HexFrame hexFrame = null;
         private BankedClockState clockState;
+        private boolean newlyCreated = true;
 
         BankedRamState(Instance parent, BankedMemContents contents, MemListener listener) {
             super(contents);
@@ -267,6 +282,14 @@ public class BankedRAM extends BankedMem {
             this.clockState = new BankedClockState();
             if (parent != null) parent.getAttributeSet().addAttributeListener(this);
             contents.addHexModelListener(listener);
+        }
+
+        public boolean isNewlyCreated() {
+            return newlyCreated;
+        }
+
+        public void markLoaded() {
+            this.newlyCreated = false;
         }
 
         void setRam(Instance value) {
