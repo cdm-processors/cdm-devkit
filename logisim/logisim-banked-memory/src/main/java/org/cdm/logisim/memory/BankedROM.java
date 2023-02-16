@@ -2,7 +2,6 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -95,15 +94,6 @@ public class BankedROM extends BankedMem {
 
     BankedMemContents getMemContents(Instance instance) {
         return instance.getAttributeValue(CONTENTS_ATTR);
-    }
-
-    void autoLoadImage(InstanceState state) {
-        String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
-        try {
-            File file = new File(filename);
-            loadImage(state, file);
-        } catch (IOException e) {
-        }
     }
 
     @Override

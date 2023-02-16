@@ -2,7 +2,6 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.NoSuchElementException;
@@ -70,11 +69,13 @@ public class BankedRAM extends BankedMem {
      */
 
     private static Attribute<?>[] ATTRIBUTES = {
-            BankedMem.ADDR_ATTR, PATH_ATTRIBUTE
+            BankedMem.ADDR_ATTR, PATH_ATTRIBUTE, LOAD_FROM_IMAGE_FILE
     };
     private static Object[] DEFAULTS = {
-            BitWidth.create(8), ""
+            BitWidth.create(8), "", NO_IMAGE_FILE
     };
+
+
 
     private static final int OE = MEM_INPUTS + 0;
     private static final int CLR = MEM_INPUTS + 1;
@@ -180,15 +181,6 @@ public class BankedRAM extends BankedMem {
     HexFrame getHexFrame(Project proj, Instance instance, CircuitState circState) {
         BankedRamState state = (BankedRamState) getState(instance, circState);
         return state.getHexFrame(proj);
-    }
-
-    void autoLoadImage(InstanceState state) {
-        String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
-        try {
-            File file = new File(filename);
-            loadImage(state, file);
-        } catch (IOException e) {
-        }
     }
 
     @Override

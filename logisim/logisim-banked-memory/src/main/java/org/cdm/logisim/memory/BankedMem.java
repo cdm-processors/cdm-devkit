@@ -10,6 +10,7 @@ import com.cburch.hex.HexModel;
 import com.cburch.hex.HexModelListener;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.data.Attribute;
+import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.BitWidth;
@@ -44,6 +45,13 @@ abstract class BankedMem extends InstanceFactory {
             "dataWidth", BankedStrings.getter("ramDataWidthAttr"));
 
     public static final Attribute<String> PATH_ATTRIBUTE = Attributes.forString("Directory", BankedStrings.getter("Image file"));
+
+    public static final AttributeOption HAS_IMAGE_FILE = new AttributeOption("load", BankedStrings.getter("Yes"));
+    public static final AttributeOption NO_IMAGE_FILE = new AttributeOption("noLoading", BankedStrings.getter("No"));
+    public static final Attribute<AttributeOption> LOAD_FROM_IMAGE_FILE =
+            Attributes.forOption("LoadImageFromFile",
+                    BankedStrings.getter("Load Image From File"),
+                    new AttributeOption[]{HAS_IMAGE_FILE, NO_IMAGE_FILE});
 
     // port-related constants
     static final int DATA = 0;
@@ -177,6 +185,18 @@ abstract class BankedMem extends InstanceFactory {
         BankedMemState s = this.getState(instanceState);
         HexFile.open(s.getContents(), imageFile);
         this.setCurrentImage(instanceState.getInstance(), imageFile);
+    }
+
+    void autoLoadImage(InstanceState state) {
+        if (state.getAttributeSet().getValue(LOAD_FROM_IMAGE_FILE).equals(NO_IMAGE_FILE)){
+            return;
+        }
+        String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
+        try {
+            File file = new File(filename);
+            loadImage(state, file);
+        } catch (IOException e) {
+        }
     }
 
     @Override
