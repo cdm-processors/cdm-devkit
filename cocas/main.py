@@ -49,7 +49,7 @@ def main():
     available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
 
     parser = argparse.ArgumentParser('cocas')
-    parser.add_argument('-t', '--target', type=str, default='cdm-8e',
+    parser.add_argument('-t', '--target', type=str, default='cdm-16',
                         help='target processor, CdM-16 is default')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     # TODO: enable object file generation (if stand-alone linker will be ready)
