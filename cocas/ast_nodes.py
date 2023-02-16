@@ -59,6 +59,7 @@ class ConditionalStatementNode:
     conditions: list
     then_lines: list
     else_lines: list
+    cond_location: CodeLocation
 
 
 @dataclass
@@ -66,12 +67,14 @@ class WhileLoopNode:
     condition_lines: list
     branch_mnemonic: str
     lines: list
+    mnem_location: CodeLocation
 
 
 @dataclass
 class UntilLoopNode:
     lines: list
     branch_mnemonic: str
+    mnem_location: CodeLocation
 
 
 @dataclass

@@ -1,5 +1,6 @@
 from antlr4 import *
 from cocas.ast_nodes import *
+from cocas.ast_nodes import LabelDeclarationNode
 from cocas.generated.AsmLexer import AsmLexer
 from cocas.generated.AsmParser import AsmParser
 from cocas.generated.AsmParserVisitor import AsmParserVisitor
@@ -85,10 +86,12 @@ class BuildAstVisitor(AsmParserVisitor):
         return self.visitCode_block(ctx.code_block(), return_locations=True)
 
     def visitConditional(self, ctx: AsmParser.ConditionalContext):
-        conditions = self.visitConditions(ctx.conditions())
+        ctx_conditions = ctx.conditions()
+        cond_location = self._ctx_location(ctx_conditions)
+        conditions = self.visitConditions(ctx_conditions)
         then_lines = self.visitCode_block(ctx.code_block())
         else_lines = self.visitElse_clause(ctx.else_clause()) if ctx.else_clause() else []
-        return ConditionalStatementNode(conditions, then_lines, else_lines)
+        return ConditionalStatementNode(conditions, then_lines, else_lines, cond_location)
 
     def visitConditions(self, ctx: AsmParser.ConditionsContext):
         conditions = []
@@ -115,14 +118,16 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitWhile_loop(self, ctx: AsmParser.While_loopContext):
         condition_lines = self.visitWhile_condition(ctx.while_condition())
         lines = self.visitCode_block(ctx.code_block())
-        return WhileLoopNode(condition_lines, ctx.branch_mnemonic().getText(), lines)
+        mnemonic = ctx.branch_mnemonic()
+        return WhileLoopNode(condition_lines, mnemonic.getText(), lines, self._ctx_location(mnemonic))
 
     def visitWhile_condition(self, ctx: AsmParser.While_conditionContext):
         return self.visitCode_block(ctx.code_block())
 
     def visitUntil_loop(self, ctx: AsmParser.Until_loopContext):
         lines = self.visitCode_block(ctx.code_block())
-        return UntilLoopNode(lines, ctx.branch_mnemonic().getText())
+        mnemonic = ctx.branch_mnemonic()
+        return UntilLoopNode(lines, mnemonic.getText(), self._ctx_location(mnemonic))
 
     def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations=False):
         if ctx.children is None:
@@ -185,7 +190,7 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
-    def visitStandaloneLabel(self, ctx: AsmParser.StandaloneLabelContext) -> LabelNode:
+    def visitStandaloneLabel(self, ctx: AsmParser.StandaloneLabelContext) -> LabelDeclarationNode:
         label_decl = self.visitLabel_declaration(ctx.label_declaration())
         label_decl.external = ctx.Ext() is not None
         if label_decl.entry and label_decl.external:

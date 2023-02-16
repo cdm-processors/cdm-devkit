@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Type
+from typing import Type, Callable, Any
 
 from cocas import default_instructions, default_code_segments
 from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
@@ -43,7 +43,7 @@ class CodeBlock:
         self.size += sum(map(lambda x: x.size, br))
 
     def assemble_lines(self, lines: list, temp_storage):
-        ast_node_handlers = {
+        ast_node_handlers: dict[Type, Callable[[Any, Any], None]] = {
             LabelDeclarationNode: self.assemble_label_declaration,
             InstructionNode: self.assemble_instruction,
             ConditionalStatementNode: self.assemble_conditional_statement,
@@ -82,25 +82,26 @@ class CodeBlock:
         then_label = f'${nonce}_then'
         else_label = f'${nonce}_else'
         finally_label = f'${nonce}_finally'
+        cond_location = line.cond_location
 
         next_or = 0
         for cond in line.conditions:
             self.assemble_lines(cond.lines, temp_storage)
             next_or_label = f'{or_label}{next_or}'
             if cond.conjunction is None:
-                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, else_label, True)
+                self.append_branch_instruction(cond_location, cond.branch_mnemonic, else_label, True)
             elif cond.conjunction == 'or':
-                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, then_label, False)
+                self.append_branch_instruction(cond_location, cond.branch_mnemonic, then_label, False)
                 self.append_label(next_or_label)
                 next_or += 1
             elif cond.conjunction == 'and':
-                self.append_branch_instruction(CodeLocation(), cond.branch_mnemonic, next_or_label, True)
+                self.append_branch_instruction(cond_location, cond.branch_mnemonic, next_or_label, True)
 
         self.append_label(then_label)
         self.assemble_lines(line.then_lines, temp_storage)
 
         if len(line.else_lines) > 0:
-            self.append_branch_instruction(CodeLocation(), 'anything', finally_label, False)
+            self.append_branch_instruction(cond_location, 'anything', finally_label, False)
             self.append_label(else_label)
             self.assemble_lines(line.else_lines, temp_storage)
             self.append_label(finally_label)
@@ -111,13 +112,14 @@ class CodeBlock:
         nonce = self.address + self.size
         cond_label = f'${nonce}_cond'
         finally_label = f'${nonce}_finally'
+        mnem_location = line.mnem_location
 
         self.loop_stack.append((cond_label, finally_label))
         self.append_label(cond_label)
         self.assemble_lines(line.condition_lines, temp_storage)
-        self.append_branch_instruction(CodeLocation(), line.branch_mnemonic, finally_label, True)
+        self.append_branch_instruction(mnem_location, line.branch_mnemonic, finally_label, True)
         self.assemble_lines(line.lines, temp_storage)
-        self.append_branch_instruction(CodeLocation(), 'anything', cond_label, False)
+        self.append_branch_instruction(mnem_location, 'anything', cond_label, False)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -126,12 +128,13 @@ class CodeBlock:
         loop_body_label = f'${nonce}_loop_body'
         cond_label = f'${nonce}_cond'
         finally_label = f'${nonce}_finally'
+        mnem_location = line.mnem_location
 
         self.loop_stack.append((cond_label, finally_label))
         self.append_label(loop_body_label)
         self.assemble_lines(line.lines, temp_storage)
         self.append_label(cond_label)
-        self.append_branch_instruction(CodeLocation(), line.branch_mnemonic, loop_body_label, True)
+        self.append_branch_instruction(mnem_location, line.branch_mnemonic, loop_body_label, True)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
