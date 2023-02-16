@@ -265,7 +265,6 @@ public class BankedRAM extends BankedMem {
         private MemListener listener;
         private HexFrame hexFrame = null;
         private BankedClockState clockState;
-        private boolean newlyCreated = true;
 
         BankedRamState(Instance parent, BankedMemContents contents, MemListener listener) {
             super(contents);
@@ -274,14 +273,6 @@ public class BankedRAM extends BankedMem {
             this.clockState = new BankedClockState();
             if (parent != null) parent.getAttributeSet().addAttributeListener(this);
             contents.addHexModelListener(listener);
-        }
-
-        public boolean isNewlyCreated() {
-            return newlyCreated;
-        }
-
-        public void markLoaded() {
-            this.newlyCreated = false;
         }
 
         void setRam(Instance value) {
