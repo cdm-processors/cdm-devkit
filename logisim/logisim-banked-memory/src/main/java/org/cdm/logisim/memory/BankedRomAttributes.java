@@ -9,13 +9,14 @@ import java.util.WeakHashMap;
 
 import com.cburch.logisim.data.AbstractAttributeSet;
 import com.cburch.logisim.data.Attribute;
+import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.gui.hex.HexFrame;
 import com.cburch.logisim.proj.Project;
 
 class BankedRomAttributes extends AbstractAttributeSet {
     private static List<Attribute<?>> ATTRIBUTES = Arrays.asList(new Attribute<?>[]{
-            BankedMem.ADDR_ATTR, BankedROM.CONTENTS_ATTR
+            BankedMem.ADDR_ATTR, BankedROM.CONTENTS_ATTR, BankedMem.PATH_ATTRIBUTE, BankedMem.LOAD_FROM_IMAGE_FILE
     });
 
     private static WeakHashMap<BankedMemContents, BankedRomContentsListener> listenerRegistry
@@ -44,6 +45,8 @@ class BankedRomAttributes extends AbstractAttributeSet {
     private BitWidth addrBits = BitWidth.create(8);
     private BitWidth dataBits = BitWidth.create(8);
     private BankedMemContents contents;
+    private String autoRom = "";
+    private AttributeOption loadFromImageFile = BankedMem.NO_IMAGE_FILE;
 
     BankedRomAttributes() {
         contents = BankedMemContents.create(addrBits.getWidth(), dataBits.getWidth());
@@ -59,6 +62,8 @@ class BankedRomAttributes extends AbstractAttributeSet {
         d.addrBits = addrBits;
         d.dataBits = dataBits;
         d.contents = contents.clone();
+        d.autoRom = autoRom;
+        d.loadFromImageFile = loadFromImageFile;
     }
 
     @Override
@@ -72,6 +77,8 @@ class BankedRomAttributes extends AbstractAttributeSet {
         if (attr == BankedMem.ADDR_ATTR) return (V) addrBits;
         if (attr == BankedMem.DATA_ATTR) return (V) dataBits;
         if (attr == BankedROM.CONTENTS_ATTR) return (V) contents;
+        if (attr == BankedMem.PATH_ATTRIBUTE) return (V) autoRom;
+        if (attr == BankedMem.LOAD_FROM_IMAGE_FILE) return (V) loadFromImageFile;
         return null;
     }
 
@@ -85,6 +92,10 @@ class BankedRomAttributes extends AbstractAttributeSet {
             contents.setDimensions(addrBits.getWidth(), dataBits.getWidth());
         } else if (attr == BankedROM.CONTENTS_ATTR) {
             contents = (BankedMemContents) value;
+        } else if (attr == BankedMem.PATH_ATTRIBUTE) {
+            autoRom = (String) value;
+        } else if (attr == BankedMem.LOAD_FROM_IMAGE_FILE){
+            loadFromImageFile = (AttributeOption) value;
         }
         fireAttributeValueChanged(attr, value);
     }

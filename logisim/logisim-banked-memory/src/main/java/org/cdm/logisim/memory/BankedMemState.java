@@ -33,11 +33,20 @@ class BankedMemState implements InstanceData, Cloneable, HexModelListener {
     private long curScroll = 0;
     private long cursorLoc = -1;
     private long curAddr = -1;
+    private boolean newlyCreated = true;
 
     BankedMemState(BankedMemContents contents) {
         this.contents = contents;
         setBits(contents.getLogLength(), contents.getWidth());
         contents.addHexModelListener(this);
+    }
+
+    public boolean isNewlyCreated() {
+        return newlyCreated;
+    }
+
+    public void markLoaded(){
+        this.newlyCreated = false;
     }
 
     @Override

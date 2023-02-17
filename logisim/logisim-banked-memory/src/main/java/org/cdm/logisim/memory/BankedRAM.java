@@ -2,19 +2,22 @@ package org.cdm.logisim.memory;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeEvent;
 import com.cburch.logisim.data.AttributeListener;
-import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.AttributeSets;
-import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.gui.hex.HexFile;
 import com.cburch.logisim.gui.hex.HexFrame;
 import com.cburch.logisim.instance.Instance;
 import com.cburch.logisim.instance.InstanceData;
@@ -26,18 +29,53 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.proj.Project;
 
 public class BankedRAM extends BankedMem {
-    static final AttributeOption BUS_COMBINED
-            = new AttributeOption("combined", BankedStrings.getter("ramBusSynchCombined"));
-    static final Attribute<AttributeOption> ATTR_BUS = Attributes.forOption("bus",
+
+    //todo ram memcontent attribute
+    public static Attribute<BankedMemContents> CONTENTS_ATTR = new Attribute<BankedMemContents>
+            ("contents", BankedStrings.getter("ramContentsAttr")) {
+        @Override
+        public BankedMemContents parse(String value) {
+            int lineBreak = value.indexOf('\n');
+            String first = lineBreak < 0 ? value : value.substring(0, lineBreak);
+            String rest = lineBreak < 0 ? "" : value.substring(lineBreak + 1);
+            StringTokenizer toks = new StringTokenizer(first);
+            try {
+                String header = toks.nextToken();
+                if (!header.equals("addr/data:")) return null;
+                int addr = Integer.parseInt(toks.nextToken());
+                int data = Integer.parseInt(toks.nextToken());
+                BankedMemContents ret = BankedMemContents.create(addr, data);
+                HexFile.open(ret, new StringReader(rest));
+                return ret;
+            } catch (IOException e) {
+                return null;
+            } catch (NumberFormatException e) {
+                return null;
+            } catch (NoSuchElementException e) {
+                return null;
+            }
+        }
+    };
+
+    /*
+    static final AttributeOption HAS_IMAGE_FILE
+            = new AttributeOption("with image file", BankedStrings.getter("ramImageFile"));
+    static final AttributeOption NO_IMAGE_FILE
+            = new AttributeOption("no image file", BankedStrings.getter("ramNoImageFile"));
+
+    static final Attribute<AttributeOption> ATTR_IMG_FILE = Attributes.forOption("bus",
             BankedStrings.getter("ramBusAttr"),
-            new AttributeOption[]{BUS_COMBINED});
+            new AttributeOption[]{NO_IMAGE_FILE, HAS_IMAGE_FILE});
+     */
 
     private static Attribute<?>[] ATTRIBUTES = {
-            BankedMem.ADDR_ATTR
+            BankedMem.ADDR_ATTR, PATH_ATTRIBUTE, LOAD_FROM_IMAGE_FILE
     };
     private static Object[] DEFAULTS = {
-            BitWidth.create(8), BitWidth.create(8)
+            BitWidth.create(8), "", NO_IMAGE_FILE
     };
+
+
 
     private static final int OE = MEM_INPUTS + 0;
     private static final int CLR = MEM_INPUTS + 1;
@@ -62,6 +100,10 @@ public class BankedRAM extends BankedMem {
         setInstanceLogger(Logger.class);
     }
 
+    BankedMemContents getMemContents(Instance instance) {
+        return instance.getAttributeValue(CONTENTS_ATTR);
+    }
+
     @Override
     protected void configureNewInstance(Instance instance) {
         super.configureNewInstance(instance);
@@ -70,7 +112,6 @@ public class BankedRAM extends BankedMem {
 
     @Override
     protected void instanceAttributeChanged(Instance instance, Attribute<?> attr) {
-        super.instanceAttributeChanged(instance, attr);
         configurePorts(instance);
     }
 
@@ -145,17 +186,20 @@ public class BankedRAM extends BankedMem {
     @Override
     public void propagate(InstanceState state) {
         BankedRamState myState = (BankedRamState) getState(state);
-        BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
-        Object busVal = state.getAttributeValue(ATTR_BUS);
-
+        //BitWidth dataBits = state.getAttributeValue(DATA_ATTR);
+        //Object busVal = state.getAttributeValue(ATTR_BUS);
         // state.setPort(BITS, Value.createKnown(BitWidth.create(BankedMem.DEFAULT_BITS_SIZE), BankedMem.DEFAULT_BITS_VALUE), DELAY);
-
         Value addrValue = state.getPort(ADDR);
         Value bits = state.getPort(BITS);
         boolean chipSelect = state.getPort(CS) != Value.FALSE;
         boolean triggered = myState.setClock(state.getPort(CLK), StdAttr.TRIG_RISING);
         boolean outputEnabled = state.getPort(OE) != Value.FALSE;
         boolean shouldClear = state.getPort(CLR) == Value.TRUE;
+
+        if (myState.isNewlyCreated()) {
+            myState.markLoaded();
+            autoLoadImage(state);
+        }
 
         if (shouldClear) {
             myState.getContents().clear();
