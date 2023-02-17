@@ -35,11 +35,13 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
         for i in range(len(rsect_bins)):
             bin_begin, bin_size = rsect_bins[i]
             if bin_size >= rsect_size:
-                if rsect.name in sect_addresses:
-                    raise CdmLinkException(f'Duplicate sections "{rsect.name}"')
-                sect_addresses[rsect.name] = bin_begin
-                rsect_bins[i] = (bin_begin + rsect_size, bin_size - rsect_size)
-                break
+                address = (bin_begin + rsect.alignment - 1) // rsect.alignment * rsect.alignment
+                if address + rsect_size < bin_begin + bin_size:
+                    if rsect.name in sect_addresses:
+                        raise CdmLinkException(f'Duplicate sections "{rsect.name}"')
+                    sect_addresses[rsect.name] = address
+                    rsect_bins[i] = (address + rsect_size, bin_size - rsect_size)
+                    break
         else:
             raise CdmLinkException(f'Section "{rsect.name}" exceeds image size limit')
     return sect_addresses

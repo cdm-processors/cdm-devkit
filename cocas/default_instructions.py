@@ -13,7 +13,7 @@ class TargetInstructionsInterface:
         return
 
     @staticmethod
-    def make_branch_instruction(branch_mnemonic: str, label_name: str) \
+    def make_branch_instruction(location: CodeLocation, branch_mnemonic: str, label_name: str, inverse: bool) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 

@@ -82,7 +82,6 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                     if other_vl.sect is vl.sect and other_vl.pos > vl.pos:
                         other_vl.pos += shift
                 changed = True
-                break
 
 
 def assemble(pn: ProgramNode, target_instructions, code_segments):
