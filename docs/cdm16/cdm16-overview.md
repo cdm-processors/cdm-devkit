@@ -187,6 +187,7 @@ bz # branch if r0 == 0
 | :------------------------------------: | :---------------------------------------------------: | :-----------------: | :----------------: | :---------------: |
 | **halt** | **Halt processor**. Stops processor clock, changes processor status to **HALTED**. | - | 1 | 2 |
 | **wait** | **Wait for an interrupt**. Stops processor clock until an interrupt or an exception <br> occurs, changes processor status to **WAITING**. | - | 1 | 2 |
+| **reset** ***imm9*** | **Reset processor**. Fetches vector ***imm9*** thus performing soft reset. | - | 2 | 2 |
 | **ei** | **Enable interrupts**. Sets **I** bit *(bit 15)* in **PS** thus enabling interrupts. | - | 1 | 2 |
 | **di** | **Disable interrupts**. Clears **I** bit *(bit 15)* in **PS** thus disabling interrupts. | - | 1 | 2 |
 
