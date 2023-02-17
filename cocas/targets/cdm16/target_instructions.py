@@ -315,8 +315,21 @@ class TargetInstructions(TargetInstructionsInterface):
             if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
                 raise CdmTempException('Const number expected')
             if arg.const_term < 0:
-                raise CdmTempException('Interrupt number must be positive')
-            return [CodeSegments.Imm9(line.location, False, 0, arg)]
+                raise CdmTempException('Interrupt number must be not negative')
+            return [CodeSegments.InstructionBytesSegment(pack("u3u4s9", 0b100, 0, arg.const_term), line.location)]
+        elif line.mnemonic == 'reset':
+            if len(line.arguments) == 0:
+                arg = RelocatableExpressionNode(None, [], [], 0)
+            elif len(line.arguments) == 1:
+                assert_args(line.arguments, RelocatableExpressionNode)
+                arg = line.arguments[0]
+            else:
+                raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
+            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+                raise CdmTempException('Const number expected')
+            if arg.const_term < 0:
+                raise CdmTempException('Vector number must be not negative')
+            return [CodeSegments.InstructionBytesSegment(pack("u3u4s9", 0b100, 1, arg.const_term), line.location)]
         elif line.mnemonic == 'addsp':
             assert_count_args(line.arguments, RelocatableExpressionNode)
             arg = copy(line.arguments[0])
@@ -352,5 +365,5 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
         Handler(imm9, {'push': 1}),
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'addsp': -1}),
+        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1}),
     ]
