@@ -192,7 +192,8 @@ int:            mem, data, word, sp_asrt0, sp_dec, ps_asrtD;
                 mem, read, word, imm_asrt1, pc_latch;
                 mem, read, word, imm_asrt1, ps_latch_word
 
-imm9_1:
+reset:          mem, read, word, imm_asrt1, pc_latch;
+                mem, read, word, imm_asrt1, ps_latch_word
 
 push_p:         mem, data, word, sp_dec, sp_asrt0, imm_asrtD
 push_n:         mem, data, word, sp_dec, sp_asrt0, imm_asrtD, imm_extend_negative
