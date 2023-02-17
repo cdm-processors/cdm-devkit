@@ -324,7 +324,7 @@ class TargetInstructions(TargetInstructionsInterface):
                 assert_args(line.arguments, RelocatableExpressionNode)
                 arg = line.arguments[0]
             else:
-                raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
+                raise CdmTempException(f'Expected 0 or 1 arguments, found {len(line.arguments)}')
             if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
                 raise CdmTempException('Const number expected')
             if arg.const_term < 0:
