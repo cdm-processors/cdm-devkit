@@ -47,16 +47,15 @@ asect 0
 main: ext               # Declare labels
 default_handler: ext    # as external
 
-br main # You must put branch to entry point of your program 
-        # as first instruction (at address 0x0000)
-
 # Interrupt vector table (IVT)
-# Map all internal exceptions to default_handler
+# Place a vector to program start and
+# map all internal exceptions to default_handler
+dc main, 0              # Startup/Reset vector
 dc default_handler, 0   # Unaligned SP
 dc default_handler, 0   # Unaligned PC
 dc default_handler, 0   # Invalid instruction
 dc default_handler, 0   # Division by zero
-ds 108                  # Reserve space for the rest
+align 0x80              # Reserve space for the rest 
                         # of IVT
 
 # Exception handlers section
