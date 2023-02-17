@@ -54,7 +54,7 @@
         "instructions": {
 			"patterns": [{
 				"name": "storage.type.struct.cdm16-assembly",
-				"match": "\\b(ext|beq|bz|bne|bnz|bhs|bcs|blo|bcc|bmi|bpl|bvs|bvc|bhi|bls|bge|blt|bgt|ble|br|halt|wait|ei|di|jsr|rti|pupc|popc|pusp|posp|pups|pops|push|pop|ldi|jsrr|ldsp|stsp|ldps|stps|ldpc|stpc|shl|shr|shra|ror|rol|rcr|rcl|move|cmp|bit|ldw|ldsb|neg|not|sxt|scl|lsw|lsb|lssb|ssw|ssb|int|addsp|ldb|lcw|lcb|lcsb|stw|stb|and|or|xor|bic|add|addc|sub|subc)\\b"
+				"match": "\\b(ext|reset|beq|bz|bne|bnz|bhs|bcs|blo|bcc|bmi|bpl|bvs|bvc|bhi|bls|bge|blt|bgt|ble|br|halt|wait|ei|di|jsr|rti|pupc|popc|pusp|posp|pups|pops|push|pop|ldi|jsrr|ldsp|stsp|ldps|stps|ldpc|stpc|shl|shr|shra|ror|rol|rcr|rcl|move|cmp|bit|ldw|ldsb|neg|not|sxt|scl|lsw|lsb|lssb|ssw|ssb|int|addsp|ldb|lcw|lcb|lcsb|stw|stb|and|or|xor|bic|add|addc|sub|subc)\\b"
 			}]
 		},
         "comments": {
