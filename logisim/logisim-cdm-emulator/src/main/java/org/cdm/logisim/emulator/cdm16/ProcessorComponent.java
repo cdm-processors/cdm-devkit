@@ -20,7 +20,7 @@ public class ProcessorComponent extends InstanceFactory {
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
     public ProcessorComponent() {
-        super("ProcessorComponent");
+        super("CdM-16");
 
         setOffsetBounds(Bounds.create(0, 0, 120, 120));
 
