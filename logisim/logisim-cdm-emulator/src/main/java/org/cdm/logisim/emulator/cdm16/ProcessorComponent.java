@@ -1,4 +1,4 @@
-package org.cdm.logisim.emulator;
+package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
@@ -14,12 +14,12 @@ import com.cburch.logisim.util.StringUtil;
 
 import java.awt.*;
 
-class ProcessorComponent extends InstanceFactory {
-    Processor processor;
+public class ProcessorComponent extends InstanceFactory {
+    private final Processor processor;
 
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
-    ProcessorComponent() {
+    public ProcessorComponent() {
         super("ProcessorComponent");
 
         setOffsetBounds(Bounds.create(0, 0, 120, 120));
@@ -209,32 +209,32 @@ class ProcessorComponent extends InstanceFactory {
         );
     }
 
-    static final int DATA_IN = 0;
-    static final int DATA_OUT = 1;
-    static final int ADDRESS = 2;
-    static final int MEM = 3;
-    static final int DATA = 4;
-    static final int READ = 5;
-    static final int WORD = 6;
-    static final int IRQ = 7;
-    static final int INT_NUMBER = 8;
-    static final int EXC = 9;
-    static final int CLK = 10;
-    static final int EXC_NUMBER = 11;
-    static final int HOLD_WAIT = 12;
-    static final int HALTED = 13;
-    static final int R0 = 14;
-    static final int R1 = 15;
-    static final int R2 = 16;
-    static final int R3 = 17;
-    static final int R4 = 18;
-    static final int R5 = 19;
-    static final int R6 = 20;
-    static final int FP = 21;
-    static final int PC = 22;
-    static final int SP = 23;
-    static final int PS = 24;
-    static final int FETCH = 25;
-    static final int IAck = 26;
+    private static final int DATA_IN = 0;
+    private static final int DATA_OUT = 1;
+    private static final int ADDRESS = 2;
+    private static final int MEM = 3;
+    private static final int DATA = 4;
+    private static final int READ = 5;
+    private static final int WORD = 6;
+    private static final int IRQ = 7;
+    private static final int INT_NUMBER = 8;
+    private static final int EXC = 9;
+    private static final int CLK = 10;
+    private static final int EXC_NUMBER = 11;
+    private static final int HOLD_WAIT = 12;
+    private static final int HALTED = 13;
+    private static final int R0 = 14;
+    private static final int R1 = 15;
+    private static final int R2 = 16;
+    private static final int R3 = 17;
+    private static final int R4 = 18;
+    private static final int R5 = 19;
+    private static final int R6 = 20;
+    private static final int FP = 21;
+    private static final int PC = 22;
+    private static final int SP = 23;
+    private static final int PS = 24;
+    private static final int FETCH = 25;
+    private static final int IAck = 26;
 
 }

@@ -1,6 +1,12 @@
-package org.cdm.logisim.emulator;
+package org.cdm.logisim.emulator.cdm16;
 
-public class Processor {
+import org.cdm.logisim.emulator.ExceptionHandler;
+import org.cdm.logisim.emulator.InterruptHandler;
+import org.cdm.logisim.emulator.GenericProcessor;
+
+public class Processor implements GenericProcessor, ExceptionHandler, InterruptHandler {
+
+    public static int MAX_INT = 0xFFFF;
     private final ProcessorComponent processorComponent;
 
     public Processor(ProcessorComponent processorComponent) {

@@ -1,4 +1,4 @@
-package org.cdm.logisim.emulator;
+package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.InstanceData;
