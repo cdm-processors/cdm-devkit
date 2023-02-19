@@ -7,10 +7,9 @@ import org.cdm.logisim.emulator.GenericProcessor;
 public class Processor implements GenericProcessor, ExceptionHandler, InterruptHandler {
 
     public static int MAX_INT = 0xFFFF;
-    private final ProcessorComponent processorComponent;
 
-    public Processor(ProcessorComponent processorComponent) {
-        this.processorComponent = processorComponent;
+    public Processor() {
+
     }
 
     public void externalInterrupt(int interruptNumber) {

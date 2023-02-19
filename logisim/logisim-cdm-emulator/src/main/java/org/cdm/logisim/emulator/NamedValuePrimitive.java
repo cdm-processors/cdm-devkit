@@ -1,6 +1,6 @@
-package org.cdm.logisim.emulator.cdm16;
+package org.cdm.logisim.emulator;
 
-public class NamedValuePrimitive {
+public abstract class NamedValuePrimitive {
 
     protected int value = 0;
 
@@ -11,8 +11,6 @@ public class NamedValuePrimitive {
     public NamedValuePrimitive(String name, int bits) {
         this.name = name;
         this.maxValue = ~((-1) << bits);
-
-        System.out.println(maxValue);
     }
 
     public String getName() {

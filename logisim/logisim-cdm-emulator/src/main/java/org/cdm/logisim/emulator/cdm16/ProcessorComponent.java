@@ -15,8 +15,6 @@ import com.cburch.logisim.util.StringUtil;
 import java.awt.*;
 
 public class ProcessorComponent extends InstanceFactory {
-    private final Processor processor;
-
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
     public ProcessorComponent() {
@@ -83,7 +81,6 @@ public class ProcessorComponent extends InstanceFactory {
         ps[IAck].setToolTip(getter("IAck"));
 
         this.setPorts(ps);
-        processor = new Processor(this);
     }
 
     @Override
@@ -146,20 +143,25 @@ public class ProcessorComponent extends InstanceFactory {
 
     @Override
     public void propagate(InstanceState state) {
-        ProcessorClockState data = (ProcessorClockState) state.getData();
-        if (data == null) {
-            data = new ProcessorClockState();
-            state.setData(data);
+        ProcessorComponentData componentData = (ProcessorComponentData) state.getData();
+
+        if (componentData == null) {
+            componentData = new ProcessorComponentData();
+            state.setData(componentData);
         }
 
+        ProcessorClockState clockState = componentData.getProcessorClockState();
+
         Object irqTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean irqTriggered = data.updateClock(state.getPort(IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
+        boolean irqTriggered = clockState.updateClock(state.getPort(IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
 
         Object excTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean excTriggered = data.updateClock(state.getPort(EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
+        boolean excTriggered = clockState.updateClock(state.getPort(EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
 
         Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean clkTriggered = data.updateClock(state.getPort(CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
+        boolean clkTriggered = clockState.updateClock(state.getPort(CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
+
+        Processor processor = componentData.getProcessor();
 
         if (irqTriggered) {
             processor.externalInterrupt(state.getPort(INT_NUMBER).toIntValue());
@@ -170,7 +172,7 @@ public class ProcessorComponent extends InstanceFactory {
 
         if (clkTriggered) {
             processor.clockRising();
-        } else if (data.checkClockFalling(state.getPort(CLK))){
+        } else if (clockState.checkClockFalling(state.getPort(CLK))){
             processor.clockFalling();
         }
 

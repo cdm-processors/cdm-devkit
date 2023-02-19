@@ -1,5 +1,7 @@
 package org.cdm.logisim.emulator.cdm16;
 
+import org.cdm.logisim.emulator.NamedValuePrimitive;
+
 public class Bus extends NamedValuePrimitive {
 
     private boolean isSet = false;
