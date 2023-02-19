@@ -20,4 +20,10 @@ public class Bus extends NamedValuePrimitive {
         this.value = value;
         this.isSet = true;
     }
+
+    @Override
+    public void clear() {
+        super.clear();
+        isSet = false;
+    }
 }
