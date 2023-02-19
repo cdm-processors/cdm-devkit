@@ -164,19 +164,19 @@ public class ProcessorComponent extends InstanceFactory {
         Processor processor = componentData.getProcessor();
 
         if (irqTriggered) {
-            processor.externalInterrupt(state.getPort(INT_NUMBER).toIntValue());
+            processor.externalInterrupt(state, state.getPort(INT_NUMBER).toIntValue());
         }
         if (excTriggered) {
-            processor.externalException(state.getPort(EXC_NUMBER).toIntValue());
+            processor.externalException(state, state.getPort(EXC_NUMBER).toIntValue());
         }
 
         if (clkTriggered) {
-            processor.clockRising();
+            processor.clockRising(state);
         } else if (clockState.checkClockFalling(state.getPort(CLK))){
-            processor.clockFalling();
+            processor.clockFalling(state);
         }
 
-        processor.update();
+        processor.update(state);
     }
 
     public static StringGetter getter(String key) {

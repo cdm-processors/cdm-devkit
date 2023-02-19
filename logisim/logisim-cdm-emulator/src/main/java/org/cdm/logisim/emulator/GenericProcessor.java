@@ -1,9 +1,11 @@
 package org.cdm.logisim.emulator;
 
+import com.cburch.logisim.instance.InstanceState;
+
 public interface GenericProcessor {
-    void clockRising();
+    void clockRising(InstanceState state);
 
-    void clockFalling();
+    void clockFalling(InstanceState state);
 
-    void update();
+    void update(InstanceState state);
 }
