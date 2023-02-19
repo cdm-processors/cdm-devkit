@@ -4,10 +4,12 @@ import org.cdm.logisim.emulator.NamedValuePrimitive;
 
 public class Bus extends NamedValuePrimitive {
 
+    private static final int BUS_BITS = 16;
+
     private boolean isSet = false;
 
-    public Bus(String name, int bits) {
-        super(name, bits);
+    public Bus(String name) {
+        super(name, BUS_BITS);
     }
 
     @Override
