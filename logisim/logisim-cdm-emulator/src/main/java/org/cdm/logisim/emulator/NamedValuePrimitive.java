@@ -22,6 +22,14 @@ public abstract class NamedValuePrimitive {
     }
 
     public void setValue(int value) {
-        this.value = value & maxValue;
+        this.value = normalize(value);
+    }
+
+    public void clear() {
+        value = 0;
+    }
+
+    protected int normalize(int value) {
+        return value & maxValue;
     }
 }
