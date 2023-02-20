@@ -52,33 +52,33 @@ public class ProcessorComponent extends InstanceFactory {
                 new Port(80, 120, "output", 1), //fetch
                 new Port(0, 50, "output", 1)}; //IAck
 
-        ps[DATA_IN].setToolTip(getter("in"));
-        ps[DATA_OUT].setToolTip(getter("out"));
-        ps[ADDRESS].setToolTip(getter("addr"));
-        ps[MEM].setToolTip(getter("memory"));
-        ps[DATA].setToolTip(getter("data/ins'"));
-        ps[READ].setToolTip(getter("read/write'"));
-        ps[WORD].setToolTip(getter("word"));
-        ps[IRQ].setToolTip(getter("IRQ"));
-        ps[INT_NUMBER].setToolTip(getter("int_vector"));
-        ps[EXC].setToolTip(getter("EXC"));
-        ps[CLK].setToolTip(getter("clk"));
-        ps[EXC_NUMBER].setToolTip(getter("exc_vector"));
-        ps[HOLD_WAIT].setToolTip(getter("hold"));
-        ps[HALTED].setToolTip(getter("status"));
-        ps[R0].setToolTip(getter("r0"));
-        ps[R1].setToolTip(getter("r1"));
-        ps[R2].setToolTip(getter("r2"));
-        ps[R3].setToolTip(getter("r3"));
-        ps[R4].setToolTip(getter("r4"));
-        ps[R5].setToolTip(getter("r5"));
-        ps[R6].setToolTip(getter("r6"));
-        ps[FP].setToolTip(getter("fp"));
-        ps[PC].setToolTip(getter("pc"));
-        ps[SP].setToolTip(getter("sp"));
-        ps[PS].setToolTip(getter("ps"));
-        ps[FETCH].setToolTip(getter("fetch"));
-        ps[IAck].setToolTip(getter("IAck"));
+        ps[Ports.DATA_IN].setToolTip(getter("in"));
+        ps[Ports.DATA_OUT].setToolTip(getter("out"));
+        ps[Ports.ADDRESS].setToolTip(getter("addr"));
+        ps[Ports.MEM].setToolTip(getter("memory"));
+        ps[Ports.DATA].setToolTip(getter("data/ins'"));
+        ps[Ports.READ].setToolTip(getter("read/write'"));
+        ps[Ports.WORD].setToolTip(getter("word"));
+        ps[Ports.IRQ].setToolTip(getter("IRQ"));
+        ps[Ports.INT_NUMBER].setToolTip(getter("int_vector"));
+        ps[Ports.EXC].setToolTip(getter("EXC"));
+        ps[Ports.CLK].setToolTip(getter("clk"));
+        ps[Ports.EXC_NUMBER].setToolTip(getter("exc_vector"));
+        ps[Ports.HOLD_WAIT].setToolTip(getter("hold"));
+        ps[Ports.HALTED].setToolTip(getter("status"));
+        ps[Ports.R0].setToolTip(getter("r0"));
+        ps[Ports.R1].setToolTip(getter("r1"));
+        ps[Ports.R2].setToolTip(getter("r2"));
+        ps[Ports.R3].setToolTip(getter("r3"));
+        ps[Ports.R4].setToolTip(getter("r4"));
+        ps[Ports.R5].setToolTip(getter("r5"));
+        ps[Ports.R6].setToolTip(getter("r6"));
+        ps[Ports.FP].setToolTip(getter("fp"));
+        ps[Ports.PC].setToolTip(getter("pc"));
+        ps[Ports.SP].setToolTip(getter("sp"));
+        ps[Ports.PS].setToolTip(getter("ps"));
+        ps[Ports.FETCH].setToolTip(getter("fetch"));
+        ps[Ports.IAck].setToolTip(getter("IAck"));
 
         this.setPorts(ps);
     }
@@ -91,25 +91,25 @@ public class ProcessorComponent extends InstanceFactory {
         painter.drawLabel();
 
         // DATA_IN, DATA_OUT, ADDRESS, MEM, DATA, READ, WORD, IRQ, INT_NUMBER, EXC, CLK , EXC_NUMBER , HOLD_WAIT , HALTED;
-        painter.drawPort(DATA_IN, get("in"), Direction.WEST);
-        painter.drawPort(DATA_OUT, get("out"), Direction.WEST);
-        painter.drawPort(ADDRESS, get("addr"), Direction.WEST);
-        painter.drawPort(MEM, get("memory"), Direction.WEST);
-        painter.drawPort(DATA, get("data/ins'"), Direction.WEST);
-        painter.drawPort(READ, get("read/write'"), Direction.WEST);
-        painter.drawPort(WORD, get("word"), Direction.WEST);
-        painter.drawPort(IRQ, get("IRQ"), Direction.EAST);
-        painter.drawPort(INT_NUMBER, get("int_vector"), Direction.EAST);
-        painter.drawPort(EXC, get("EXC"), Direction.EAST);
-        painter.drawPort(CLK);
-        painter.drawPort(EXC_NUMBER, get("exc_vector"), Direction.EAST);
-        painter.drawPort(HOLD_WAIT, get("hold"), Direction.EAST);
+        painter.drawPort(Ports.DATA_IN, get("in"), Direction.WEST);
+        painter.drawPort(Ports.DATA_OUT, get("out"), Direction.WEST);
+        painter.drawPort(Ports.ADDRESS, get("addr"), Direction.WEST);
+        painter.drawPort(Ports.MEM, get("memory"), Direction.WEST);
+        painter.drawPort(Ports.DATA, get("data/ins'"), Direction.WEST);
+        painter.drawPort(Ports.READ, get("read/write'"), Direction.WEST);
+        painter.drawPort(Ports.WORD, get("word"), Direction.WEST);
+        painter.drawPort(Ports.IRQ, get("IRQ"), Direction.EAST);
+        painter.drawPort(Ports.INT_NUMBER, get("int_vector"), Direction.EAST);
+        painter.drawPort(Ports.EXC, get("EXC"), Direction.EAST);
+        painter.drawPort(Ports.CLK);
+        painter.drawPort(Ports.EXC_NUMBER, get("exc_vector"), Direction.EAST);
+        painter.drawPort(Ports.HOLD_WAIT, get("hold"), Direction.EAST);
 
-        painter.drawPort(FETCH, get("fetch"), Direction.SOUTH);
-        painter.drawPort(IAck, get("IAck"), Direction.EAST);
-        painter.drawPort(HALTED, get("status"), Direction.SOUTH);
+        painter.drawPort(Ports.FETCH, get("fetch"), Direction.SOUTH);
+        painter.drawPort(Ports.IAck, get("IAck"), Direction.EAST);
+        painter.drawPort(Ports.HALTED, get("status"), Direction.SOUTH);
 
-        painter.drawClock(CLK, Direction.NORTH);
+        painter.drawClock(Ports.CLK, Direction.NORTH);
 
 
         g.setFont(
@@ -119,17 +119,17 @@ public class ProcessorComponent extends InstanceFactory {
                 )
         );
 
-        painter.drawPort(R0, get("r0"), Direction.NORTH);
-        painter.drawPort(R1, get("...."), Direction.NORTH);
-        painter.drawPort(R2, get("...."), Direction.NORTH);
-        painter.drawPort(R3, get("...."), Direction.NORTH);
-        painter.drawPort(R4, get("...."), Direction.NORTH);
-        painter.drawPort(R5, get("...."), Direction.NORTH);
-        painter.drawPort(R6, get("r6"), Direction.NORTH);
-        painter.drawPort(FP, get("fp"), Direction.NORTH);
-        painter.drawPort(PC, get("pc"), Direction.NORTH);
-        painter.drawPort(SP, get("sp"), Direction.NORTH);
-        painter.drawPort(PS, get("ps"), Direction.NORTH);
+        painter.drawPort(Ports.R0, get("r0"), Direction.NORTH);
+        painter.drawPort(Ports.R1, get("...."), Direction.NORTH);
+        painter.drawPort(Ports.R2, get("...."), Direction.NORTH);
+        painter.drawPort(Ports.R3, get("...."), Direction.NORTH);
+        painter.drawPort(Ports.R4, get("...."), Direction.NORTH);
+        painter.drawPort(Ports.R5, get("...."), Direction.NORTH);
+        painter.drawPort(Ports.R6, get("r6"), Direction.NORTH);
+        painter.drawPort(Ports.FP, get("fp"), Direction.NORTH);
+        painter.drawPort(Ports.PC, get("pc"), Direction.NORTH);
+        painter.drawPort(Ports.SP, get("sp"), Direction.NORTH);
+        painter.drawPort(Ports.PS, get("ps"), Direction.NORTH);
 
         g.setFont(
                 increaseFontSize(
@@ -153,26 +153,26 @@ public class ProcessorComponent extends InstanceFactory {
         ProcessorClockState clockState = componentData.getProcessorClockState();
 
         Object irqTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean irqTriggered = clockState.updateClock(state.getPort(IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
+        boolean irqTriggered = clockState.updateClock(state.getPort(Ports.IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
 
         Object excTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean excTriggered = clockState.updateClock(state.getPort(EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
+        boolean excTriggered = clockState.updateClock(state.getPort(Ports.EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
 
         Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean clkTriggered = clockState.updateClock(state.getPort(CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
+        boolean clkTriggered = clockState.updateClock(state.getPort(Ports.CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
 
         Processor processor = componentData.getProcessor();
 
         if (irqTriggered) {
-            processor.externalInterrupt(state, state.getPort(INT_NUMBER).toIntValue());
+            processor.externalInterrupt(state, state.getPort(Ports.INT_NUMBER).toIntValue());
         }
         if (excTriggered) {
-            processor.externalException(state, state.getPort(EXC_NUMBER).toIntValue());
+            processor.externalException(state, state.getPort(Ports.EXC_NUMBER).toIntValue());
         }
 
         if (clkTriggered) {
             processor.clockRising(state);
-        } else if (clockState.checkClockFalling(state.getPort(CLK))){
+        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))){
             processor.clockFalling(state);
         }
 
@@ -210,33 +210,4 @@ public class ProcessorComponent extends InstanceFactory {
                 currentFont.getSize()
         );
     }
-
-    private static final int DATA_IN = 0;
-    private static final int DATA_OUT = 1;
-    private static final int ADDRESS = 2;
-    private static final int MEM = 3;
-    private static final int DATA = 4;
-    private static final int READ = 5;
-    private static final int WORD = 6;
-    private static final int IRQ = 7;
-    private static final int INT_NUMBER = 8;
-    private static final int EXC = 9;
-    private static final int CLK = 10;
-    private static final int EXC_NUMBER = 11;
-    private static final int HOLD_WAIT = 12;
-    private static final int HALTED = 13;
-    private static final int R0 = 14;
-    private static final int R1 = 15;
-    private static final int R2 = 16;
-    private static final int R3 = 17;
-    private static final int R4 = 18;
-    private static final int R5 = 19;
-    private static final int R6 = 20;
-    private static final int FP = 21;
-    private static final int PC = 22;
-    private static final int SP = 23;
-    private static final int PS = 24;
-    private static final int FETCH = 25;
-    private static final int IAck = 26;
-
 }

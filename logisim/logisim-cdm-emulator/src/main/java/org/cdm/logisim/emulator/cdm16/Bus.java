@@ -16,7 +16,7 @@ public class Bus extends NamedValuePrimitive {
     public void setValue(int value) {
 
         if (isSet) {
-            System.err.println("Multiple assertion on " + name);
+            System.err.println("Multiple assertion on " + name + " new value: " + value);
         }
 
         this.value = value;
