@@ -40,8 +40,8 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     private Bus bus0 = new Bus("bus0");
     private Bus bus1 = new Bus("bus1");
-    private Bus busD = new Bus("busD");
     private Bus busA = new Bus("busA");
+    private Bus busD = new Bus("busD", false);
 
     private Bus[] buses = new Bus[] {
             bus0,
@@ -89,6 +89,10 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
         updateRegisters();
 
+        for (Bus bus : buses) {
+            bus.clear();
+        }
+
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.CUT)) {
             phase = 0;
             fetch = !fetch;
@@ -108,20 +112,20 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
         microcommand = mainMicrocode[microcommandAddress];
 
-        updateDatapath(state);
+        updateDatapath();
     }
 
     public void update(InstanceState state) {
         //System.out.println("update");
 
         if (!initialized) {
-            initialize(state);
+            initialize();
         }
 
         updateExternal(state);
     }
 
-    private void initialize(InstanceState state) {
+    private void initialize() {
         initialized = true;
 
         fetch = true;
@@ -130,7 +134,7 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
         signals.put("alu_func", ALU_3op.ADC);
 
-        updateDatapath(state);
+        updateDatapath();
     }
 
     private void updateExternal(InstanceState state) {
@@ -223,6 +227,68 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
             sp.dec(2);
+        }
+    }
+
+    private void updateDatapath() {
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
+            int imm = signals.get("imm");
+
+            if (signals.get("imm_type") == IMM_Type.IMM_6) {
+                imm |= 0b1111111111000000;
+            } else {
+                imm |= 0b1111111000000000;
+            }
+
+            signals.put("imm", imm);
+        }
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_SHIFT)) {
+            int imm = signals.get("imm");
+
+            imm <<= 1;
+
+            signals.put("imm", imm);
+        }
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT0)) {
+            bus0.setValue(gpRegisters[signals.get("rs0")].getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT1)) {
+            bus1.setValue(gpRegisters[signals.get("rs1")].getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRTD)) {
+            busD.setValue(gpRegisters[signals.get("rd")].getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.FP_ASRT0)) {
+            bus0.setValue(fp.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRT1)) {
+            bus1.setValue(signals.get("imm"));
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRTD)) {
+            busD.setValue(signals.get("imm"));
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRT0)) {
+            bus0.setValue(sp.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRTD)) {
+            busD.setValue(sp.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRT0)) {
+            bus0.setValue(pc.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRTD)) {
+            busD.setValue(pc.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_ASRTD)) {
+            busD.setValue(ps.getValue());
+        }
+
+        alu();
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.ALU_ASRTD)) {
+            busD.setValue(busA.getValue());
         }
     }
 
@@ -436,70 +502,16 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         }
     }
 
-    private void updateDatapath(InstanceState state) {
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
-            int imm = signals.get("imm");
-
-            if (signals.get("imm_type") == IMM_Type.IMM_6) {
-                imm |= 0b1111111111000000;
-            } else {
-                imm |= 0b1111111000000000;
-            }
-
-            signals.put("imm", imm);
-        }
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_SHIFT)) {
-            int imm = signals.get("imm");
-
-            imm <<= 1;
-
-            signals.put("imm", imm);
-        }
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT0)) {
-            bus0.setValue(gpRegisters[signals.get("rs0")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT1)) {
-            bus1.setValue(gpRegisters[signals.get("rs1")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRTD)) {
-            busD.setValue(gpRegisters[signals.get("rd")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.FP_ASRT0)) {
-            bus0.setValue(fp.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRT1)) {
-            bus1.setValue(signals.get("imm"));
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRTD)) {
-            busD.setValue(signals.get("imm"));
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRT0)) {
-            bus0.setValue(sp.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRTD)) {
-            busD.setValue(sp.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRT0)) {
-            bus0.setValue(pc.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRTD)) {
-            busD.setValue(pc.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_ASRTD)) {
-            busD.setValue(ps.getValue());
-        }
-
-        alu();
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.ALU_ASRTD)) {
-            busD.setValue(busA.getValue());
-        }
-    }
-
     private void alu() {
-        busA.setValue(bus0.getValue());
+        if (!bus0.isSet()) {
+            bus0.setValue(0);
+        }
+
+        if (!bus1.isSet()) {
+            bus1.setValue(0);
+        }
+
+        busA.setValue(bus0.getValue() + bus1.getValue());
     }
 
     public static class ALU_InstructionGroups {
