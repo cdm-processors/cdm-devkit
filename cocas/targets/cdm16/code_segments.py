@@ -160,8 +160,10 @@ class CodeSegments(CodeSegmentsInterface):
     class Branch(InstructionSegment, VaryingLengthSegment):
         expr: RelocatableExpressionNode
 
-        def __init__(self, location: CodeLocation, branch_code: int, expr: RelocatableExpressionNode):
+        def __init__(self, location: CodeLocation, branch_code: int, expr: RelocatableExpressionNode,
+                     operation='branch'):
             CodeSegments.InstructionSegment.__init__(self, location)
+            self.type = operation
             self.branch_code = branch_code
             self.expr = expr
             self.size = 2
@@ -176,13 +178,20 @@ class CodeSegments(CodeSegmentsInterface):
             if value % 2 != 0:
                 _error(self, "Destination address must be 2-byte aligned")
             if self.size == 4:
-                object_record.data.extend(pack("u5p7u4", 0x00001, self.branch_code))
+                if self.type == 'branch':
+                    object_record.data.extend(pack("u5p7u4", 0x00001, self.branch_code))
+                elif self.type == 'jsr':
+                    object_record.data.extend(pack("u5p7u4", 0x00000, 8))
                 CodeSegments.ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
             else:
                 dist = value - (section.address + len(object_record.data) + 2)
-                val = dist // 2 % 512
-                sign = 0 if dist < 0 else 1
-                object_record.data.extend(pack("u2u1u4u9", 0b11, sign, self.branch_code, val))
+                if self.type == 'branch':
+                    val = dist // 2 % 512
+                    sign = 0 if dist < 0 else 1
+                    object_record.data.extend(pack("u2u1u4u9", 0b11, sign, self.branch_code, val))
+                elif self.type == 'jsr':
+                    val = dist // 2 % 1024
+                    object_record.data.extend(pack("u3u3u10", 0b100, 3, val))
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int],
                                   templates: dict[str, dict[str, int]]):
