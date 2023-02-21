@@ -511,7 +511,120 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             bus1.setValue(0);
         }
 
-        busA.setValue(bus0.getValue() + bus1.getValue());
+        Integer op_type = signals.get("alu_op_type");
+        Integer func = signals.get("alu_func");
+
+        if (op_type == null || func == null) {
+            System.err.println("ALU signals are not calculated yet!");
+            busA.setValue(0);
+            return;
+        }
+
+        Integer rs0 = bus0.getValue();
+        Integer rs1 = bus1.getValue();
+
+        Integer rd = 0;
+
+        Integer arith_carry = signals.get("arith_carry");
+        Integer cIn = 0;
+        Integer cOut = 0;
+
+        if (arith_carry != null && arith_carry > 0) {
+            cIn = (ps.getFlags() >> 3) & 1;
+        }
+
+        switch (op_type) {
+            case ALU_InstructionGroups.ALU_3:
+                switch (func) {
+                    case ALU_3op.AND:
+                        rd = rs0 & rs1;
+                        break;
+                    case ALU_3op.OR:
+                        rd = rs0 | rs1;
+                        break;
+                    case ALU_3op.XOR:
+                        rd = rs0 ^ rs1;
+                        break;
+                    case ALU_3op.BIC:
+                        rd = rs0 & (~rs1);
+                        break;
+                    case ALU_3op.ADD:
+                        rd = rs0 + rs1;
+                        break;
+                    case ALU_3op.ADC:
+                        rd = rs0 + rs1 + cIn;
+                        break;
+                    case ALU_3op.SUB:
+                        rd = rs0 - rs1;
+                        break;
+                    case ALU_3op.SBC:
+                        rd = rs0 - rs1 + cIn - 1;
+                        break;
+                }
+                break;
+            case ALU_InstructionGroups.ALU_2:
+                switch (func) {
+                    case ALU_2op.NEG:
+                        rd = -rs0;
+                        break;
+                    case ALU_2op.NOT:
+                        rd = ~rs0;
+                        break;
+                    case ALU_2op.SXT:
+                        rd = signExtend(rs0);
+                        break;
+                    case ALU_2op.SCL:
+                        rd = rs0 & 0x00FF;
+                        break;
+                }
+                break;
+            case ALU_InstructionGroups.SHIFTS:
+                Integer shiftCount = signals.get("shift_count_d");
+
+                if (shiftCount != null) {
+                    shiftCount++;
+                } else {
+                    System.err.println("shift_count_d is not calculated");
+                    return;
+                }
+
+                switch (func) {
+                    case ALU_Shifts.SHL:
+                        rd = rs0 << shiftCount;
+                        break;
+                    case ALU_Shifts.SHR:
+                        rd = rs0 >>> shiftCount;
+                        break;
+                    case ALU_Shifts.SHRA:
+                        rd = rs0 >> shiftCount;
+                        break;
+                    case ALU_Shifts.ROL:
+                        rd = (rs0 << shiftCount) | (rs0 >> (16 - shiftCount));
+                        break;
+                    case ALU_Shifts.ROR:
+                        rd = (rs0 >> shiftCount) | (rs0 << (16 - shiftCount));
+                        break;
+                    case ALU_Shifts.RCL:
+                        rd = (rs0 << shiftCount) | (cIn << shiftCount - 1) | (rs0 >> (16 - shiftCount + 1));
+                        break;
+                    case ALU_Shifts.RCR:
+                        rd = (rs0 >> shiftCount) | (cIn << (16 - shiftCount)) | (rs0 << (16 - shiftCount + 1));
+                        break;
+                }
+                break;
+        }
+
+        busA.setValue(rd);
+    }
+
+    private int encodeFlags(int C, int V, int Z, int N) {
+
+        C &= 1;
+        V &= 1;
+        Z &= 1;
+        N &= 1;
+
+        return (C << 3) | (V << 2) | (Z << 1) | N;
     }
 
     public static class ALU_InstructionGroups {
