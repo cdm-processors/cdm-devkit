@@ -38,7 +38,7 @@ public class Bus extends NamedValuePrimitive {
             System.err.println("Multiple assertion on " + name + " new value: " + value);
         }
 
-        this.value = value;
+        super.setValue(value);
         this.isSet = true;
     }
 
