@@ -126,18 +126,17 @@ Asterisk *(\*)* in branch instuctions is a condition. It must be replaced with o
 | **ne/nz** | not equal, not zero, **Z** is clear |
 | **hs/cs** | unsigned higher or same, **C** is set |
 | **lo/cc** | unsigned lower, **C** is clear |
-| **mi/npl** | negative (minus) |
-| **pl/nmi** | positive or zero (plus) |
-| **vs/nvc** | **V** is set |
-| **vc/nvs** | **V** is clear |
-| **hi/nlc** | unsigned higher |
-| **ls/nhi** | unsigned lower or same |
-| **ge/nlt** | greater than or equal |
-| **lt/nge** | less than, less than zero |
-| **gt/nle** | greater than |
-| **le/ngt** | less than or equal |
-| **r/true** | unconditional branch |
-| **false**  | no-op |
+| **mi** | negative (minus) |
+| **pl** | positive or zero (plus) |
+| **vs** | **V** is set |
+| **vc** | **V** is clear |
+| **hi** | unsigned higher |
+| **ls** | unsigned lower or same |
+| **ge** | greater than or equal |
+| **lt** | less than, less than zero |
+| **gt** | greater than |
+| **le** | less than or equal |
+| **r** | unconditional branch |
 
 Instruction changes **PC** only if this condition is met, processor determines it by testing condition against **C, V, Z, N** flags in **PS** register.
 
