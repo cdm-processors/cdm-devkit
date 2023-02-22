@@ -203,7 +203,7 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             sp.setValue(busD.getValue());
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_FLAGS)) {
-            ps.setFlags(busD.getValue());
+            ps.setFlags(signals.get("alu_flags"));
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_WORD)) {
             ps.setWord(busD.getValue());
@@ -528,6 +528,9 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         Integer arith_carry = signals.get("arith_carry");
         Integer cIn = 0;
         Integer cOut = 0;
+        Integer vOut = 0;
+
+        Integer ZN = 0;
 
         if (arith_carry != null && arith_carry > 0) {
             cIn = (ps.getFlags() >> 3) & 1;
@@ -550,15 +553,23 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
                         break;
                     case ALU_3op.ADD:
                         rd = rs0 + rs1;
+                        cOut = checkC(rd);
+                        vOut = checkV(rd, rs0, rs1);
                         break;
                     case ALU_3op.ADC:
                         rd = rs0 + rs1 + cIn;
+                        cOut = checkC(rd);
+                        vOut = checkV(rd, rs0, rs1);
                         break;
                     case ALU_3op.SUB:
-                        rd = rs0 - rs1;
+                        rd = rs0 + (~rs1) + 1;
+                        cOut = checkC(rd);
+                        vOut = checkV(rd, rs0, rs1);
                         break;
                     case ALU_3op.SBC:
-                        rd = rs0 - rs1 + cIn - 1;
+                        rd = rs0 + (~rs1) + cIn;
+                        cOut = checkC(rd);
+                        vOut = checkV(rd, rs0, rs1);
                         break;
                 }
                 break;
@@ -591,29 +602,38 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
                 switch (func) {
                     case ALU_Shifts.SHL:
                         rd = rs0 << shiftCount;
+                        cOut = rs0 & (1 << (16 - shiftCount));
                         break;
                     case ALU_Shifts.SHR:
                         rd = rs0 >>> shiftCount;
+                        cOut = rs0 & (1 << (shiftCount - 1));
                         break;
                     case ALU_Shifts.SHRA:
                         rd = rs0 >> shiftCount;
+                        cOut = rs0 & (1 << (shiftCount - 1));
                         break;
                     case ALU_Shifts.ROL:
                         rd = (rs0 << shiftCount) | (rs0 >> (16 - shiftCount));
+                        cOut = rs0 & (1 << (16 - shiftCount));
                         break;
                     case ALU_Shifts.ROR:
                         rd = (rs0 >> shiftCount) | (rs0 << (16 - shiftCount));
+                        cOut = rs0 & (1 << (shiftCount - 1));
                         break;
                     case ALU_Shifts.RCL:
                         rd = (rs0 << shiftCount) | (cIn << shiftCount - 1) | (rs0 >> (16 - shiftCount + 1));
+                        cOut = rs0 & (1 << (16 - shiftCount));
                         break;
                     case ALU_Shifts.RCR:
                         rd = (rs0 >> shiftCount) | (cIn << (16 - shiftCount)) | (rs0 << (16 - shiftCount + 1));
+                        cOut = rs0 & (1 << (shiftCount - 1));
                         break;
                 }
                 break;
         }
 
+        ZN = checkZN(rd);
+        signals.put("alu_flags", encodeFlags(cOut, vOut, ZN));
         busA.setValue(rd);
     }
 
@@ -625,6 +645,36 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         N &= 1;
 
         return (C << 3) | (V << 2) | (Z << 1) | N;
+    }
+
+    private int encodeFlags(int C, int V, int ZN) {
+
+        C &= 1;
+        V &= 1;
+        ZN &= 0b11;
+
+        return  (C << 3) | (V << 2) | ZN;
+    }
+
+    private int checkZ(int value) {
+        return value == 0 ? 1 : 0;
+    }
+
+    private int checkN(int value) {
+        return value > (MAX_INT >> 1) ? 1 : 0;
+    }
+
+    private int checkC(int value) {
+        return (value & (MAX_INT + 1)) > 0 ? 1 : 0;
+    }
+
+    private int checkV(int rd, int rs0, int rs1) {
+        return ((rd > (MAX_INT >> 1)) && (rs0 <= (MAX_INT >> 1)) && (rs1 <= (MAX_INT >> 1))) ||
+                ((rd <= (MAX_INT >> 1)) && (rs0 > (MAX_INT >> 1)) && (rs1 > (MAX_INT >> 1))) ? 1 : 0;
+    }
+
+    private int checkZN(int value) {
+        return (checkZ(value) << 1) | checkN(value);
     }
 
     public static class ALU_InstructionGroups {
