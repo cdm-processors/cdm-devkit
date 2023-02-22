@@ -339,6 +339,9 @@ class TargetInstructions(TargetInstructionsInterface):
                 raise CdmTempException('Only even numbers can be added to stack pointer')
             arg.const_term //= 2
             return [CodeSegments.Imm9(line.location, False, 2, arg)]
+        elif line.mnemonic == 'jsr':
+            assert_count_args(line.arguments, RelocatableExpressionNode)
+            return [CodeSegments.Branch(line.location, 0, line.arguments[0], operation='jsr')]
 
     @dataclass
     class Handler:
@@ -353,7 +356,7 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(save, {'save': -1}),
         Handler(restore, {'restore': -1}),
         Handler(ldi, {'ldi': -1}),
-        Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'jsr': 8, 'rti': 9,
+        Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'rti': 9,
                       'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
         Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'ror': 3, 'rol': 4, 'rcr': 5, 'rcl': 6}),
         Handler(op1, {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
@@ -365,5 +368,5 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
         Handler(imm9, {'push': 1}),
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1}),
+        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1}),
     ]

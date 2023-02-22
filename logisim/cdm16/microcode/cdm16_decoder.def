@@ -205,7 +205,7 @@ jsr_rel_p:      mem, data, word, sp_dec, sp_asrt0, pc_asrtD;
                 pc_asrt0, imm_asrt1, imm_shift, alu_asrtD, pc_latch
 
 jsr_rel_n:      mem, data, word, sp_dec, sp_asrt0, pc_asrtD;
-                pc_asrt0, imm_asrt1, imm_extend_negative, imm_shift, alu_asrtD
+                pc_asrt0, imm_asrt1, imm_extend_negative, imm_shift, alu_asrtD, pc_latch
 
 imm9_8:
 imm9_9:
