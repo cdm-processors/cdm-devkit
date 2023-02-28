@@ -93,6 +93,8 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             bus.clear();
         }
 
+        signals.clear();
+
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.CUT)) {
             phase = 0;
             fetch = !fetch;
