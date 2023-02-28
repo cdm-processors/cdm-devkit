@@ -451,6 +451,29 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             signals.put("imm", imm9_d);
         }
 
+        if (microcode_address == InstructionGroups.IMM_9) {
+            signals.put("int", 1);
+        }
+
+        if (microcode_address == 0b1000) {
+            signals.put("jsr", 1);
+        }
+
+        switch (microcode_address) {
+            case 0x4:
+                signals.put("halt", 1);
+                break;
+            case 0x5:
+                signals.put("wait", 1);
+                break;
+            case 0x6:
+                signals.put("ei", 1);
+                break;
+            case 0x7:
+                signals.put("di", 1);
+                break;
+        }
+
         return microcode_address;
     }
 
