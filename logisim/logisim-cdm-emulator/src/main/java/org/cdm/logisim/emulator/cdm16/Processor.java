@@ -20,8 +20,6 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     private int microcommand;
 
-    private boolean initialized = false;
-
     private Map<String, Integer> signals = new HashMap<>();
 
     private ProcessorState state = new ProcessorState();
@@ -70,6 +68,8 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
     public Processor() {
         // Insert path to microcode
         mainMicrocode = MicrocodeLoader.loadFromFile("");
+
+        initialize();
     }
 
     public void externalInterrupt(InstanceState state, int interruptNumber) {
@@ -118,16 +118,10 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
     public void update(InstanceState state) {
         //System.out.println("update");
 
-        if (!initialized) {
-            initialize();
-        }
-
         updateExternal(state);
     }
 
     private void initialize() {
-        initialized = true;
-
         fetch = true;
 
         microcommand = mainMicrocode[Instructions.FETCH];
