@@ -1,13 +1,13 @@
 package org.cdm.logisim.emulator.cdm16;
 
-public class RegisterCounter extends Register {
+public class RegisterCounter extends Register implements Cloneable {
 
     public RegisterCounter(String name) {
         super(name);
     }
 
     public void inc() {
-        value = normalize(value + 1);
+        inc(1);
     }
 
     public void inc(int value) {
@@ -15,11 +15,19 @@ public class RegisterCounter extends Register {
     }
 
     public void dec() {
-        value = normalize(value - 1);
+        dec(1);
     }
 
     public void dec(int value) {
         this.value = normalize(this.value - value);
     }
 
+    @Override
+    public RegisterCounter clone() {
+        try {
+            return (RegisterCounter) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
 }

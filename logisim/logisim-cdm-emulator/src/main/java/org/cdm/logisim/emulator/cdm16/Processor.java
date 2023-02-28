@@ -264,10 +264,22 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             busD.setValue(signals.get("imm"));
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRT0)) {
-            bus0.setValue(sp.getValue());
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
+                RegisterCounter spClone = sp.clone();
+                spClone.dec(2);
+                bus0.setValue(spClone.getValue());
+            } else {
+                bus0.setValue(sp.getValue());
+            }
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRTD)) {
-            busD.setValue(sp.getValue());
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
+                RegisterCounter spClone = sp.clone();
+                spClone.dec(2);
+                busD.setValue(spClone.getValue());
+            } else {
+                busD.setValue(sp.getValue());
+            }
         }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRT0)) {
             bus0.setValue(pc.getValue());
