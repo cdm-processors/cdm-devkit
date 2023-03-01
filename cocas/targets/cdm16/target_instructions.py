@@ -350,6 +350,10 @@ class TargetInstructions(TargetInstructionsInterface):
             arg.const_term //= 2
             return [CodeSegments.Imm9(line.location, False, 2, arg)]
         elif line.mnemonic == 'jsr':
+            if len(line.arguments) == 1 and isinstance(line.arguments[0], RegisterNode):
+                jsrr = copy(line)
+                jsrr.mnemonic = 'jsrr'
+                return TargetInstructions.assemble_instruction(jsrr, temp_storage)
             assert_count_args(line.arguments, RelocatableExpressionNode)
             return [CodeSegments.Branch(line.location, 0, line.arguments[0], operation='jsr')]
 
