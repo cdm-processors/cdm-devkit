@@ -85,18 +85,20 @@ class CodeBlock:
         cond_location = line.cond_location
 
         next_or = 0
+        next_or_label = f'{or_label}{next_or}'
         for cond in line.conditions:
             self.assemble_lines(cond.lines, temp_storage)
-            next_or_label = f'{or_label}{next_or}'
             if cond.conjunction is None:
                 self.append_branch_instruction(cond_location, cond.branch_mnemonic, else_label, True)
             elif cond.conjunction == 'or':
                 self.append_branch_instruction(cond_location, cond.branch_mnemonic, then_label, False)
                 self.append_label(next_or_label)
                 next_or += 1
+                next_or_label = f'{or_label}{next_or}'
             elif cond.conjunction == 'and':
                 self.append_branch_instruction(cond_location, cond.branch_mnemonic, next_or_label, True)
 
+        self.append_label(next_or_label)
         self.append_label(then_label)
         self.assemble_lines(line.then_lines, temp_storage)
 

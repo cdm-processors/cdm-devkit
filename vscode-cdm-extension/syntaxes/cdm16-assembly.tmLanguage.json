@@ -71,7 +71,7 @@
 		"macros": {
 			"patterns": [{
 				"name": "keyword.control.instruction.cdm8-assembly",
-				"match": "\\b(else|if|fi|is|gt|lt|le|ge|mi|pl|eq|ne|z|nz|cs|cc|vs|vc|hi|lo|hs|ls|true|false|continue|wend|until|while|save|restore|stays|break|tst|clr|do|unique|rts|bis|inc|dec|ld|st|ldc|nop)\\b"
+				"match": "\\b(else|if|fi|is|gt|lt|le|ge|mi|pl|eq|ne|z|nz|cs|cc|vs|vc|hi|lo|hs|ls|true|false|continue|wend|until|while|save|restore|stays|break|tst|clr|do|then|unique|rts|bis|inc|dec|ld|st|ldc|nop)\\b"
 			}]
 		},
         "labels": {

@@ -204,7 +204,8 @@ class CodeSegments(CodeSegmentsInterface):
                     _error(self, 'Cannot subtract labels in branch value expressions')
                 elif len(self.expr.add_terms) > 1:
                     _error(self, 'Cannot use multiple labels in branch value expressions')
-                bad = self.parsed.external or self.parsed.asect and section.name != '$abs'
+                const = not self.expr.add_terms and not self.expr.sub_terms
+                bad = self.parsed.external or (self.parsed.asect or const) and section.name != '$abs'
                 self.checked = True
             value = CodeSegments.calculate_expression(self.parsed, section, labels)
             dist = value - pos - 2
