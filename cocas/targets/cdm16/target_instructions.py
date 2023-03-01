@@ -26,9 +26,19 @@ def assert_count_args(args, *types):
     assert_args(args, *types)
 
 
+def handle_frame_pointer(line: InstructionNode):
+    for i in range(len(line.arguments)):
+        arg = line.arguments[i]
+        if isinstance(arg, RelocatableExpressionNode):
+            if not arg.const_term and not arg.sub_terms and not arg.byte_specifier and len(arg.add_terms) == 1 \
+                    and isinstance(arg.add_terms[0], LabelNode) and arg.add_terms[0].name == 'fp':
+                line.arguments[i] = RegisterNode(7)
+
+
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def assemble_instruction(line: InstructionNode, temp_storage: dict) -> list[CodeSegmentsInterface.CodeSegment]:
+        handle_frame_pointer(line)
         try:
             for h in TargetInstructions.handlers:
                 if line.mnemonic in h.instructions:
