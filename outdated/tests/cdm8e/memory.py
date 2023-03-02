@@ -1,9 +1,9 @@
 _mem_addr = 15
 
 # TODO: logisim sets carry flag on decrease for unknown reason
-code = """
+code = f"""
 asect 0x00
-ldi r0, """ + str(_mem_addr) + """
+ldi r0, {str(_mem_addr)}
 ldi r1, 4
 st r0, r1
 inc r0
