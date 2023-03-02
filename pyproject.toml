@@ -3,12 +3,13 @@ name = "cdm-devkit"
 version = "0.1.0"
 description = "Developer tools for CdM processors"
 authors = [
-    "leadpogrommer <ilyamerzlakov@gmail.com>",
+    "Ilya Merzlyakov <ilyamerzlakov@gmail.com>",
     "Nikolay Repin <n.repin@g.nsu.ru>",
     "Timofey Khrapovitskiy <vuki03@mail.ru>",
     "Mikhail Krasnikov <m.krasnikov1@g.nsu.ru>",
     "Nikita Tatarinov <n.tatarinov@g.nsu.ru>",
-    "Nikita Korotkov <n.korotkov@g.nsu.ru>"
+    "Nikita Korotkov <n.korotkov@g.nsu.ru>",
+    "Dmitriy Vashurin <kapkekes@yandex.ru>"
 ]
 
 packages = [
@@ -26,9 +27,22 @@ websocket-server = "^0.6.4"
 colorama = "^0.4.4"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^5.2"
 antlr4-tools = "^0.2"
+ruff = "^0.0.253"
+strictyaml = "^1.6.2"
+pytest = "^7.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+select = ["E", "F", "I"]
+exclude = [
+    "cocas/generated"
+]
+line-length = 120
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+
