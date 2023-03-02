@@ -36,7 +36,7 @@ public class ProcessorComponent extends InstanceFactory {
                 new Port(20, 120, "input", 1), //clk
                 new Port(0, 80, "input", 5), //excnumber
                 new Port(0, 100, "input", 1), //hold
-                new Port(50, 120, "output", 2), //halted (status)
+                new Port(50, 120, "output", 2), //status
 
                 new Port(10, 0, "output", 16), //r0
                 new Port(20, 0, "output", 16), //r1
@@ -64,8 +64,8 @@ public class ProcessorComponent extends InstanceFactory {
         ps[Ports.EXC].setToolTip(getter("EXC"));
         ps[Ports.CLK].setToolTip(getter("clk"));
         ps[Ports.EXC_NUMBER].setToolTip(getter("exc_vector"));
-        ps[Ports.HOLD_WAIT].setToolTip(getter("hold"));
-        ps[Ports.HALTED].setToolTip(getter("status"));
+        ps[Ports.HOLD].setToolTip(getter("hold"));
+        ps[Ports.STATUS].setToolTip(getter("status"));
         ps[Ports.R0].setToolTip(getter("r0"));
         ps[Ports.R1].setToolTip(getter("r1"));
         ps[Ports.R2].setToolTip(getter("r2"));
@@ -90,7 +90,7 @@ public class ProcessorComponent extends InstanceFactory {
         painter.drawBounds();
         painter.drawLabel();
 
-        // DATA_IN, DATA_OUT, ADDRESS, MEM, DATA, READ, WORD, IRQ, INT_NUMBER, EXC, CLK , EXC_NUMBER , HOLD_WAIT , HALTED;
+        // DATA_IN, DATA_OUT, ADDRESS, MEM, DATA, READ, WORD, IRQ, INT_NUMBER, EXC, CLK , EXC_NUMBER , HOLD_WAIT , STATUS;
         painter.drawPort(Ports.DATA_IN, get("in"), Direction.WEST);
         painter.drawPort(Ports.DATA_OUT, get("out"), Direction.WEST);
         painter.drawPort(Ports.ADDRESS, get("addr"), Direction.WEST);
@@ -103,11 +103,11 @@ public class ProcessorComponent extends InstanceFactory {
         painter.drawPort(Ports.EXC, get("EXC"), Direction.EAST);
         painter.drawPort(Ports.CLK);
         painter.drawPort(Ports.EXC_NUMBER, get("exc_vector"), Direction.EAST);
-        painter.drawPort(Ports.HOLD_WAIT, get("hold"), Direction.EAST);
+        painter.drawPort(Ports.HOLD, get("hold"), Direction.EAST);
 
         painter.drawPort(Ports.FETCH, get("fetch"), Direction.SOUTH);
         painter.drawPort(Ports.IAck, get("IAck"), Direction.EAST);
-        painter.drawPort(Ports.HALTED, get("status"), Direction.SOUTH);
+        painter.drawPort(Ports.STATUS, get("status"), Direction.SOUTH);
 
         painter.drawClock(Ports.CLK, Direction.NORTH);
 

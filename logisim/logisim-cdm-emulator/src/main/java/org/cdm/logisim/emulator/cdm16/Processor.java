@@ -32,9 +32,11 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     private Register ir = new Register("ir");
 
-    private boolean fetch;
+    private boolean fetch = true;
 
-    private int phase;
+    private int status = Status.RUNNING;
+
+    private int phase = 0;
 
     private Bus bus0 = new Bus("bus0");
     private Bus bus1 = new Bus("bus1");
@@ -47,6 +49,11 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             busD,
             busA
     };
+
+    private Latch holdLatch = new Latch();
+    private Latch waitLatch = new Latch();
+    private Latch haltLatch = new Latch();
+    private Latch faultLatch = new Latch();
 
     //private boolean br_rel_nop;
 
@@ -67,7 +74,7 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     public Processor() {
         // Insert path to microcode
-        mainMicrocode = MicrocodeLoader.loadFromFile("");
+        mainMicrocode = MicrocodeLoader.loadFromFile("C:\\Users\\comp_i5\\Desktop\\cdm16\\cdm16_decoder.img");
 
         initialize();
     }
@@ -82,10 +89,28 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     public void clockRising(InstanceState state) {
         //System.out.println("clockRising");
+
+        if (clockSuspended()) {
+            return;
+        }
+
+        if (signals.get("halt") != null && signals.get("halt") == 1) {
+            haltLatch.set();
+            status = Status.HALTED;
+        }
+
+        if (signals.get("wait") != null && signals.get("wait") == 1) {
+            waitLatch.set();
+            status = Status.WAITING;
+        }
     }
 
     public void clockFalling(InstanceState state) {
         //System.out.println("clockFalling");
+
+        if (clockSuspended()) {
+            return;
+        }
 
         updateRegisters();
 
@@ -120,6 +145,10 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
     public void update(InstanceState state) {
         //System.out.println("update");
 
+        if (state.getPort(Ports.CLK).toIntValue() == 0) {
+            holdLatch.setValue(state.getPort(Ports.HOLD).toIntValue() > 0);
+        }
+
         updateExternal(state);
     }
 
@@ -141,6 +170,8 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         state.setPort(Ports.PC, Value.createKnown(BitWidth.create(16), pc.getValue()), DELAY);
         state.setPort(Ports.SP, Value.createKnown(BitWidth.create(16), sp.getValue()), DELAY);
         state.setPort(Ports.PS, Value.createKnown(BitWidth.create(16), ps.getValue()), DELAY);
+
+        state.setPort(Ports.STATUS, Value.createKnown(BitWidth.create(2), status), DELAY);
 
         if (fetch) {
             state.setPort(Ports.FETCH, Value.TRUE, DELAY);
@@ -712,6 +743,13 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     private int checkZN(int value) {
         return (checkZ(value) << 1) | checkN(value);
+    }
+
+    private boolean clockSuspended() {
+        return haltLatch.getValue() ||
+                faultLatch.getValue() ||
+                holdLatch.getValue() ||
+                waitLatch.getValue();
     }
 
     public static class ALU_InstructionGroups {

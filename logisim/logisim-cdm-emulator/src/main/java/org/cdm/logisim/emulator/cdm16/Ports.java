@@ -13,8 +13,8 @@ public class Ports {
     public static final int EXC = 9;
     public static final int CLK = 10;
     public static final int EXC_NUMBER = 11;
-    public static final int HOLD_WAIT = 12;
-    public static final int HALTED = 13;
+    public static final int HOLD = 12;
+    public static final int STATUS = 13;
     public static final int R0 = 14;
     public static final int R1 = 15;
     public static final int R2 = 16;
