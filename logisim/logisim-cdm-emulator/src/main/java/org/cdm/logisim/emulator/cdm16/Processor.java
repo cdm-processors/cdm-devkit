@@ -204,6 +204,12 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_WORD)) {
             ps.setWord(busD.getValue());
         }
+        if (signals.get("ei") != null && signals.get("ei") == 1) {
+            ps.setInterrupt();
+        }
+        if (signals.get("di") != null && signals.get("di") == 1) {
+            ps.clearInterrupt();
+        }
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_LATCH)) {
             gpRegisters[signals.get("rd")].setValue(busD.getValue());
         }

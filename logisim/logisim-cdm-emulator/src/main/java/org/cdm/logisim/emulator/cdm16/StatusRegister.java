@@ -23,4 +23,12 @@ public class StatusRegister extends Register {
         this.value &= maxValue & (~MAX_FLAGS);
         this.value |= value & MAX_FLAGS;
     }
+
+    public void setInterrupt() {
+        value |= (1 << 15);
+    }
+
+    public void clearInterrupt() {
+        value &= ~(1 << 15);
+    }
 }
