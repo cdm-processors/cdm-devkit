@@ -1,0 +1,7 @@
+registers:
+    r0: 4
+
+memory:
+    0x0F: 4
+    0x10: 5
+    0x11: 4
