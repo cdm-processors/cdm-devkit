@@ -164,20 +164,20 @@ mem2_E:
 mem2_F:
 
 # imm6
-ldsw_p:         mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch
-ldsw_n:         mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+lsw_p:          mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch
+lsw_n:          mem, data, read, word, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
 
-ldsb_p:         mem, data, read, fp_asrt0, imm_asrt1, imm_shift, r_latch
-ldsb_n:         mem, data, read, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+lsb_p:          mem, data, read, fp_asrt0, imm_asrt1, r_latch
+lsb_n:          mem, data, read, fp_asrt0, imm_asrt1, r_latch, imm_extend_negative
 
-ldssb_p:        mem, data, read, sign_extend, fp_asrt0, imm_asrt1, imm_shift, r_latch
-ldssb_n:        mem, data, read, sign_extend, fp_asrt0, imm_asrt1, imm_shift, r_latch, imm_extend_negative
+lssb_p:         mem, data, read, sign_extend, fp_asrt0, imm_asrt1, r_latch
+lssb_n:         mem, data, read, sign_extend, fp_asrt0, imm_asrt1, r_latch, imm_extend_negative
 
-stsw_p:         mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD
-stsw_n:         mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD, imm_extend_negative
+ssw_p:          mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD
+ssw_n:          mem, data, word, fp_asrt0, imm_asrt1, imm_shift, r_asrtD, imm_extend_negative
 
-stsb_p:         mem, data, fp_asrt0, imm_asrt1, imm_shift, r_asrtD
-stsb_n:         mem, data, fp_asrt0, imm_asrt1, imm_shift, r_asrtD, imm_extend_negative
+ssb_p:          mem, data, fp_asrt0, imm_asrt1, r_asrtD
+ssb_n:          mem, data, fp_asrt0, imm_asrt1, r_asrtD, imm_extend_negative
 
 ldi_p:          r_latch, imm_asrtD
 ldi_n:          r_latch, imm_asrtD, imm_extend_negative
