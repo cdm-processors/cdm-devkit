@@ -106,16 +106,21 @@ However, programmer should not exceed size of maximum available operand type.
 
 **Operations with frame pointer:**
 
-Processor can access data by adding a constant to **fp**. **Note:** in this case ***imm6*** represents number of 2-byte **words**.<br>
-*(so the resulting address is **fp + (imm6 * 2**))*.
+Processor can access data by adding a constant to **fp**. There, ***off*** is an immediate value, offset to **fp** in bytes.
+
+There are some limitations:
++ For **byte** variants: $-64 \leq off < 64$
++ For **word** variants: $-128 \leq off < 128$ and ***off*** must be **even**
+
+> **Note:** ***off*** will be expanded by assembler as ***off*** = ***imm6* \* *size***. This gives limitations above. 
 
 |              Instruction               |                     Description                       | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
 | :------------------------------------: | :---------------------------------------------------: | :-----------------: | :----------------: | :---------------: |
-| **lsw** ***rd***, ***imm6*** | **Load word from stack**. **-...-** | - | 1 | 2 |
-| **lsb** ***rd***, ***imm6*** | **Load byte from stack**. **-...-** | - | 1 | 2 |
-| **lssb** ***rd***, ***imm6*** | **Load signed byte from stack**. **-...-** | - | 1 | 2 |
-| **ssw** ***rd***, ***imm6*** | **Store word on stack**. **-...-** | - | 1 | 2 |
-| **ssb** ***rd***, ***imm6*** | **Store byte on stack**. **-...-** | - | 1 | 2 |
+| **lsw** ***rd***, ***off*** | **Load word relative to *fp***. Loads a word from memory locaton ***fp* + *off*** to ***rd***. | - | 1 | 2 |
+| **lsb** ***rd***, ***off*** | **Load byte relative to *fp***. Loads a byte from memory locaton ***fp* + *off*** to ***rd***. | - | 1 | 2 |
+| **lssb** ***rd***, ***off*** | **Load signed byte relative to *fp***. Loads a byte from memory<br>locaton ***fp* + *off*** to ***rd*** with sign-extend. | - | 1 | 2 |
+| **ssw** ***rd***, ***off*** | **Store word relative to *fp***. Stores a word from ***rd*** to memory locaton ***fp* + *off***. | - | 1 | 2 |
+| **ssb** ***rd***, ***off*** | **Store byte relative to *fp***. Stores a lower byte of ***rd*** to memory locaton ***fp* + *off***. | - | 1 | 2 |
 
 ### Flow control instructions:
 Asterisk *(\*)* in branch instuctions is a condition. It must be replaced with one of condition codes:
