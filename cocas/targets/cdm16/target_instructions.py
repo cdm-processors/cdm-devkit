@@ -1,6 +1,6 @@
 from copy import copy
 from dataclasses import dataclass
-from typing import get_origin, get_args, Callable
+from typing import get_origin, get_args, Callable, Union
 import re
 
 from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode, LabelNode
@@ -14,8 +14,10 @@ def assert_args(args, *types):
     ts = [((t,) if get_origin(t) is None else get_args(t)) for t in types]
     for i in range(len(args)):
         for j in ts[i]:
-            if not isinstance(args[i], j):
-                raise CdmTempException(f'Incompatible argument type {type(args[i])}')
+            if isinstance(args[i], j):
+                break
+        else:
+            raise CdmTempException(f'Incompatible argument type {type(args[i])}')
         if isinstance(args[i], RegisterNode) and not 0 <= args[i].number <= 7:
             raise CdmTempException(f'Invalid register number r{args[i].number}')
 
@@ -278,11 +280,6 @@ class TargetInstructions(TargetInstructionsInterface):
         return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments)]
 
     @staticmethod
-    def imm9(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
-        assert_count_args(line.arguments, RelocatableExpressionNode)
-        return [CodeSegments.Imm9(line.location, False, op_number, *line.arguments)]
-
-    @staticmethod
     def alu3(line: InstructionNode, _, op_number: int):
         if len(line.arguments) == 3:
             assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
@@ -356,6 +353,13 @@ class TargetInstructions(TargetInstructionsInterface):
                 return TargetInstructions.assemble_instruction(jsrr, temp_storage)
             assert_count_args(line.arguments, RelocatableExpressionNode)
             return [CodeSegments.Branch(line.location, 0, line.arguments[0], operation='jsr')]
+        elif line.mnemonic == 'push':
+            assert_count_args(line.arguments, Union[RegisterNode, RelocatableExpressionNode])
+            if isinstance(line.arguments[0], RegisterNode):
+                reg = line.arguments[0].number
+                return [CodeSegments.InstructionBytesSegment(pack("u3p6u4u3", 0b001, 0, reg), line.location)]
+            else:
+                return [CodeSegments.Imm9(line.location, False, 1, *line.arguments)]
 
     @dataclass
     class Handler:
@@ -380,7 +384,6 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
         Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
         Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
-        Handler(imm9, {'push': 1}),
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1}),
+        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
     ]
