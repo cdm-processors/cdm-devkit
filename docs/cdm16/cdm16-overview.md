@@ -236,7 +236,9 @@ bz # branch if r0 == 0
 | **bis** ***rs0***, ***rs1***, ***rd*** | **Bit set**. Sets bits in ***rs0*** that are set in ***rs1***. Computes ***rs0* \| *rs1*** and puts result in ***rd***. | **or** ***rs0***, ***rs1***, ***rd*** | 
 
 ### Shift instructions:
-**CdM-16** has a barrel shifter that can performs shifts from **1** to **8** postitions, ***val*** determines distance of shift.
+**CdM-16** has a barrel shifter that can perform shifts from **1** to **8** postitions, ***val*** is an immediate value that determines distance of shift. It can take values from **1** to **8**, ***val* == 0** is considered invalid.
+
+> **Note:** ***val*** will be expanded by assembler as ***val*** = ***imm3* + 1**. This gives limitations above. 
 
 + **Z, N** flags is set accoding to resulting number
 + **C** is set according to last shifted bit
