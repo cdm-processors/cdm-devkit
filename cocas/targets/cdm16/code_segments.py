@@ -219,8 +219,9 @@ class CodeSegments(CodeSegmentsInterface):
         expr: RelocatableExpressionNode
 
         def __init__(self, location: CodeLocation, negative: bool, op_number: int, register: RegisterNode,
-                     expr: RelocatableExpressionNode):
+                     expr: RelocatableExpressionNode, word=False):
             super().__init__(location)
+            self.word = word
             self.op_number = op_number
             self.sign = -1 if negative else 1
             self.reg: int = register.number
@@ -236,7 +237,11 @@ class CodeSegments(CodeSegmentsInterface):
                 _error(self, 'No external labels allowed in immediate form')
             elif parsed.relative_additions != 0:
                 _error(self, 'Can use rsect labels only to find distance in immediate form')
-            elif not -64 <= value < 64:
+            if self.word:
+                if value % 2 != 0:
+                    _error(self, "Destination address must be 2-byte aligned")
+                value //= 2
+            if not -64 <= value < 64:
                 _error(self, 'Value is out of bounds for immediate form')
             object_record.data.extend(pack("u3u3s7u3", 0b011, self.op_number, value, self.reg))
 

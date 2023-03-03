@@ -280,6 +280,11 @@ class TargetInstructions(TargetInstructionsInterface):
         return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments)]
 
     @staticmethod
+    def imm6_word(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
+        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+        return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments, word=True)]
+
+    @staticmethod
     def alu3(line: InstructionNode, _, op_number: int):
         if len(line.arguments) == 3:
             assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
@@ -383,7 +388,8 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(alu3_ind, {'bit': 0}),
         Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
         Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
-        Handler(imm6, {'lsw': 0, 'lsb': 1, 'lssb': 2, 'ssw': 3, 'ssb': 4}),
+        Handler(imm6, {'lsb': 1, 'lssb': 2, 'ssb': 4}),
+        Handler(imm6_word, {'lsw': 0, 'ssw': 3}),
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
         Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
     ]
