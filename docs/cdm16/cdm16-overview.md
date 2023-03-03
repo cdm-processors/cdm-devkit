@@ -101,8 +101,8 @@ as `78 74` instead.*
 
 **Operations with stack:**
 
-+ When a **push** is performed, processor decrements **SP** by 2 bytes and stores data to memory pointed by new **SP
-  ** <br> *(resulting address is **SP-2**)*.
++ When a **push** is performed, processor decrements **SP** by 2 bytes and stores data to memory pointed by new
++ **SP** <br> *(resulting address is **SP-2**)*.
 + When a **pop** is performed, processor loads data from memory pointed by **SP** and then increments **SP** by 2 bytes.
 
 |     Instruction     |                                     Description                                      | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
@@ -124,10 +124,11 @@ bytes.
 
 There are some limitations:
 
-+ For **byte** variants: $-64 \leq off < 64$
-+ For **word** variants: $-128 \leq off < 128$ and ***off*** must be **even**
++ For **byte** variants: $-64 &leq; off < 64$
++ For **word** variants: $-128 &leq; off < 128$ and ***off*** must be **even**
 
-> **Note:** ***off*** will be expanded by assembler as ***off*** = ***imm6* \* *size***. This gives limitations above.
+> **Note:** ***off*** will be expanded by assembler as ***off*** = ***imm6* &ast; *size***. This gives limitations
+> above.
 
 |         Instruction          |                                                        Description                                                         | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
 |:----------------------------:|:--------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
@@ -139,7 +140,7 @@ There are some limitations:
 
 ### Flow control instructions:
 
-Asterisk *(\*)* in branch instructions is a condition. It must be replaced with one of condition codes:
+Asterisk *(&ast;)* in branch instructions is a condition. It must be replaced with one of condition codes:
 
 | Condition code |              Description              | 
 |:--------------:|:-------------------------------------:|
@@ -178,15 +179,15 @@ r0
 bz  # branch if r0 == 0
 ```
 
-|     Instruction     |                                                                         Description                                                                         | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
-|:-------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
-| **b\*** ***imm16*** |                **Absolute branch**. Loads ***imm16*** to **PC**, thus passing control to the instruction located at the address ***imm16***.                |          -          |         1          |         4         |
-| **b\*** ***imm9***  | **Relative branch**. Adds value ***imm9* \* *2*** to **PC**, thus passing control to the instruction located at the address **PC + (*imm9* \* *2*) + *2***. |          -          |         1          |         2         |
-| **jsr** ***imm16*** |             **Jump to subroutine (Absolute)**. Pushes **PC** to stack and then does unconditional <br> absolute branch to address ***imm16***.              |          -          |         2          |         4         |
-| **jsr** ***imm9***  |             **Jump to subroutine (Relative)**. Pushes **PC** to stack and then does unconditional <br> relative branch with offset ***imm9***.              |          -          |         2          |         2         |
-|  **jsrr** ***rd***  |        **Jump to subroutine by pointer**. Pushes **PC** to stack and then does unconditional <br> absolute branch to address contained in ***rd***.         |          -          |         2          |         2         |
-| **int** ***imm9***  |                                      **Software interrupt**. Triggers an interrupt with vector with number ***imm9***.                                      |          -          |         4          |         2         |
-|       **rti**       |             **Return from interrupt**. Pops **PC** and **PS** from stack and thus returns <br> control to the caller code and restores **PS**.              |          -          |         2          |         2         |
+|      Instruction       |                                                                            Description                                                                            | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
+|:----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
+| **b&ast;** ***imm16*** |                   **Absolute branch**. Loads ***imm16*** to **PC**, thus passing control to the instruction located at the address ***imm16***.                   |          -          |         1          |         4         |
+| **b&ast;** ***imm9***  | **Relative branch**. Adds value ***imm9* &ast; *2*** to **PC**, thus passing control to the instruction located at the address **PC + (*imm9* &ast; *2*) + *2***. |          -          |         1          |         2         |
+|  **jsr** ***imm16***   |                **Jump to subroutine (Absolute)**. Pushes **PC** to stack and then does unconditional <br> absolute branch to address ***imm16***.                 |          -          |         2          |         4         |
+|   **jsr** ***imm9***   |                **Jump to subroutine (Relative)**. Pushes **PC** to stack and then does unconditional <br> relative branch with offset ***imm9***.                 |          -          |         2          |         2         |
+|   **jsrr** ***rd***    |           **Jump to subroutine by pointer**. Pushes **PC** to stack and then does unconditional <br> absolute branch to address contained in ***rd***.            |          -          |         2          |         2         |
+|   **int** ***imm9***   |                                         **Software interrupt**. Triggers an interrupt with vector with number ***imm9***.                                         |          -          |         4          |         2         |
+|        **rti**         |                **Return from interrupt**. Pops **PC** and **PS** from stack and thus returns <br> control to the caller code and restores **PS**.                 |          -          |         2          |         2         |
 
 **Macros**
 
@@ -250,19 +251,19 @@ bz  # branch if r0 == 0
 
 ### Logic instructions:
 
-|              Instruction               |                                                            Description                                                             |         Flags <br> affected          | Time <br> (cycles) | Size <br> (bytes) |
-|:--------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------:|:------------------:|:-----------------:|
-| **and** ***rs0***, ***rs1***, ***rd*** |                              Bitwise **and**. Computes ***rs0* & *rs1*** and puts result in ***rd***.                              |                 Z, N                 |         1          |         2         |
-| **or** ***rs0***, ***rs1***, ***rd***  |                                                 Bitwise **or**. Computes ***rs0* \                                                 | *rs1*** and puts result in ***rd***. |        Z, N        |         1         | 2 |
-| **xor** ***rs0***, ***rs1***, ***rd*** |                              Bitwise **xor**. Computes ***rs0* ^ *rs1*** and puts result in ***rd***.                              |                 Z, N                 |         1          |         2         |
-|       **not** ***rs***, ***rd***       |                         Bitwise **not**. Computes **~*rs*** (1's complement) and puts result in ***rd***.                          |                 Z, N                 |         1          |         2         |
-| **bic** ***rs0***, ***rs1***, ***rd*** | **Bit clear**. Clears bits in ***rs0*** that are set in ***rs1***. <br> Computes ***rs0* & (~*rs1***) and puts result in ***rd***. |                 Z, N                 |         1          |         2         |
+|              Instruction               |                                                            Description                                                             | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
+|:--------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
+| **and** ***rs0***, ***rs1***, ***rd*** |                              Bitwise **and**. Computes ***rs0* & *rs1*** and puts result in ***rd***.                              |        Z, N         |         1          |         2         |
+| **or** ***rs0***, ***rs1***, ***rd***  |                            Bitwise **or**. Computes ***rs0* &vert; *rs1*** and puts result in ***rd***.                            |        Z, N         |         1          |         2         |
+| **xor** ***rs0***, ***rs1***, ***rd*** |                              Bitwise **xor**. Computes ***rs0* ^ *rs1*** and puts result in ***rd***.                              |        Z, N         |         1          |         2         |
+|       **not** ***rs***, ***rd***       |                         Bitwise **not**. Computes **~*rs*** (1's complement) and puts result in ***rd***.                          |        Z, N         |         1          |         2         |
+| **bic** ***rs0***, ***rs1***, ***rd*** | **Bit clear**. Clears bits in ***rs0*** that are set in ***rs1***. <br> Computes ***rs0* & (~*rs1***) and puts result in ***rd***. |        Z, N         |         1          |         2         |
 
 **Macros:**
 
-|                 Macro                  |                                    Description                                    |              Expansion               |
-|:--------------------------------------:|:---------------------------------------------------------------------------------:|:------------------------------------:|
-| **bis** ***rs0***, ***rs1***, ***rd*** | **Bit set**. Sets bits in ***rs0*** that are set in ***rs1***. Computes ***rs0* \ | *rs1*** and puts result in ***rd***. | **or** ***rs0***, ***rs1***, ***rd*** | 
+|                 Macro                  |                                                         Description                                                         |               Expansion               |
+|:--------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------:|
+| **bis** ***rs0***, ***rs1***, ***rd*** | **Bit set**. Sets bits in ***rs0*** that are set in ***rs1***. Computes ***rs0* &vert; *rs1*** and puts result in ***rd***. | **or** ***rs0***, ***rs1***, ***rd*** | 
 
 ### Shift instructions:
 
