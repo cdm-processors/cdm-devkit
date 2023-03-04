@@ -197,18 +197,18 @@ bz  # branch if r0 == 0
 
 ### Register transfer instructions:
 
-|          Instruction          |                                            Description                                             | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
-|:-----------------------------:|:--------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
-| **ldi** ***rd***, ***imm16*** |           **Load immediate to register**. Loads immediate value ***imm16*** to ***rd***.           |          -          |         1          |         4         |
-| **ldi** ***rd***, ***imm6***  |        **Load short immediate to register**. Loads immediate value ***imm6*** to ***rd***.         |          -          |         1          |         2         |
-|  **move** ***rs***, ***rd***  |                     **Copy register**. Copies value from ***rs*** to ***rd***.                     |     C, V, Z, N      |         1          |         2         |
-|     **addsp** ***imm9***      | **Add immediate to SP**. Adds ***imm9* * *2*** to **SP**. <br> (***imm9** is number of **words***) |          -          |         1          |         2         |
-|       **ldsp** ***rd***       |                         **Load SP**. Copies value from **SP** to ***rd***.                         |          -          |         1          |         2         |
-|       **stsp** ***rd***       |                        **Store SP**. Copies value from ***rd*** to **SP**.                         |          -          |         1          |         2         |
-|       **ldps** ***rd***       |                         **Load PS**. Copies value from **PS** to ***rd***.                         |          -          |         1          |         2         |
-|       **stps** ***rd***       |                        **Store PS**. Copies value from ***rd*** to **PS**.                         |          -          |         1          |         2         |
-|       **ldpc** ***rd***       |                         **Load PC**. Copies value from **PC** to ***rd***.                         |          -          |         1          |         2         |
-|       **stpc** ***rd***       |                        **Store PC**. Copies value from ***rd*** to **PC**.                         |          -          |         1          |         2         |
+|          Instruction          |                                                                    Description                                                                     | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
+|:-----------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:------------------:|:-----------------:|
+| **ldi** ***rd***, ***imm16*** |                                   **Load immediate to register**. Loads immediate value ***imm16*** to ***rd***.                                   |          -          |         1          |         4         |
+| **ldi** ***rd***, ***imm6***  |                                **Load short immediate to register**. Loads immediate value ***imm6*** to ***rd***.                                 |          -          |         1          |         2         |
+|  **move** ***rs***, ***rd***  |                                             **Copy register**. Copies value from ***rs*** to ***rd***.                                             |     C, V, Z, N      |         1          |         2         |
+|      **addsp** ***val***      | **Add immediate to SP**. Adds ***val*** bytes to **SP**. <br> (***val*** is immediate value; $-1024 &leq; val < 1024$; ***val*** must be **even**) |          -          |         1          |         2         |
+|       **ldsp** ***rd***       |                                                 **Load SP**. Copies value from **SP** to ***rd***.                                                 |          -          |         1          |         2         |
+|       **stsp** ***rd***       |                                                **Store SP**. Copies value from ***rd*** to **SP**.                                                 |          -          |         1          |         2         |
+|       **ldps** ***rd***       |                                                 **Load PS**. Copies value from **PS** to ***rd***.                                                 |          -          |         1          |         2         |
+|       **stps** ***rd***       |                                                **Store PS**. Copies value from ***rd*** to **PS**.                                                 |          -          |         1          |         2         |
+|       **ldpc** ***rd***       |                                                 **Load PC**. Copies value from **PC** to ***rd***.                                                 |          -          |         1          |         2         |
+|       **stpc** ***rd***       |                                                **Store PC**. Copies value from ***rd*** to **PC**.                                                 |          -          |         1          |         2         |
 
 ### Processor control instructions:
 
