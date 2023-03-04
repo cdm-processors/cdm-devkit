@@ -264,25 +264,7 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
     }
 
     private void updateDatapath() {
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
-            int imm = signals.get("imm");
-
-            if (signals.get("imm_type") == IMM_Type.IMM_6) {
-                imm |= 0b1111111111000000;
-            } else {
-                imm |= 0b1111111000000000;
-            }
-
-            signals.put("imm", imm);
-        }
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_SHIFT)) {
-            int imm = signals.get("imm");
-
-            imm <<= 1;
-
-            signals.put("imm", imm);
-        }
+        computeImmediate();
 
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT0)) {
             bus0.setValue(gpRegisters[signals.get("rs0")].getValue());
@@ -485,9 +467,9 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         }
 
         if (signals.get("imm_type") ==  IMM_Type.IMM_6) {
-            signals.put("imm", imm6_d);
+            signals.put("imm_d", imm6_d);
         } else if (signals.get("imm_type") ==  IMM_Type.IMM_9) {
-            signals.put("imm", imm9_d);
+            signals.put("imm_d", imm9_d);
         }
 
         if (microcode_address == InstructionGroups.IMM_9) {
@@ -560,6 +542,32 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         dcsn = reverse ^ dcsn;
 
         return dcsn != 0;
+    }
+
+    private void computeImmediate() {
+        int imm = signals.get("imm_d");
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
+            if (signals.get("imm_type") == IMM_Type.IMM_6) {
+                imm |= 0b1111111111000000;
+            } else {
+                imm |= 0b1111111000000000;
+            }
+        }
+
+        if (signals.get("int") != null && signals.get("int") == 1) {
+            imm <<= 2;
+
+            if (phase % 2 == 1) {
+                imm |= 2;
+            }
+        } else {
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_SHIFT)) {
+                imm <<= 1;
+            }
+        }
+
+        signals.put("imm", imm);
     }
 
     private int signExtend(int value) {
