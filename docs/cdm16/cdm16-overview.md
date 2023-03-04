@@ -101,8 +101,7 @@ as `78 74` instead.*
 
 **Operations with stack:**
 
-+ When a **push** is performed, processor decrements **SP** by 2 bytes and stores data to memory pointed by new
-+ **SP** <br> *(resulting address is **SP-2**)*.
++ When a **push** is performed, processor decrements **SP** by 2 bytes and stores data to memory pointed by new **SP** <br> *(resulting address is **SP-2**)*.
 + When a **pop** is performed, processor loads data from memory pointed by **SP** and then increments **SP** by 2 bytes.
 
 |     Instruction     |                                     Description                                      | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
