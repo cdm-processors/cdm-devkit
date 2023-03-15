@@ -1,4 +1,4 @@
-package org.logisim.runner;
+package org.cdm.logisim.runner;
 
 import com.cburch.hex.HexModel;
 import com.cburch.logisim.circuit.Analyze;
@@ -19,6 +19,7 @@ import com.cburch.logisim.std.wiring.Pin;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -27,22 +28,49 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 public class Runner {
-    private final List<String> PIN_NAMES = List.of("r0", "r1", "r2", "r3", "pc", "ps", "sp");
-    private final String HALT_PIN = "halt";
+    private final List<String> PIN_NAMES;
+    private final String HALT_PIN;
+    private File inputFile;
+    private File circuitFile;
+    private File configFile;
+    private int timeout;
 
-    public int getPinValue(CircuitState circuitState, Instance pin){
+    public Runner(File inputFile, File circuitFile, File configFile, int timeout) throws IOException {
+        this.timeout = timeout;
+        this.inputFile = inputFile;
+        this.circuitFile = circuitFile;
+
+        Properties configProperties = new Properties();
+        configProperties.load(new FileInputStream(configFile));
+        PIN_NAMES = Arrays
+                .stream(configProperties
+                        .getProperty("pin_names")
+                        .split(","))
+                .toList();
+
+        HALT_PIN = configProperties.getProperty("halt_pin");
+    }
+
+    public int getPinValue(CircuitState circuitState, Instance pin) {
         InstanceState state = circuitState.getInstanceState(pin);
         return Pin.FACTORY.getValue(state).toIntValue();
     }
 
-    public String run(File inputFile, int timeout) throws IOException, LoadFailedException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+    public String run() throws
+            IOException,
+            LoadFailedException,
+            ClassNotFoundException,
+            InvocationTargetException,
+            IllegalAccessException {
         System.out.println("Loading file...");
+
         Loader logisimLoader = new Loader(null);
-        InputStream stream = Runner.class.getResourceAsStream("/runner.circ");
+        InputStream stream = new FileInputStream(circuitFile);
         LogisimFile logisimFile = logisimLoader.openLogisimFile(stream);
         Project logisimProject = new Project(logisimFile);
         Circuit circuit = logisimFile.getMainCircuit();
@@ -57,7 +85,7 @@ public class Runner {
                 );
 
         Instance haltPin = outputPins.get(HALT_PIN);
-        if (haltPin == null){
+        if (haltPin == null) {
             throw new NullPointerException();
         }
         CircuitState circuitState = new CircuitState(logisimProject, circuit);
@@ -70,7 +98,7 @@ public class Runner {
                 .get();
 
         propagator.propagate();
-        if (romComponent.getFactory() instanceof Rom){
+        if (romComponent.getFactory() instanceof Rom) {
             ((Rom) romComponent.getFactory())
                     .loadImage(
                             circuitState
@@ -79,31 +107,31 @@ public class Runner {
         }
         propagator.propagate();
 
-        long start = System.currentTimeMillis();
-
         System.out.println("Starting simulation");
-        while (true) {
-            if (start + timeout < System.currentTimeMillis()) {
-                System.out.println("Timeout");
-                System.exit(1);
-            }
+        int ticks;
+        for (ticks = 0; ticks < timeout; ticks++) {
             if (getPinValue(circuitState, haltPin) != 0) {
                 break;
             }
             propagator.tick();
             propagator.propagate();
+            ticks++;
+        }
+        if (ticks == timeout) {
+            System.out.println("Timeout");
+            System.exit(1);
         }
         System.out.println("Simulation done");
 
         Map<String, Integer> registersValues = new HashMap<>();
-        for (String pin : PIN_NAMES){
+        for (String pin : PIN_NAMES) {
             registersValues.put(pin, getPinValue(circuitState, outputPins.get(pin)));
         }
 
         var contents = getRamContents(circuit, circuitState);
 
         LongStream ramData = LongStream
-                .iterate(0, i -> i+1)
+                .iterate(0, i -> i + 1)
                 .limit(contents.getLastOffset())
                 .map(contents::get);
 
@@ -116,13 +144,17 @@ public class Runner {
         return g.toString();
     }
 
-    private HexModel getRamContents(Circuit circuit, CircuitState circuitState) throws InvocationTargetException, IllegalAccessException, ClassNotFoundException {
+    private HexModel getRamContents(Circuit circuit, CircuitState circuitState) throws
+            InvocationTargetException,
+            IllegalAccessException,
+            ClassNotFoundException {
         Component ramComponent = circuit
                 .getNonWires()
                 .stream()
                 .filter(x -> x.getFactory() instanceof Ram)
                 .findFirst()
-                .get();
+                .orElse(null);
+
         Method getStateMethod = Arrays
                 .stream(
                         ramComponent
@@ -132,16 +164,18 @@ public class Runner {
                 .filter(it -> it.getName().equals("getState") && it.getParameterCount() == 2)
                 .findFirst()
                 .orElse(null);
+
         getStateMethod.isAccessible();
-        var ramState = getStateMethod.invoke(
+
+        Object ramState = getStateMethod.invoke(
                 ramComponent.getFactory(),
                 circuitState.getInstanceState(ramComponent));
-        var contentsProperty = Arrays.stream(Class
-                .forName("com.cburch.logisim.std.memory.MemState")
-                .getMethods())
-                .filter(it -> it.getName().equals("contents"))
+        Method contentsProperty = Arrays.stream(Class
+                        .forName("com.cburch.logisim.std.memory.MemState")
+                        .getMethods())
+                .filter(it -> it.getName().equals("getContents"))
                 .findFirst()
-                .get();
+                .orElse(null);
         return null;
     }
 }
