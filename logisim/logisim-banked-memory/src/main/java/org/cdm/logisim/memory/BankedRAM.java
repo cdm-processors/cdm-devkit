@@ -4,6 +4,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
@@ -104,6 +105,10 @@ public class BankedRAM extends BankedMem {
         return instance.getAttributeValue(CONTENTS_ATTR);
     }
 
+    public List<List<Integer>> getPrettyContent(InstanceState state){
+        return this.getState(state).getContents().getPrettyContent();
+    }
+
     @Override
     protected void configureNewInstance(Instance instance) {
         super.configureNewInstance(instance);
@@ -145,7 +150,7 @@ public class BankedRAM extends BankedMem {
     }
 
     @Override
-    BankedMemState getState(InstanceState state) {
+    public BankedMemState getState(InstanceState state) {
         BitWidth addrBits = state.getAttributeValue(ADDR_ATTR);
         BitWidth dataBits = BitWidth.create(8);
 
@@ -162,7 +167,7 @@ public class BankedRAM extends BankedMem {
     }
 
     @Override
-    BankedMemState getState(Instance instance, CircuitState state) {
+    public BankedMemState getState(Instance instance, CircuitState state) {
         BitWidth addrBits = instance.getAttributeValue(ADDR_ATTR);
         BitWidth dataBits = instance.getAttributeValue(DATA_ATTR);
 

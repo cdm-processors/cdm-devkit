@@ -1,12 +1,9 @@
 package org.cdm.logisim.runner;
 
-import com.cburch.logisim.file.LoadFailedException;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
@@ -16,12 +13,7 @@ public class Main {
     private static final int CONFIG_FILE = 3;
     private static final int TIMEOUT = 4;
 
-    public static void main(String[] args) throws
-            IOException,
-            LoadFailedException,
-            ClassNotFoundException,
-            InvocationTargetException,
-            IllegalAccessException {
+    public static void main(String[] args) {
         System.setProperty("java.awt.headless", "true");
 
         File imgFile = new File(args[IMG_FILE]);
@@ -42,17 +34,28 @@ public class Main {
             System.exit(1);
         }
 
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+        OutputStreamWriter outputStreamWriter = null;
+        try {
+            outputStreamWriter = new OutputStreamWriter(
                     new FileOutputStream(args[OUTPUT_FILE]),
                     StandardCharsets.UTF_8
             );
+        } catch (IOException e){
+            System.out.println("Failed to open OutputFile");
+            System.exit(1);
+        }
         int timeout = Integer.parseInt(args[TIMEOUT]);
 
-        Runner runner = new Runner(imgFile, circuitFile, configFile, timeout);
-        String res = runner.run();
+        Runner runner = new Runner();
+        String res = runner.run(imgFile, circuitFile, configFile, timeout);
 
-        outputStreamWriter.write(res);
-        outputStreamWriter.close();
+        try {
+            outputStreamWriter.write(res);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            System.out.println("Failed to write to output file");
+            System.exit(1);
+        }
 
         System.exit(0);
     }

@@ -20,7 +20,7 @@ test {
 }
 
 compileJava {
-    options.compilerArgs.addAll(['--release', 7, '-Xlint:-options'])
+    options.compilerArgs.addAll(['--release', 16, '-Xlint:-options'])
 }
 
 jar {

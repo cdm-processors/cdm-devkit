@@ -1,6 +1,5 @@
 package org.cdm.logisim.runner;
 
-import com.cburch.hex.HexModel;
 import com.cburch.logisim.circuit.Analyze;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
@@ -12,66 +11,67 @@ import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.instance.Instance;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.std.memory.Ram;
-import com.cburch.logisim.std.memory.Rom;
-//import com.cburch.logisim.std.memory.MemState;
 import com.cburch.logisim.std.wiring.Pin;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import org.cdm.logisim.memory.BankedRAM;
+import org.cdm.logisim.memory.BankedROM;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 public class Runner {
-    private final List<String> PIN_NAMES;
-    private final String HALT_PIN;
-    private File inputFile;
-    private File circuitFile;
-    private File configFile;
-    private int timeout;
-
-    public Runner(File inputFile, File circuitFile, File configFile, int timeout) throws IOException {
-        this.timeout = timeout;
-        this.inputFile = inputFile;
-        this.circuitFile = circuitFile;
-
-        Properties configProperties = new Properties();
-        configProperties.load(new FileInputStream(configFile));
-        PIN_NAMES = Arrays
-                .stream(configProperties
-                        .getProperty("pin_names")
-                        .split(","))
-                .toList();
-
-        HALT_PIN = configProperties.getProperty("halt_pin");
-    }
-
     public int getPinValue(CircuitState circuitState, Instance pin) {
         InstanceState state = circuitState.getInstanceState(pin);
         return Pin.FACTORY.getValue(state).toIntValue();
     }
 
-    public String run() throws
-            IOException,
-            LoadFailedException,
-            ClassNotFoundException,
-            InvocationTargetException,
-            IllegalAccessException {
+    public String run(File inputFile, File circuitFile, File configFile, int timeout){
         System.out.println("Loading file...");
 
+        Properties configProperties = new Properties();
+
+        try {
+            configProperties.load(new FileInputStream(configFile));
+        } catch (IOException|IllegalArgumentException e){
+            System.out.println("Cannot find config file");
+            System.exit(1);
+        }
+
+        List<String> pin_names = Arrays
+                .stream(configProperties
+                        .getProperty("pin_names")
+                        .split(","))
+                .map(String::trim)
+                .toList();
+
+        String halt_pin = configProperties.getProperty("halt_pin");
+
         Loader logisimLoader = new Loader(null);
-        InputStream stream = new FileInputStream(circuitFile);
-        LogisimFile logisimFile = logisimLoader.openLogisimFile(stream);
+
+        InputStream stream = null;
+        try {
+            stream = new FileInputStream(circuitFile);
+        } catch (FileNotFoundException e){
+            System.out.println("Cannot find circuit file");
+            System.exit(1);
+        }
+        LogisimFile logisimFile = null;
+        try {
+            logisimFile = logisimLoader.openLogisimFile(stream);
+        } catch (LoadFailedException|IOException e){
+            System.out.println("unable to open logisim file");
+            System.exit(1);
+        }
         Project logisimProject = new Project(logisimFile);
         Circuit circuit = logisimFile.getMainCircuit();
 
@@ -84,7 +84,7 @@ public class Runner {
                         Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)
                 );
 
-        Instance haltPin = outputPins.get(HALT_PIN);
+        Instance haltPin = outputPins.get(halt_pin);
         if (haltPin == null) {
             throw new NullPointerException();
         }
@@ -93,17 +93,27 @@ public class Runner {
         Component romComponent = circuit
                 .getNonWires()
                 .stream()
-                .filter(x -> x.getFactory() instanceof Rom)
+                .filter(x -> x.getFactory() instanceof BankedROM)
                 .findFirst()
-                .get();
+                .orElse(null);
+
+        if (romComponent == null){
+            System.out.println("there is no ROM found");
+            System.exit(1);
+        }
 
         propagator.propagate();
-        if (romComponent.getFactory() instanceof Rom) {
-            ((Rom) romComponent.getFactory())
-                    .loadImage(
-                            circuitState
-                                    .getInstanceState(romComponent),
-                            inputFile);
+        if (romComponent.getFactory() instanceof BankedROM) {
+            try {
+                ((BankedROM) romComponent.getFactory())
+                        .loadImage(
+                                circuitState
+                                        .getInstanceState(romComponent),
+                                inputFile);
+            } catch (IOException e){
+                System.out.println("Failed to load image");
+                System.exit(1);
+            }
         }
         propagator.propagate();
 
@@ -124,58 +134,42 @@ public class Runner {
         System.out.println("Simulation done");
 
         Map<String, Integer> registersValues = new HashMap<>();
-        for (String pin : PIN_NAMES) {
+        for (String pin : pin_names) {
             registersValues.put(pin, getPinValue(circuitState, outputPins.get(pin)));
         }
 
         var contents = getRamContents(circuit, circuitState);
 
-        LongStream ramData = LongStream
-                .iterate(0, i -> i + 1)
-                .limit(contents.getLastOffset())
-                .map(contents::get);
+        if (contents == null){
+            System.out.println("there is no RAM found");
+            return "";
+        }
 
-//        logisimLoader.
+        var ramData = contents
+                .stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
 
         var gson = new Gson();
 
-        var g = gson.toJsonTree(registersValues);
+        JsonElement g = gson.toJsonTree(registersValues);
         g.getAsJsonObject().add("mem", gson.toJsonTree(ramData));
         return g.toString();
     }
 
-    private HexModel getRamContents(Circuit circuit, CircuitState circuitState) throws
-            InvocationTargetException,
-            IllegalAccessException,
-            ClassNotFoundException {
+    private List<List<Integer>> getRamContents(Circuit circuit, CircuitState circuitState) {
         Component ramComponent = circuit
                 .getNonWires()
                 .stream()
-                .filter(x -> x.getFactory() instanceof Ram)
+                .filter(x -> x.getFactory() instanceof BankedRAM)
                 .findFirst()
                 .orElse(null);
 
-        Method getStateMethod = Arrays
-                .stream(
-                        ramComponent
-                                .getFactory()
-                                .getClass()
-                                .getMethods())
-                .filter(it -> it.getName().equals("getState") && it.getParameterCount() == 2)
-                .findFirst()
-                .orElse(null);
+        if (ramComponent == null){
+            return null;
+        }
 
-        getStateMethod.isAccessible();
-
-        Object ramState = getStateMethod.invoke(
-                ramComponent.getFactory(),
-                circuitState.getInstanceState(ramComponent));
-        Method contentsProperty = Arrays.stream(Class
-                        .forName("com.cburch.logisim.std.memory.MemState")
-                        .getMethods())
-                .filter(it -> it.getName().equals("getContents"))
-                .findFirst()
-                .orElse(null);
-        return null;
+        return ((BankedRAM) ramComponent.getFactory())
+                .getPrettyContent(circuitState.getInstanceState(ramComponent));
     }
 }

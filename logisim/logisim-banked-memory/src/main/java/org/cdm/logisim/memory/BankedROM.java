@@ -66,7 +66,7 @@ public class BankedROM extends BankedMem {
     }
 
     @Override
-    BankedMemState getState(Instance instance, CircuitState state) {
+    public BankedMemState getState(Instance instance, CircuitState state) {
         BankedMemState ret = (BankedMemState) instance.getData(state);
         if (ret == null) {
             BankedMemContents contents = getMemContents(instance);
@@ -77,7 +77,7 @@ public class BankedROM extends BankedMem {
     }
 
     @Override
-    BankedMemState getState(InstanceState state) {
+    public BankedMemState getState(InstanceState state) {
         BankedMemState ret = (BankedMemState) state.getData();
         if (ret == null) {
             BankedMemContents contents = getMemContents(state.getInstance());

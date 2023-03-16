@@ -3,7 +3,10 @@ package org.cdm.logisim.memory;
 /* Copyright (c) 2010, Carl Burch. License information is located in the
  * com.cburch.logisim.Main source code and at www.cburch.com/logisim/. */
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 import com.cburch.hex.HexModel;
 import com.cburch.hex.HexModelListener;
@@ -27,6 +30,17 @@ class BankedMemContents implements Cloneable, HexModel {
     private BankedMemContents(int addrBits, int width) {
         listeners = null;
         setDimensions(addrBits, width);
+    }
+
+    public List<List<Integer>> getPrettyContent(){
+        List<List<Integer>> result = new ArrayList<>();
+        for (int i = 0; i<pages.length; i++){
+            result.add(new ArrayList<Integer>());
+            for (int j = 0; j < pages[i].getLength(); j++){
+                result.get(i).set(j, pages[i].get(j));
+            }
+        }
+        return result;
     }
 
     //
