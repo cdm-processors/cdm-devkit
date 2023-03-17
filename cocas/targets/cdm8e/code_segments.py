@@ -147,7 +147,8 @@ class CodeSegments(CodeSegmentsInterface):
                     for label_name in section.labels:
                         if section.labels[label_name] > pos:
                             section.labels[label_name] += shift_length
-                            labels[label_name] += shift_length
+                            if label_name in labels:
+                                labels[label_name] += shift_length
                     return shift_length
             except CdmException as e:
                 raise e
