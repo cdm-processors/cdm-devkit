@@ -111,7 +111,7 @@ def main():
     try:
         data, code_locations = link(objects)
     except CdmLinkException as e:
-        log_error(str(CdmExceptionTag.LINK), e.message)
+        log_error(CdmExceptionTag.LINK.value, e.message)
         return 1
 
     try:
