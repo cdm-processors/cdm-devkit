@@ -343,14 +343,18 @@ class TargetInstructions(TargetInstructionsInterface):
                 raise CdmTempException('Vector number must be not negative')
             return [CodeSegments.InstructionBytesSegment(pack("u3u4s9", 0b100, 1, arg.const_term), line.location)]
         elif line.mnemonic == 'addsp':
-            assert_count_args(line.arguments, RelocatableExpressionNode)
-            arg = copy(line.arguments[0])
-            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                raise CdmTempException('Const number expected')
-            if arg.const_term % 2 == 1:
-                raise CdmTempException('Only even numbers can be added to stack pointer')
-            arg.const_term //= 2
-            return [CodeSegments.Imm9(line.location, False, 2, arg)]
+            assert_count_args(line.arguments, Union[RelocatableExpressionNode, RegisterNode])
+            if isinstance(line.arguments[0], RelocatableExpressionNode):
+                arg = copy(line.arguments[0])
+                if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+                    raise CdmTempException('Const number expected')
+                if arg.const_term % 2 == 1:
+                    raise CdmTempException('Only even numbers can be added to stack pointer')
+                arg.const_term //= 2
+                return [CodeSegments.Imm9(line.location, False, 2, arg)]
+            else:
+                reg = line.arguments[0].number
+                return [CodeSegments.InstructionBytesSegment(pack("u3p6u4u3", 0b001, 10, reg), line.location)]
         elif line.mnemonic == 'jsr':
             if len(line.arguments) == 1 and isinstance(line.arguments[0], RegisterNode):
                 jsrr = copy(line)

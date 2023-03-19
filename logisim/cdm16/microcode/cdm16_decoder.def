@@ -117,7 +117,7 @@ ldpc:           pc_asrtD, r_latch
 
 stpc:           pc_latch, r_asrtD
 
-1op_A:
+addsp:          sp_asrt0, r_asrt1, alu_asrtD, sp_latch
 1op_B:
 1op_C:
 1op_D:
