@@ -14,7 +14,7 @@ def init_bins(asects: list[ObjectSectionRecord]):
         bin_size = asects[i].address - last_bin_begin
         if bin_size > 0:
             rsect_bins.append((last_bin_begin, bin_size))
-        elif bin_size < 0:
+        elif bin_size < 0 and len(asects[i].data) > 0:
             addr1 = asects[i - 1].address
             addr2 = asects[i].address
             len1 = len(asects[i - 1].data)
