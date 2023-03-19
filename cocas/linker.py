@@ -11,16 +11,17 @@ def init_bins(asects: list[ObjectSectionRecord]):
     rsect_bins = []
     last_bin_begin = 0
     for i in range(len(asects)):
-        bin_size = asects[i].address - last_bin_begin
-        if bin_size > 0:
-            rsect_bins.append((last_bin_begin, bin_size))
-        elif bin_size < 0 and len(asects[i].data) > 0:
-            addr1 = asects[i - 1].address
-            addr2 = asects[i].address
-            len1 = len(asects[i - 1].data)
-            len2 = len(asects[i].data)
-            raise CdmLinkException(f'Overlapping sections at {addr1} (size {len1}) and {addr2} (size {len2})')
-        last_bin_begin = asects[i].address + len(asects[i].data)
+        if len(asects[i].data) > 0:
+            bin_size = asects[i].address - last_bin_begin
+            if bin_size > 0:
+                rsect_bins.append((last_bin_begin, bin_size))
+            elif bin_size < 0:
+                addr1 = asects[i - 1].address
+                addr2 = asects[i].address
+                len1 = len(asects[i - 1].data)
+                len2 = len(asects[i].data)
+                raise CdmLinkException(f'Overlapping sections at {addr1} (size {len1}) and {addr2} (size {len2})')
+            last_bin_begin = asects[i].address + len(asects[i].data)
 
     if last_bin_begin < 2 ** 16:
         rsect_bins.append((last_bin_begin, 2 ** 16 - last_bin_begin))
