@@ -1,5 +1,5 @@
 code = """
-asect  0x00
+asect 0x00
 
 if
     ldi r1, 3
