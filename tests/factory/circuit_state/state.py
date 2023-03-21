@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Self, TypedDict
+from typing import TypedDict, TypeVar
 
 from strictyaml import HexInt, Int, Map, MapPattern, Optional, Str, Validator
 
 from .memory import Memory, SerializedMemory
+
+TCircuitState = TypeVar("TCircuitState", bound="CircuitState")
 
 
 class SerializedCircuitState(TypedDict, total=False):
@@ -45,7 +47,7 @@ class CircuitState:
         })
 
     @classmethod
-    def load(cls, state: SerializedCircuitState) -> Self:
+    def load(cls, state: SerializedCircuitState) -> TCircuitState:
         """Creates a ``CircuitState`` instance from serialized state.
 
         Args:

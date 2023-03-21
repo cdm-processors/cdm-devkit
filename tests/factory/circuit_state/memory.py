@@ -1,12 +1,12 @@
 from collections.abc import Iterable, Mapping, Sequence
 from math import ceil, log2
-from typing import Self, TypeAlias
+from typing import TypeAlias, TypeVar
 
 from strictyaml import HexInt, Int, MapPattern, Seq, Str, Validator
 
 Integer = Int() | HexInt()
 SerializedMemory: TypeAlias = dict[int, int | str | list[int | str]]
-
+TMemory = TypeVar("TMemory", bound="Memory")
 
 class Memory:
     """Implements state-resolving functionality for the memory layout section."""
@@ -194,7 +194,7 @@ class Memory:
         return self.unsafe_write(addr, val)
 
     @classmethod
-    def resolve(cls, raw_layout: SerializedMemory) -> Self:
+    def resolve(cls, raw_layout: SerializedMemory) -> TMemory:
         """Creates a ``Memory`` instance from user-defined layout.
 
         Args:
