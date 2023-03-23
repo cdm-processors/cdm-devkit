@@ -76,9 +76,8 @@ class Collector:
 
         return Path(image_file.name).read_text() if process.returncode == 0 else None
 
-    def _extract_case(self, case: Path) -> Case | Failure:
-        program = case / "program.asm"
-        state = case / "state.yaml"
+    def _extract_case(self, program: Path) -> Case | Failure:
+        state = program.parent.parent / "output" / f"{program.stem}.yaml"
 
         if not program.exists():
             return Failure.MISSING_PROGRAM
@@ -102,6 +101,7 @@ class Collector:
         """Quite straight-forward: collect tests."""
         for arch_folder in self._target.iterdir():
             arch = arch_folder.name
-            for case_folder in filter(lambda e: e.is_dir(), arch_folder.iterdir()):
-                case = case_folder.name
-                self._cases[f"{arch}-{case}"] = (self._extract_case(case_folder),)
+            programs_dir = arch_folder / "input"
+            for case_program in programs_dir.iterdir():
+                case = case_program.stem
+                self._cases[f"{arch}-{case}"] = (self._extract_case(case_program),)
