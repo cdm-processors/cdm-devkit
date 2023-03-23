@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import ClassVar
 
+from _pytest.mark import Mark
 from _pytest.python import Metafunc
 
 from .factory import Case, Collector, skip_invalid_cases
@@ -33,7 +34,10 @@ def pytest_generate_tests(metafunc: Metafunc):
 
         arg_specs = arg_specs + ["circuits"]
         cases = filtered_cases.values()
-        names = filtered_cases.keys()
+        if not filtered_cases:
+            names = ["no-logisim-compatible-targets"]
+        else:
+            names = filtered_cases.keys()
 
     metafunc.parametrize(arg_specs, cases, ids=names)
 
