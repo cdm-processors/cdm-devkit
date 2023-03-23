@@ -13,7 +13,29 @@ def pytest_generate_tests(metafunc: Metafunc):
         cls.collected = Collector(cls.resources)
         cls.collected.collect()
 
-    metafunc.parametrize(cls.arg_specs, cls.collected.cases, ids=cls.collected.names)
+    arg_specs = cls.arg_specs
+    cases = cls.collected.cases
+    names = cls.collected.names
+
+    if "logisim" in metafunc.function.__name__:
+        raw_cases = cls.collected.raw_cases
+
+        has_circuits = {
+            arch.name: (arch / "circuits").exists()
+            for arch in cls.resources.iterdir()
+        }
+
+        filtered_cases = {}
+        for name, case in raw_cases.items():
+            arch, *_ = name.split("-")
+            if has_circuits[arch]:
+                filtered_cases[name] = (*case, cls.resources / arch / "circuits")
+
+        arg_specs = arg_specs + ["circuits"]
+        cases = filtered_cases.values()
+        names = filtered_cases.keys()
+
+    metafunc.parametrize(arg_specs, cases, ids=names)
 
 
 class TestEmulators:
@@ -28,7 +50,6 @@ class TestEmulators:
         ...
 
     @skip_invalid_cases
-    def test_logisim(self, case: Case) -> None:
+    def test_logisim(self, case: Case, circuits: Path) -> None:
         image, circuit_state = case.unpack()
-
         ...

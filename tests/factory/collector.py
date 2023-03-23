@@ -1,5 +1,5 @@
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -32,6 +32,15 @@ class Collector:
         """
         self._target = target
         self._cases = {}
+
+    @property
+    def raw_cases(self) -> Mapping[str, tuple[Case] | tuple[Failure]]:
+        """Get the raw test cases representation.
+
+        Returns:
+            A mapping with names as keys and cases as values.
+        """
+        return self._cases
 
     @property
     def names(self) -> Iterable[str]:
