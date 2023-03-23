@@ -13,24 +13,24 @@ class Collector:
     """Factory class for integration tests.
 
     Test cases consist out of next components:
-        * a ``target`` folder, where cases will be searched;
-        * ``target/architecture`` folders; note that `architecture` should match an
+        * a ``resources`` folder, where cases will be searched;
+        * ``resources/architecture`` folders; note that `architecture` should match an
           existing arch of `cocas`;
         * a ``*.circ`` file for each architecture, which will be used for `logisim`
           integration test;
         * a set of folders with ``program.asm`` and ``state.yaml`` files for each arch.
     """
-    _target: Path
+    _resources: Path
     _cases: dict[str, tuple[Case] | tuple[Failure]]
 
-    def __init__(self, target: Path) -> None:
+    def __init__(self, resources: Path) -> None:
         """Creates a ``Collector`` instance.
 
         Args:
-            target:
+            resources:
                 A folder, where all tests will be searched.
         """
-        self._target = target
+        self._resources = resources
         self._cases = {}
 
     @property
@@ -108,7 +108,7 @@ class Collector:
 
     def collect(self) -> None:
         """Quite straight-forward: collect tests."""
-        for arch_folder in self._target.iterdir():
+        for arch_folder in self._resources.iterdir():
             arch = arch_folder.name
             programs_dir = arch_folder / "input"
             for case_program in programs_dir.iterdir():
