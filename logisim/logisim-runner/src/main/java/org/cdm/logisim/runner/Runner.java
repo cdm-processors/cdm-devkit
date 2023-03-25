@@ -170,7 +170,6 @@ public class Runner {
             for (ticks = 0; ticks < timeout && this.getPinValue(circuitState, haltPin) == 0; ++ticks) {
                 propagator.tick();
                 propagator.propagate();
-                ++ticks;
             }
 
             if (ticks == timeout) {
