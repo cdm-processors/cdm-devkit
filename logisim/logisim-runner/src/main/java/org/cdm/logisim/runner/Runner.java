@@ -175,7 +175,7 @@ public class Runner {
 
             if (ticks == timeout) {
                 System.err.println("Timeout");
-                System.exit(1);
+                System.exit(13);
             }
 
             Map<String, Integer> registersValues = new HashMap<>();
