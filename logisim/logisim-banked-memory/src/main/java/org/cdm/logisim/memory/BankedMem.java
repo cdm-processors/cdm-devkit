@@ -61,6 +61,7 @@ abstract class BankedMem extends InstanceFactory {
 
     public static final int DEFAULT_BITS_SIZE = 1;
     public static final int DEFAULT_BITS_VALUE = 0;
+    public static final int DEFAULT_DATA_SIZE = 16;
 
     // other constants
     static final int DELAY = 10;

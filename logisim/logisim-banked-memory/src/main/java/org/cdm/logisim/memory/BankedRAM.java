@@ -83,8 +83,6 @@ public class BankedRAM extends BankedMem {
     private static final int CLK = MEM_INPUTS + 2;
     private static final int WE = MEM_INPUTS + 3;
     private static final int DIN = MEM_INPUTS + 4;
-
-    public static final int DEFAULT_DATA_SIZE = 16;
     public static final int DATA = 0;
     public static final int ADDR = 1;
     public static final int SEL = 2;
@@ -101,7 +99,7 @@ public class BankedRAM extends BankedMem {
         setInstanceLogger(Logger.class);
     }
 
-    BankedMemContents getMemContents(Instance instance) {
+    public BankedMemContents getMemContents(Instance instance) {
         return instance.getAttributeValue(CONTENTS_ATTR);
     }
 
@@ -125,7 +123,7 @@ public class BankedRAM extends BankedMem {
         int portCount = 7;
         Port[] ps = new Port[portCount];
 
-        ps[DATA] = new Port(0, 0, "inout", DEFAULT_DATA_SIZE);
+        ps[DATA] = new Port(0, 0, "inout", BankedMem.DEFAULT_DATA_SIZE);
         ps[ADDR] = new Port(-140, 0, "inout", ADDR_ATTR);
         ps[SEL] = new Port(-90, 40, "input", 1);
         ps[LD] = new Port(-50, 40, "input", 1);

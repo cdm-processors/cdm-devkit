@@ -42,15 +42,13 @@ public class BankedROM extends BankedMem {
     public static final int SEL = 2;
     public static final int BITS = 3;
     public static final int PORTS = 4;
-    public static final int DATABITS = 16;
-    public static final int ADDRBITS = 8;
 
 
     @Override
     void configurePorts(Instance instance) {
         Port[] ps = new Port[PORTS];
-        ps[DATA] = new Port(0, 0, "inout", 16);
-        ps[ADDR] = new Port(-140, 0, "input", 8);
+        ps[DATA] = new Port(0, 0, "inout", BankedMem.DEFAULT_DATA_SIZE);
+        ps[ADDR] = new Port(-140, 0, "input", BankedMem.ADDR_ATTR);
         ps[SEL] = new Port(-90, 40, "input", 1);
         ps[BITS] = new Port(-50, 40, "input", 1);
         ps[DATA].setToolTip(BankedStrings.getter("memDataTip"));
