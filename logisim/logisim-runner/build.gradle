@@ -1,4 +1,5 @@
 plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
     id 'java'
 }
 
@@ -25,7 +26,6 @@ compileJava {
 
 jar {
     manifest {
-        //Main-Class
-        attributes 'Library-Class': 'org.cdm.logisim.emulator.Components'
+        attributes 'Main-Class': 'org.cdm.logisim.runner.Runner'
     }
 }
