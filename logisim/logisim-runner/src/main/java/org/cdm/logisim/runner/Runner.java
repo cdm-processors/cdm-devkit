@@ -16,6 +16,7 @@ import com.cburch.logisim.std.memory.Rom;
 import com.cburch.logisim.std.wiring.Pin;
 import org.cdm.logisim.memory.BankedMemState;
 import org.cdm.logisim.memory.BankedRAM;
+import org.cdm.logisim.memory.BankedROM;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,17 +87,17 @@ public class Runner {
             Component romComponent = circuit
                     .getNonWires()
                     .stream()
-                    .filter(x -> x.getFactory() instanceof Rom)
+                    .filter(x -> x.getFactory() instanceof BankedROM)
                     .findFirst()
                     .orElse(null);
             if (romComponent == null) {
-                throw new RunnerException("Unable to find ROM");
+                throw new RunnerException("Unable to find BankedROM");
             }
 
             propagator.propagate();
 
             try {
-                ((Rom) romComponent.getFactory())
+                ((BankedROM) romComponent.getFactory())
                         .loadImage(circuitState.getInstanceState(romComponent), inputFile);
             } catch (IOException e) {
                 throw new RunnerException("Failed to load image");
