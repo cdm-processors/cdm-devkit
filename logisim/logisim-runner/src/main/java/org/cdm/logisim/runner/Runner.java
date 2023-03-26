@@ -22,8 +22,11 @@ import org.cdm.logisim.memory.BankedRAM;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,8 +38,12 @@ import java.util.stream.Collectors;
 public class Runner {
     private static final int IMG_FILE = 0;
     private static final int CIRCUIT_FILE = 1;
-    private static final int CONFIG_FILE = 2;
-    private static final int TIMEOUT = 3;
+    private static final int OUTPUT_FILE = 2;
+    private static final int CONFIG_FILE = 3;
+    private static final int TIMEOUT = 4;
+
+    public Runner() {
+    }
 
     public static void main(String[] args) {
         Runner runner = new Runner();
@@ -52,12 +59,33 @@ public class Runner {
         } else if (!configFile.exists()) {
             System.err.println("Cannot find config file");
             System.exit(1);
+        } else if (!(new File(args[OUTPUT_FILE])).exists()) {
+            System.err.println("Cannot find output file");
+            System.exit(1);
+        }
+
+        OutputStreamWriter outputStreamWriter = null;
+
+        try {
+            outputStreamWriter = new OutputStreamWriter(
+                    new FileOutputStream(args[OUTPUT_FILE]),
+                    StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to open OutputFile");
+            System.exit(1);
         }
 
         int timeout = Integer.parseInt(args[TIMEOUT]);
         JsonElement res = runner.run(imgFile, circuitFile, configFile, timeout);
 
-        System.out.println(res);
+        try {
+            System.out.println(res);
+            outputStreamWriter.write(res.toString());
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            System.err.println("Failed to write to output file");
+            System.exit(1);
+        }
 
         System.exit(0);
     }
