@@ -66,7 +66,7 @@ class Collector:
         return self._cases.values()
 
     @staticmethod
-    def pass_to_cocas(arch: str, assembly_file: Path) -> str | None:
+    def pass_to_cocas(arch: str, assembly_file: Path) -> Path | None:
         """Send an assembly file to `cocas` and get, if possible, an image of it.
 
         Args:
@@ -88,7 +88,7 @@ class Collector:
             str(assembly_file)
         ], capture_output=True)
 
-        return Path(image_file.name).read_text() if process.returncode == 0 else None
+        return Path(image_file.name) if process.returncode == 0 else None
 
     def _extract_case(self, program: Path) -> Case | Failure:
         state = program.parent.parent / "output" / f"{program.stem}.yaml"
@@ -99,7 +99,7 @@ class Collector:
         if not state.exists():
             return Failure.MISSING_STATE
 
-        if (image := self.pass_to_cocas(program.parent.parent.name, program)) is None:
+        if (image_file := self.pass_to_cocas(program.parent.parent.name, program)) is None:
             return Failure.ASSEMBLER_FAIL
 
         try:
@@ -109,7 +109,7 @@ class Collector:
         except (YAMLError, ValueError):
             return Failure.STATE_RESOLVER_FAIL
 
-        return Case(image, circuit_state)
+        return Case(image_file, circuit_state)
 
     def collect(self) -> None:
         """Quite straight-forward: collect tests."""
