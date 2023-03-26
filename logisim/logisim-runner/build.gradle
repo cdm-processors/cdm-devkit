@@ -26,6 +26,6 @@ compileJava {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.cdm.logisim.runner.Runner'
+        attributes 'Main-Class': 'org.cdm.logisim.runner.Main'
     }
 }
