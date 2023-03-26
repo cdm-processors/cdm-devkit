@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import ClassVar
 
-from _pytest.mark import Mark
+import pytest
 from _pytest.python import Metafunc
 
 from .factory import Case, Collector, skip_invalid_cases
@@ -18,11 +18,11 @@ def pytest_generate_tests(metafunc: Metafunc):
     cases = cls.collected.cases
     names = cls.collected.names
 
-    if "logisim" in metafunc.function.__name__:
+    if "logisim_emulator" in metafunc.function.__name__:
         raw_cases = cls.collected.raw_cases
 
         has_circuits = {
-            arch.name: (arch / "circuits").exists()
+            arch.name: (arch / "circuit" / "test_circuit.circ").exists()
             for arch in cls.resources.iterdir()
         }
 
@@ -30,9 +30,9 @@ def pytest_generate_tests(metafunc: Metafunc):
         for name, case in raw_cases.items():
             arch, *_ = name.split("-")
             if has_circuits[arch]:
-                filtered_cases[name] = (*case, cls.resources / arch / "circuits")
+                filtered_cases[name] = (*case, cls.resources / arch / "circuit")
 
-        arg_specs = arg_specs + ["circuits"]
+        arg_specs = arg_specs + ["circuit_folder"]
         cases = filtered_cases.values()
         if not filtered_cases:
             names = ["no-logisim-compatible-targets"]
@@ -42,18 +42,26 @@ def pytest_generate_tests(metafunc: Metafunc):
     metafunc.parametrize(arg_specs, cases, ids=names)
 
 
-class TestEmulators:
+class TestProcessors:
     resources: ClassVar[Path] = Path(__file__).parent / "resources"
     arg_specs: ClassVar[list[str]] = ["case"]
     collected: ClassVar[Collector | None] = None
 
     @skip_invalid_cases
-    def test_python(self, case: Case) -> None:
+    def test_logisim_scheme(self, case: Case) -> None:
         image, circuit_state = case.unpack()
 
         ...
 
     @skip_invalid_cases
-    def test_logisim(self, case: Case, circuits: Path) -> None:
+    def test_logisim_emulator(self, case: Case, circuit_folder: Path) -> None:
         image, circuit_state = case.unpack()
+
+        ...
+
+    @pytest.mark.skip(reason="cocoemu is not implemented yet")
+    @skip_invalid_cases
+    def test_python_emulator(self, case: Case) -> None:
+        image, circuit_state = case.unpack()
+
         ...

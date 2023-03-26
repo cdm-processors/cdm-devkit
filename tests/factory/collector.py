@@ -16,8 +16,13 @@ class Collector:
         * a ``resources`` folder, where cases will be searched;
         * ``resources/architecture`` folders; note that `architecture` should match an
           existing arch of `cocas`;
-        * a ``*.circ`` file for each architecture, which will be used for `logisim`
-          integration test;
+        * a ``circuit`` folder for each architecture, which will include test
+          circuit for logisim tests; this folder may not exist if arch doesn't
+          support logisim tests;
+        * a ``circuit/test_circuit.circ`` file for each architecture,
+          which will be used as test circuit for logisim integration tests;
+        * a ``circuit/config.properties`` file for each architecture,
+          which will be used as configuration file for logisim-runner;
         * a set of folders with ``program.asm`` and ``state.yaml`` files for each arch.
     """
     _resources: Path
