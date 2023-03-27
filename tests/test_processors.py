@@ -28,13 +28,13 @@ def pytest_generate_tests(metafunc: Metafunc):
 
         if "logisim_scheme" in metafunc.function.__name__:
             has_circuits = {
-                arch.name: (arch / "circuit" / LOGISIM_NATIVE_TEST_CIRCUIT).exists()
+                arch.name: (arch / "circuits" / LOGISIM_NATIVE_TEST_CIRCUIT).exists()
                 for arch in cls.resources.iterdir()
             }
 
         elif "logisim_emulator" in metafunc.function.__name__:
             has_circuits = {
-                arch.name: (arch / "circuit" / LOGISIM_EMULATOR_TEST_CIRCUIT).exists()
+                arch.name: (arch / "circuits" / LOGISIM_EMULATOR_TEST_CIRCUIT).exists()
                 for arch in cls.resources.iterdir()
             }
 
@@ -42,7 +42,7 @@ def pytest_generate_tests(metafunc: Metafunc):
         for name, case in raw_cases.items():
             arch, *_ = name.split("-")
             if has_circuits[arch]:
-                filtered_cases[name] = (*case, cls.resources / arch / "circuit")
+                filtered_cases[name] = (*case, cls.resources / arch / "circuits")
 
         arg_specs = arg_specs + ["circuit_folder"]
         cases = filtered_cases.values()
