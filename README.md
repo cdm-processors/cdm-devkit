@@ -166,6 +166,7 @@ Set `VERSION` variable if you want to specify project version
     - `cocemu`
     - `logisim-banked-memory`
     - `logisim-cdm-emulator`
+    - `logisim-runner`
     - `vscode-cdm-extension`
 
 ## Contact us
