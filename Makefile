@@ -1,7 +1,7 @@
 #####################################################
 #                                                   #
 #   This Makefile builds all projects and puts      #
-#   distibution files in BUILD_FOLDER.              #
+#   distribution files in BUILD_FOLDER.              #
 #                                                   #
 #####################################################
 
@@ -38,7 +38,7 @@ ifeq ($(OS), Windows_NT)
 # Windows-specific commands
 
 GRADLEW = .\gradlew.bat
-CP = xcopy /s
+CP = xcopy /s /y
 RM = rmdir /s /q
 RM_FILE = del /q
 ZIP = zip -r
@@ -95,7 +95,7 @@ endef
 
 .PHONY: all dist $(BUILD_FOLDER_EXIST)
 
-# Build all projects and create distibution package
+# Build all projects and create distribution package
 dist: all | $(BUILD_FOLDER_EXIST)
 
 	@echo ---------------------------
@@ -178,3 +178,55 @@ clean:
 	)
 
 	$(RM_FILE) $(VSCODE_EXTENSION_FOLDER)$(SLASH)vscode-cdm-extension-*.*.*.vsix
+
+
+# Tests
+
+# Runner jar folder path
+RUNNER_FOLDER = tests$(SLASH)jar
+
+# Prepare test environment
+prepare_tests: prepare_tests_processors
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory && \
+		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE)
+
+	$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner$(SLASH)libs
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner && \
+		$(GRADLEW) shadowJar -Pversion="$(VERSION)" $(NEW_LINE)
+
+	$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
+		$(RUNNER_FOLDER)
+
+	$(foreach PROCESSOR, $(PROCESSORS), \
+		$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
+		 	tests$(SLASH)resources$(SLASH)$(PROCESSOR)$(SLASH)circuits $(NEW_LINE) \
+	)
+
+prepare_tests_processors:
+	$(foreach PROCESSOR, $(PROCESSORS), \
+		$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)$(PROCESSOR)$(SLASH)*.circ \
+		 	tests$(SLASH)resources$(SLASH)$(PROCESSOR)$(SLASH)circuits $(NEW_LINE) \
+	)
+
+
+# Clean test environment
+clean_tests: clean_tests_processors
+	$(RM) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH)build \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH).gradle $(NEW_LINE)
+
+	$(RM_FILE) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner$(SLASH)libs$(SLASH)logisim-banked-memory*
+
+	$(RM) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner$(SLASH)build \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-runner$(SLASH).gradle $(NEW_LINE)
+
+	$(RM_FILE) $(RUNNER_FOLDER)$(SLASH)*.jar
+
+	$(foreach PROCESSOR, $(PROCESSORS), \
+		$(RM_FILE) tests$(SLASH)resources$(SLASH)$(PROCESSOR)$(SLASH)circuits$(SLASH)logisim-banked-memory* $(NEW_LINE) \
+	)
+
+clean_tests_processors:
+	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm8e$(SLASH)circuits$(SLASH)CdM-8e.circ
+	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits$(SLASH)cdm16.circ
