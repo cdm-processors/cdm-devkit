@@ -123,7 +123,7 @@ public class Runner {
             HexModel contents = this.getRamContents(circuit, circuitState);
             List<Integer> memoryContent = new ArrayList<>();
 
-            for (long i = 0L; i < contents.getLastOffset(); ++i) {
+            for (long i = 0L; i <= contents.getLastOffset(); ++i) {
                 memoryContent.add(contents.get(i));
             }
 
