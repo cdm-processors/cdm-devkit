@@ -186,7 +186,7 @@ clean:
 RUNNER_FOLDER = tests$(SLASH)jar
 
 # Prepare test environment
-prepare_tests: prepare_tests_processors
+prepare_tests: prepare_tests_processors gradlew
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory && \
 		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE)
 
