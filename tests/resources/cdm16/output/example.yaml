@@ -1,4 +1,4 @@
 registers:
-  ps: 0x8000
+    ps: 0x8000
 
 max_ticks: 10
