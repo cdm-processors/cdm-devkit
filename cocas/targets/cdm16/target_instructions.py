@@ -385,7 +385,7 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(ldi, {'ldi': -1}),
         Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'rti': 9,
                       'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
-        Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'ror': 3, 'rol': 4, 'rcr': 5, 'rcl': 6}),
+        Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'rol': 3, 'ror': 4, 'rcl': 5, 'rcr': 6}),
         Handler(op1, {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
                       'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
         Handler(op2, {'move': 0}),
