@@ -13,7 +13,7 @@ import com.cburch.logisim.instance.InstanceData;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.StringUtil;
 
-class BankedMemState implements InstanceData, Cloneable, HexModelListener {
+public class BankedMemState implements InstanceData, Cloneable, HexModelListener {
     private static final int ROWS = 4; // rows in memory display
 
     private static final int TABLE_WIDTH12 = 80; // width of table for addr bits <= 12

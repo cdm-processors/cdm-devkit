@@ -1,0 +1,31 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
+    id 'java'
+}
+
+group 'org.cdm.logisim.runner'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation ("com.google.code.gson:gson:2.9.0")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava {
+    options.compilerArgs.addAll(['--release', 16, '-Xlint:-options'])
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.cdm.logisim.runner.Main'
+    }
+}
