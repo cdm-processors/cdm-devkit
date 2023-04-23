@@ -66,6 +66,12 @@ def main():
     print('\t\t' + (', \n\t\t'.join(["%s(0x%X)" % (tr, trval[tr]) for tr in triggers])))
     print("\nProcessing action lists...")
 
+    fill_value = 0
+    try:
+        fill_value = int(args.fill, 16)
+    except ValueError:
+        err(f"Invalid fill value: {args.fill}, expected hex number")
+
     content = [[] for _ in range(phases)]  # can't use phases*[[]], idiotic Python will create refs to same obj.
 
     for rule in rules:
@@ -87,7 +93,11 @@ def main():
                     val += trval[trig]
             if phno == len(optrigs) - 1:  # last phase for op
                 val += trval['CUT']  # tell sequencer to cut the sequence
-            content[phno].append(val)
+
+            if val > 0:
+                content[phno].append(val)
+            else:
+                content[phno].append(fill_value)
 
     bitspp = log2(len(rules))
     reqlength = 2 ** bitspp
