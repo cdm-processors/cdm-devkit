@@ -18,6 +18,7 @@ packages = [
 
 [tool.poetry.scripts]
 cocas = 'cocas.main:main'
+synthm = 'synthm.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"

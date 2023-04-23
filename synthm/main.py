@@ -1,0 +1,122 @@
+from functools import reduce
+
+from args import parse_args
+from parser import parse
+from synth import epilog, preamble, synth
+from termcolor import colored
+from util import log2
+
+
+def main():
+    args = parse_args()
+
+    fname = args.defs
+    if fname.endswith('.def'):
+        fname = fname[:-4]
+
+    with open(fname + '.def') as fd:
+        rules, seqwidth, phases, triggers = parse(fd.read())
+
+    def hasreps(x):
+        if not x:
+            return ""
+        if x[0] not in x[1:]:
+            return hasreps(x[1:])
+        else:
+            return x[0]
+
+    def err(msg):
+        if args.color:
+            print(colored(msg, "red"))
+        else:
+            print(msg)
+
+        quit(-1)
+
+    def print_colored(msg, color):
+        if args.color:
+            print(colored(msg, color))
+        else:
+            print(msg)
+
+    repeated = hasreps(triggers)
+    if repeated:
+        err("Trigger '" + repeated + "' occurs more than once on trigger list")
+
+    triggers.sort()
+    triggers.append('CUT')
+
+    opcodes = [op for (op, _) in rules]
+
+    repeated = hasreps(opcodes)
+    if repeated:
+        err("Opcode '" + repeated + "' occurs more than once on activation list")
+
+    trval = {}
+    v = 1
+    for tr in triggers:
+        trval[tr] = v
+        v = 2 * v
+
+    print_colored("*** SECONDARY DECODER SYNTH ***", "blue")
+
+    print("\tSequencer width: " + str(seqwidth))
+    print("\tMaximum phases per instruction: " + str(phases))
+    print("\tTrigger list:")
+    print('\t\t' + (', \n\t\t'.join(["%s(0x%X)" % (tr, trval[tr]) for tr in triggers])))
+    print("\nProcessing action lists...")
+
+    content = [[] for _ in range(phases)]  # can't use phases*[[]], idiotic Python will create refs to same obj.
+
+    for rule in rules:
+        opc, optrigs = rule
+        if len(optrigs) > phases:
+            err(str(len(optrigs)) + " phases specified for opcode '" + opc + "', greater than maximum declared")
+        for phno in range(phases):
+            if args.debug and phno == 0:
+                print('\t' + opc + ':' + '; '.join([', '.join(p) for p in optrigs]))
+            val = 0
+            if phno < len(optrigs):
+                phtrigs = optrigs[phno]
+                repeated = hasreps(phtrigs)
+                if repeated:
+                    err(f"Trigger '{repeated}' occurs more than once for opcode '{opc}' in phase {str(phno)}")
+                for trig in phtrigs:
+                    if trig not in trval:
+                        err("Undeclared trigger '" + trig + "' for op-code '" + opc + "'")
+                    val += trval[trig]
+            if phno == len(optrigs) - 1:  # last phase for op
+                val += trval['CUT']  # tell sequencer to cut the sequence
+            content[phno].append(val)
+
+    bitspp = log2(len(rules))
+    reqlength = 2 ** bitspp
+    aligned = [part + (reqlength - len(part)) * [0] for part in content]
+    mmap = reduce(lambda x, y: x + y, aligned, [])
+
+    body = synth(
+        opcodes=opcodes,
+        triggers=triggers,
+        seqwidth=seqwidth,
+        phases=phases,
+        rom_content=mmap
+    )
+
+    with open(fname + '.circ', 'w') as outfile:
+        outfile.write(preamble + '\n'.join(body) + epilog)
+
+    if args.gen_image:
+
+        print_colored("Generated ROM image: " + fname + ".img", "blue")
+
+        with open(fname + '.img', 'w') as outfile:
+            outfile.write('v2.0 raw\n')
+
+            for byte in mmap:
+                outfile.write(format(byte, "2x").replace(' ', '0') + '\n')
+
+    print_colored("Success!", "green")
+
+
+if __name__ == "__main__":
+    main()
