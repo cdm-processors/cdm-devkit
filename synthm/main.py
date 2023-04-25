@@ -76,23 +76,28 @@ def main():
 
     for rule in rules:
         opc, optrigs = rule
+
         if len(optrigs) > phases:
             err(str(len(optrigs)) + " phases specified for opcode '" + opc + "', greater than maximum declared")
+
         for phno in range(phases):
             if args.debug and phno == 0:
                 print('\t' + opc + ':' + '; '.join([', '.join(p) for p in optrigs]))
+
             val = 0
             if phno < len(optrigs):
                 phtrigs = optrigs[phno]
                 repeated = hasreps(phtrigs)
                 if repeated:
                     err(f"Trigger '{repeated}' occurs more than once for opcode '{opc}' in phase {str(phno)}")
+
                 for trig in phtrigs:
                     if trig not in trval:
                         err("Undeclared trigger '" + trig + "' for op-code '" + opc + "'")
-                    val += trval[trig]
+                    val |= trval[trig]
+
             if phno == len(optrigs) - 1:  # last phase for op
-                val += trval['CUT']  # tell sequencer to cut the sequence
+                val |= trval['CUT']  # tell sequencer to cut the sequence
 
             if val > 0:
                 content[phno].append(val)
