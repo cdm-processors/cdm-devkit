@@ -1,3 +1,8 @@
+from colorama import Fore
+
+from args import args
+
+
 def parse(spec):
     rules = []
     first = True
@@ -5,10 +10,10 @@ def parse(spec):
     lnum = 0
 
     def err(msg):
-        #if args.color == True:
-        #    print(colored("Error on line " + str(lnum) + ": " + msg, "red"))
-        #else:
-        print("Error on line %d:" % lnum, msg)
+        if args.color:
+            print(Fore.RED + "Error on line " + str(lnum) + ": " + msg + Fore.RESET)
+        else:
+            print("Error on line %d:" % lnum, msg)
 
         quit(-1)
 

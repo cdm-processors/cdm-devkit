@@ -12,3 +12,6 @@ def parse_args():
     parser.add_argument('defs', type=str, help="secondary decoder definition file")
 
     return parser.parse_args()
+
+
+args = parse_args()

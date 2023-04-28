@@ -1,15 +1,14 @@
 from functools import reduce
 
-from args import parse_args
+from colorama import Fore
+
 from parser import parse
 from synth import epilog, preamble, synth
-from termcolor import colored
 from util import log2
+from args import args
 
 
 def main():
-    args = parse_args()
-
     fname = args.defs
     if fname.endswith('.def'):
         fname = fname[:-4]
@@ -27,15 +26,15 @@ def main():
 
     def err(msg):
         if args.color:
-            print(colored(msg, "red"))
+            print(Fore.RED + msg + Fore.RESET)
         else:
             print(msg)
 
         quit(-1)
 
-    def print_colored(msg, color):
+    def print_colored(msg, color: Fore):
         if args.color:
-            print(colored(msg, color))
+            print(color + msg + Fore.RESET)
         else:
             print(msg)
 
@@ -58,7 +57,7 @@ def main():
         trval[tr] = v
         v = 2 * v
 
-    print_colored("*** SECONDARY DECODER SYNTH ***", "blue")
+    print_colored("*** SECONDARY DECODER SYNTH ***", Fore.BLUE)
 
     print("\tSequencer width: " + str(seqwidth))
     print("\tMaximum phases per instruction: " + str(phases))
@@ -82,7 +81,7 @@ def main():
 
         for phno in range(phases):
             if args.debug and phno == 0:
-                print('\t' + opc + ':' + '; '.join([', '.join(p) for p in optrigs]))
+                print('\t' + opc + ': ' + '; '.join([', '.join(p) for p in optrigs]))
 
             val = 0
             if phno < len(optrigs):
@@ -122,7 +121,7 @@ def main():
 
     if args.gen_image:
 
-        print_colored("Generated ROM image: " + fname + ".img", "blue")
+        print_colored("Generated ROM image: " + fname + ".img", Fore.BLUE)
 
         with open(fname + '.img', 'w') as outfile:
             outfile.write('v2.0 raw\n')
@@ -130,7 +129,7 @@ def main():
             for byte in mmap:
                 outfile.write(format(byte, "2x").replace(' ', '0') + '\n')
 
-    print_colored("Success!", "green")
+    print_colored("Success!", Fore.GREEN)
 
 
 if __name__ == "__main__":
