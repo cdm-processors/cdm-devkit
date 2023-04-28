@@ -2,10 +2,10 @@ from functools import reduce
 
 from colorama import Fore
 
-from parser import parse
-from synth import epilog, preamble, synth
-from util import log2
-from args import args
+from .parser import parse
+from .synth import epilog, preamble, synth
+from .util import log2
+from .args import args
 
 
 def main():

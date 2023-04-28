@@ -1,4 +1,4 @@
-from util import log2
+from .util import log2
 
 
 def tunnel(name, x, y, facing='east', width=1):

@@ -1,6 +1,6 @@
 from colorama import Fore
 
-from args import args
+from .args import args
 
 
 def parse(spec):
