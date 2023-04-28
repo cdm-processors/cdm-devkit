@@ -13,7 +13,8 @@ authors = [
 ]
 
 packages = [
-    { include = "cocas" }
+    { include = "cocas" },
+    { include = "synthm" }
 ]
 
 [tool.poetry.scripts]
