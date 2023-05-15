@@ -32,6 +32,7 @@ After installation you get several components:
 - **CLI Programs**
     
     - `cocas` - universal assembler for CdM processors
+    - `synthm` - secondary decoder synthesis utility
     - *(coming soon)*
 
 - **VS Code Extension**
