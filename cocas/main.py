@@ -55,7 +55,7 @@ def main():
     # TODO: enable object file generation (if stand-alone linker will be ready)
     # parser.add_argument('-c', '--compile', type=str, help='generate object files without linking')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
-    parser.add_argument('--debug', type=str, help=argparse.SUPPRESS)
+    parser.add_argument('--debug', type=str, help=argparse.SUPPRESS, nargs='?', const='out.dbg.json')
     parser.add_argument('sources', type=str, nargs='*', help='source files')
     args = parser.parse_args()
     if args.list_targets:
