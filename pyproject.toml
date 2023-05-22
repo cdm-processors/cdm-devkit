@@ -24,7 +24,7 @@ synthm = 'synthm.main:main'
 [tool.poetry.dependencies]
 python = "^3.10"
 bitstruct = "^8.14.1"
-antlr4-python3-runtime = "4.11.*"
+antlr4-python3-runtime = "4.13.*"
 websocket-server = "^0.6.4"
 colorama = "^0.4.4"
 

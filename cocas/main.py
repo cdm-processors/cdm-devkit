@@ -90,14 +90,11 @@ def main():
             log_error("MAIN", message)
             return 1
         data = codecs.decode(data, 'utf8', 'strict')
-        # tolerate files without newline at the end
         if data[-1] != '\n':
             data += '\n'
 
         try:
             input_stream = antlr4.InputStream(data)
-            # Macros (tst, clr but not if) are replaced to commands and wrapped by tags
-            # Remove comments
             macro_expanded_input_stream = process_macros(input_stream, library_macros,
                                                          str(pathlib.Path(filepath).absolute()))
             r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))

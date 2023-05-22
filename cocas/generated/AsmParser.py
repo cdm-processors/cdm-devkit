@@ -1,4 +1,4 @@
-# Generated from AsmParser.g4 by ANTLR 4.11.1
+# Generated from ./grammar/AsmParser.g4 by ANTLR 4.13.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -271,7 +271,7 @@ class AsmParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.11.1")
+        self.checkVersion("4.13.0")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -338,7 +338,7 @@ class AsmParser ( Parser ):
             self.state = 91
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while ((_la) & ~0x3f) == 0 and ((1 << _la) & 36866) != 0:
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 36866) != 0):
                 self.state = 88
                 self.section()
                 self.state = 93
@@ -430,7 +430,7 @@ class AsmParser ( Parser ):
             self.state = 110
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while ((_la) & ~0x3f) == 0 and ((1 << _la) & 36866) != 0:
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 36866) != 0):
                 self.state = 107
                 self.section()
                 self.state = 112
@@ -1339,7 +1339,7 @@ class AsmParser ( Parser ):
                 self.state = 208
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if ((_la) & ~0x3f) == 0 and ((1 << _la) & 68189421566) != 0:
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 68189421566) != 0):
                     self.state = 207
                     self.arguments()
 
@@ -2888,7 +2888,7 @@ class AsmParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 374
             _la = self._input.LA(1)
-            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 15032385536) != 0):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 15032385536) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2987,7 +2987,7 @@ class AsmParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 376
             _la = self._input.LA(1)
-            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 1074266110) != 0):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 1074266110) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
