@@ -139,17 +139,17 @@ class CodeBlock:
         self.append_label(finally_label)
         self.loop_stack.pop()
 
-    def assemble_break_statement(self, _: BreakStatementNode, __):
+    def assemble_break_statement(self, line: BreakStatementNode, _):
         if len(self.loop_stack) == 0:
             raise Exception('"break" not allowed outside of a loop')
         _, finally_label = self.loop_stack[-1]
-        self.append_branch_instruction(CodeLocation(), 'anything', finally_label, False)
+        self.append_branch_instruction(line.location, 'anything', finally_label, False)
 
-    def assemble_continue_statement(self, _: ContinueStatementNode, __):
+    def assemble_continue_statement(self, line: ContinueStatementNode, _):
         if len(self.loop_stack) == 0:
             raise Exception('"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
-        self.append_branch_instruction(CodeLocation(), 'anything', cond_label, False)
+        self.append_branch_instruction(line.location, 'anything', cond_label, False)
 
 
 @dataclass
