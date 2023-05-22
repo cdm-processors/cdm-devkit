@@ -40,21 +40,21 @@ class BuildAstVisitor(AsmParserVisitor):
 
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
-        lines, locations = self.visitSection_body(ctx.section_body())
+        lines = self.visitSection_body(ctx.section_body())
         address = self.visitNumber(header.number())
-        return AbsoluteSectionNode(lines, locations, address)
+        return AbsoluteSectionNode(lines, address)
 
     def visitRelocatableSection(self, ctx: AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
         header = ctx.rsect_header()
-        lines, locations = self.visitSection_body(ctx.section_body())
+        lines = self.visitSection_body(ctx.section_body())
         name = header.name().getText()
-        return RelocatableSectionNode(lines, locations, name)
+        return RelocatableSectionNode(lines, name)
 
     def visitTemplateSection(self, ctx: AsmParser.TemplateSectionContext) -> TemplateSectionNode:
         header = ctx.tplate_header()
-        lines, locations = self.visitSection_body(ctx.section_body())
+        lines = self.visitSection_body(ctx.section_body())
         name = header.name().getText()
-        return TemplateSectionNode(lines, locations, name)
+        return TemplateSectionNode(lines, name)
 
     def visitLine_mark(self, ctx: AsmParser.Line_markContext):
         # TODO: use already parsed values
@@ -82,8 +82,8 @@ class BuildAstVisitor(AsmParserVisitor):
         else:
             return ord(ctx.getText()[1])
 
-    def visitSection_body(self, ctx: AsmParser.Section_bodyContext) -> tuple[list, list[CodeLocation]]:
-        return self.visitCode_block(ctx.code_block(), return_locations=True)
+    def visitSection_body(self, ctx: AsmParser.Section_bodyContext) -> list:
+        return self.visitCode_block(ctx.code_block(), return_locations=False)
 
     def visitConditional(self, ctx: AsmParser.ConditionalContext):
         ctx_conditions = ctx.conditions()
