@@ -35,7 +35,7 @@ class RelocatableExpressionNode(LocatableNode):
 
 
 @dataclass
-class LabelDeclarationNode(LocatableNode):
+class LabelDeclarationNode:
     label: LabelNode
     entry: bool
     external: bool
@@ -52,14 +52,15 @@ class ConditionNode:
     lines: list
     branch_mnemonic: str
     conjunction: Optional[str]
+    location: CodeLocation
 
 
 @dataclass
 class ConditionalStatementNode:
-    conditions: list
+    conditions: list[ConditionNode]
     then_lines: list
     else_lines: list
-    cond_location: CodeLocation
+    else_location: Optional[CodeLocation]
 
 
 @dataclass
@@ -67,14 +68,15 @@ class WhileLoopNode:
     condition_lines: list
     branch_mnemonic: str
     lines: list
-    mnem_location: CodeLocation
+    while_location: CodeLocation
+    stays_location: CodeLocation
 
 
 @dataclass
 class UntilLoopNode:
     lines: list
     branch_mnemonic: str
-    mnem_location: CodeLocation
+    until_location: CodeLocation
 
 
 @dataclass
