@@ -49,14 +49,15 @@ def main():
     available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
 
     parser = argparse.ArgumentParser('cocas')
+    parser.add_argument('sources', type=str, nargs='*', help='source files')
     parser.add_argument('-t', '--target', type=str, default='cdm-16',
                         help='target processor, CdM-16 is default')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     # TODO: enable object file generation (if stand-alone linker will be ready)
     # parser.add_argument('-c', '--compile', type=str, help='generate object files without linking')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
-    parser.add_argument('--debug', type=str, help=argparse.SUPPRESS)
-    parser.add_argument('sources', type=str, nargs='*', help='source files')
+    parser.add_argument('--debug', type=str, nargs='?', const='out.dbg.json',
+                        help='export debug information into file')
     args = parser.parse_args()
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
@@ -90,14 +91,11 @@ def main():
             log_error("MAIN", message)
             return 1
         data = codecs.decode(data, 'utf8', 'strict')
-        # tolerate files without newline at the end
         if data[-1] != '\n':
             data += '\n'
 
         try:
             input_stream = antlr4.InputStream(data)
-            # Macros (tst, clr but not if) are replaced to commands and wrapped by tags
-            # Remove comments
             macro_expanded_input_stream = process_macros(input_stream, library_macros,
                                                          str(pathlib.Path(filepath).absolute()))
             r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))

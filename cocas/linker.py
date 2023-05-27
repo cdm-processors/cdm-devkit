@@ -131,6 +131,8 @@ def link(objects: list[ObjectModule]):
             if entry_bytes.start > 0:
                 rsect.lower_parts[pos] = val % lower_limit
             image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little', signed=False)
+        for loc_offset, location in rsect.code_locations.items():
+            code_locations[loc_offset + image_begin] = location
 
     for sect in asects + rsects:
         for ext_name in sect.external:

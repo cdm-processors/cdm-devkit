@@ -1,6 +1,6 @@
-# Generated from AsmParser.g4 by ANTLR 4.11.1
+# Generated from ./grammar/AsmParser.g4 by ANTLR 4.13.0
 from antlr4 import *
-if __name__ is not None and "." in __name__:
+if "." in __name__:
     from .AsmParser import AsmParser
 else:
     from AsmParser import AsmParser

@@ -1,4 +1,4 @@
-# Generated from Macro.g4 by ANTLR 4.11.1
+# Generated from ./grammar/Macro.g4 by ANTLR 4.13.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -165,7 +165,7 @@ class MacroParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.11.1")
+        self.checkVersion("4.13.0")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -443,7 +443,7 @@ class MacroParser ( Parser ):
             self.state = 82
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while ((_la) & ~0x3f) == 0 and ((1 << _la) & 245658) != 0:
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 245658) != 0):
                 self.state = 80
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
@@ -741,7 +741,7 @@ class MacroParser ( Parser ):
             self.state = 122
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if ((_la) & ~0x3f) == 0 and ((1 << _la) & 245250) != 0:
+            if (((_la) & ~0x3f) == 0 and ((1 << _la) & 245250) != 0):
                 self.state = 119
                 self.instruction()
                 self.state = 120
@@ -1274,7 +1274,7 @@ class MacroParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 215
             _la = self._input.LA(1)
-            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 131208) != 0):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 131208) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1449,7 +1449,7 @@ class MacroParser ( Parser ):
                 self.state = 228 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 113666) != 0):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & 113666) != 0)):
                     break
 
         except RecognitionException as re:
@@ -1504,7 +1504,7 @@ class MacroParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 230
             _la = self._input.LA(1)
-            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 15362) != 0):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 15362) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
