@@ -5,17 +5,22 @@ from cocas.location import CodeLocation
 
 
 @dataclass
-class RegisterNode:
+class Node:
+    pass
+
+
+@dataclass
+class RegisterNode(Node):
     number: int
 
 
 @dataclass
-class LabelNode:
+class LabelNode(Node):
     name: str
 
 
 @dataclass
-class LocatableNode:
+class LocatableNode(Node):
     def __post_init__(self):
         self.location: CodeLocation = CodeLocation()
 
@@ -35,7 +40,7 @@ class RelocatableExpressionNode(LocatableNode):
 
 
 @dataclass
-class LabelDeclarationNode:
+class LabelDeclarationNode(Node):
     label: LabelNode
     entry: bool
     external: bool
@@ -48,7 +53,7 @@ class InstructionNode(LocatableNode):
 
 
 @dataclass
-class ConditionNode:
+class ConditionNode(Node):
     lines: list
     branch_mnemonic: str
     conjunction: Optional[str]
@@ -56,7 +61,7 @@ class ConditionNode:
 
 
 @dataclass
-class ConditionalStatementNode:
+class ConditionalStatementNode(Node):
     conditions: list[ConditionNode]
     then_lines: list
     else_lines: list
@@ -64,7 +69,7 @@ class ConditionalStatementNode:
 
 
 @dataclass
-class WhileLoopNode:
+class WhileLoopNode(Node):
     condition_lines: list
     branch_mnemonic: str
     lines: list
@@ -73,7 +78,7 @@ class WhileLoopNode:
 
 
 @dataclass
-class UntilLoopNode:
+class UntilLoopNode(Node):
     lines: list
     branch_mnemonic: str
     until_location: CodeLocation
@@ -90,7 +95,7 @@ class ContinueStatementNode(LocatableNode):
 
 
 @dataclass
-class SectionNode:
+class SectionNode(Node):
     lines: list
 
 
@@ -110,7 +115,7 @@ class TemplateSectionNode(SectionNode):
 
 
 @dataclass
-class ProgramNode:
+class ProgramNode(Node):
     template_sections: list[TemplateSectionNode]
     relocatable_sections: list[RelocatableSectionNode]
     absolute_sections: list[AbsoluteSectionNode]

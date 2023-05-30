@@ -1,3 +1,7 @@
+from dataclasses import astuple
+from typing import Any
+
+from cocas.object_module import ObjectSectionRecord, ObjectModule
 import itertools
 from dataclasses import astuple
 

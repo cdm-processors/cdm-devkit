@@ -15,6 +15,7 @@ from cocas.ast_builder import build_ast
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
+from cocas.object_module import export_obj
 
 
 def write_image(filename: str, arr: bytearray):
@@ -43,6 +44,14 @@ def write_image(filename: str, arr: bytearray):
     f.close()
 
 
+def handle_os_error(e: OSError):
+    message = e.strerror
+    if e.filename is not None:
+        message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
+    log_error("MAIN", message)
+    exit(1)
+
+
 def main():
     colorama.init()
     targets_dir = os.path.join(os.path.dirname(__file__), "targets")
@@ -53,8 +62,7 @@ def main():
     parser.add_argument('-t', '--target', type=str, default='cdm-16',
                         help='target processor, CdM-16 is default')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
-    # TODO: enable object file generation (if stand-alone linker will be ready)
-    # parser.add_argument('-c', '--compile', type=str, help='generate object files without linking')
+    parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
     parser.add_argument('--debug', type=str, nargs='?', const='out.dbg.json',
                         help='export debug information into file')
@@ -62,16 +70,18 @@ def main():
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
         return
-
     target: str = args.target.replace('-', '').lower()
+
     if target not in available_targets:
         print('Error: unknown target ' + target)
         print('Available targets: ' + ', '.join(available_targets))
-        return
-
+        return 2
     if len(args.sources) == 0:
         print('Error: no source files provided')
-        return
+        return 2
+    if args.compile and args.output and len(args.sources) > 1:
+        log_error("MAIN", 'Cannot specify output location for multiple object files')
+        return 2
 
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
@@ -81,62 +91,57 @@ def main():
     objects = []
 
     for filepath in args.sources:
+        path = pathlib.Path(filepath)
         try:
             with open(filepath, 'rb') as file:
                 data = file.read()
         except OSError as e:
-            message = e.strerror
-            if e.filename is not None:
-                message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
-            log_error("MAIN", message)
-            return 1
+            handle_os_error(e)
         data = codecs.decode(data, 'utf8', 'strict')
-        if data[-1] != '\n':
+        if not data.endswith('\n'):
             data += '\n'
 
         try:
             input_stream = antlr4.InputStream(data)
-            macro_expanded_input_stream = process_macros(input_stream, library_macros,
-                                                         str(pathlib.Path(filepath).absolute()))
-            r = build_ast(macro_expanded_input_stream, str(pathlib.Path(filepath).absolute()))
+            macro_expanded_input_stream = process_macros(input_stream, library_macros, str(path.absolute()))
+            r = build_ast(macro_expanded_input_stream, str(path.absolute()))
             obj = assemble(r, target_instructions, code_segments)
-
-            objects.append(obj)
+            objects.append((path, obj))
         except CdmException as e:
             e.log()
             return 1
 
-    try:
-        data, code_locations = link(objects)
-    except CdmLinkException as e:
-        log_error(CdmExceptionTag.LINK.value, e.message)
-        return 1
-
-    try:
-        if args.output is not None:
-            write_image(args.output, data)
-        else:
-            write_image("out.img", data)
-    except OSError as e:
-        message = e.strerror
-        if e.filename is not None:
-            message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
-        log_error("MAIN", message)
-        return 1
-
-    # write code locations(debug info)
-    if args.debug is not None:
-        code_locations = {key: asdict(loc) for key, loc in code_locations.items()}
-        json_locations = json.dumps(code_locations, indent=4, sort_keys=True)
+    if args.compile:
+        for path, obj in objects:
+            obj_path = pathlib.Path.cwd() / (path.name + '.obj')
+            lines = export_obj(obj)
+            try:
+                with open(obj_path, 'w') as file:
+                    file.writelines(lines)
+            except OSError as e:
+                handle_os_error(e)
+    else:
         try:
-            with open(args.debug, 'w') as f:
-                f.write(json_locations)
-        except OSError as e:
-            message = e.strerror
-            if e.filename is not None:
-                message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
-            log_error("MAIN", message)
+            data, code_locations = link(objects)
+        except CdmLinkException as e:
+            log_error(CdmExceptionTag.LINK.value, e.message)
             return 1
+        try:
+            if args.output is not None:
+                write_image(args.output, data)
+            else:
+                write_image("out.img", data)
+        except OSError as e:
+            handle_os_error(e)
+
+        if args.debug:
+            code_locations = {key: asdict(loc) for key, loc in code_locations.items()}
+            json_locations = json.dumps(code_locations, indent=4, sort_keys=True)
+            try:
+                with open(args.debug, 'w') as f:
+                    f.write(json_locations)
+            except OSError as e:
+                handle_os_error(e)
 
 
 if __name__ == '__main__':
