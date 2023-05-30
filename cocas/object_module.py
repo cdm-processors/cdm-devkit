@@ -9,11 +9,16 @@ class ExternalEntry:
     offset: int
     entry_bytes: range
     sign: int = field(default=1)
+    full_bytes: bool = field(default=True)
 
     def __str__(self):
         s = f'{self.sign * self.offset:02x}'
-        # TODO: work with bytes range
+        if not self.full_bytes:
+            s += f':{self.entry_bytes.start}:{self.entry_bytes.stop}'
         return s
+
+    def as_tuple(self):
+        return self.offset, self.entry_bytes, self.sign
 
 
 @dataclass
