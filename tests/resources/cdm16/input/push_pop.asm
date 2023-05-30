@@ -46,7 +46,7 @@ asect 0x8000
     push 10
     pops
 
-    push 0x0f
+    push 0x0e
     posp
 
     halt
