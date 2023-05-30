@@ -4,12 +4,18 @@
     "description": "Tools for CdM Processors",
     "version": "1.0.0",
     "engines": {
-        "vscode": "^1.0.0"
+        "vscode": "^1.65.0"
     },
     "categories": [
         "Programming Languages",
         "Snippets"
     ],
+    "activationEvents": [
+        "onDebug",
+        "onDebugResolve:cdm",
+        "onDebugDynamicConfigurations:cdm"
+    ],
+    "main": "./dist/extension.js",
     "icon": "icon.png",
     "publisher": "cdm-processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
@@ -29,6 +35,17 @@
         "cdm8e"
     ],
     "contributes": {
+        "customEditors": [
+            {
+                "viewType": "cdmDebug.cdmMem",
+                "displayName": "cdm memory view",
+                "selector": [
+                    {
+                        "filenamePattern": "*.cdmmem"
+                    }
+                ]
+            }
+        ],
         "languages": [
             {
                 "id": "cdm8-assembly",
@@ -110,9 +127,222 @@
                 "language": "cdm16-assembly",
                 "path": "./snippets/cdm-assembly-snippets.json"
             }
+        ],
+        "breakpoints": [
+            {
+                "language": "cdm8-assembly"
+            },
+            {
+                "language": "cdm8e-assembly"
+            },
+            {
+                "language": "cdm16-assembly"
+            }
+        ],
+        "debuggers": [
+            {
+                "label": "Cdm debugger",
+                "type": "cdm",
+                "languages": [
+                    "cdm8-assembly",
+                    "cdm8e-assembly",
+                    "cdm16-assembly"
+                ],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program",
+                            "runner",
+                            "registersSet",
+                            "target"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "array",
+                                "description": "Absolute pathes to .asm files",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "runner": {
+                                "type": "string",
+                                "description": "what use to run the file (logisim or emulator)"
+                            },
+                            "registersSet": {
+                                "type": "array",
+                                "description": "Set of registers of used processor",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "target": {
+                                "type": "string",
+                                "description": "Version of used processor"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "name": "Logisim cdm8",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm8",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "runner"
+                    },
+                    {
+                        "name": "Logisim cdm8e",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm8e",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "runner"
+                    },
+                    {
+                        "name": "Logisim cdm16",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm16",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "r4",
+                            "r5",
+                            "r6",
+                            "fp",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "runner"
+                    },
+                    {
+                        "name": "Emulator cdm8",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm8",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "emulator"
+                    },
+                    {
+                        "name": "Emulator cdm8e",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm8e",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "emulator"
+                    },
+                    {
+                        "name": "Emulator cdm16",
+                        "request": "launch",
+                        "type": "cdm",
+                        "target": "cdm16",
+                        "registersSet": [
+                            "r0",
+                            "r1",
+                            "r2",
+                            "r3",
+                            "r4",
+                            "r5",
+                            "r6",
+                            "fp",
+                            "ps",
+                            "sp",
+                            "pc"
+                        ],
+                        "program": [
+                            "${file}"
+                        ],
+                        "runner": "emulator"
+                    }
+                ]
+            }
         ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map"
     },
     "__metadata": {
         "publisherDisplayName": "CdM Processors"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.2.0",
+        "@types/mocha": "^9.1.0",
+        "@types/node": "14.x",
+        "@types/vscode": "^1.65.0",
+        "@typescript-eslint/eslint-plugin": "^5.16.0",
+        "@typescript-eslint/parser": "^5.16.0",
+        "@vscode/test-electron": "^2.1.3",
+        "copy-webpack-plugin": "^10.2.4",
+        "eslint": "^8.11.0",
+        "glob": "^7.2.0",
+        "html-inline-script-webpack-plugin": "^3.0.0",
+        "html-webpack-plugin": "^5.5.0",
+        "mocha": "^9.2.2",
+        "ts-loader": "^9.2.8",
+        "typescript": "^4.5.5",
+        "webpack": "^5.70.0",
+        "webpack-cli": "^4.9.2"
+    },
+    "dependencies": {
+        "@types/ws": "^8.5.3",
+        "@vscode/debugadapter": "^1.55.1",
+        "@vscode/webview-ui-toolkit": "^0.9.3",
+        "DOM": "^0.0.3",
+        "prettier": "^2.6.1",
+        "ws": "^8.5.0"
     }
 }

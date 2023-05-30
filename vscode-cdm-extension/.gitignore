@@ -1,2 +1,5 @@
 # VS Code extension binaries
 .vsix
+out
+dist
+node_modules
