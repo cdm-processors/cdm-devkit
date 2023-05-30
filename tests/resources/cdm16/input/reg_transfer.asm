@@ -9,9 +9,7 @@ dc main, 0x8765         # Startup/Reset vector
 dc default_handler, 0   # Unaligned SP
 dc default_handler, 0   # Unaligned PC
 dc default_handler, 0   # Invalid instruction
-dc default_handler, 0   # Division by zero
-dc 0, 0                 # Reserved
-dc default_handler, 0   # Interrupt fault
+dc default_handler, 0   # Double fault
 align 0x80              # Reserve space for the rest
                         # of IVT
 
