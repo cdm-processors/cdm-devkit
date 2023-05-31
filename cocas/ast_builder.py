@@ -119,10 +119,10 @@ class BuildAstVisitor(AsmParserVisitor):
         return self.visitCode_block(ctx.code_block())
 
     def visitWhile_loop(self, ctx: AsmParser.While_loopContext):
-        condition_lines = self.visitWhile_condition(ctx.while_condition())
-        lines = self.visitCode_block(ctx.code_block())
         while_loc = self._ctx_location(ctx)
+        condition_lines = self.visitWhile_condition(ctx.while_condition())
         mnem_loc = self._ctx_location(ctx.branch_mnemonic())
+        lines = self.visitCode_block(ctx.code_block())
         return WhileLoopNode(condition_lines, ctx.branch_mnemonic().getText(), lines, while_loc, mnem_loc)
 
     def visitWhile_condition(self, ctx: AsmParser.While_conditionContext):
