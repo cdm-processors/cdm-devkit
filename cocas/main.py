@@ -113,7 +113,7 @@ def main():
 
     if args.compile:
         for path, obj in objects:
-            obj_path = pathlib.Path.cwd() / (path.name + '.obj')
+            obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
             lines = export_obj(obj)
             try:
                 with open(obj_path, 'w') as file:
