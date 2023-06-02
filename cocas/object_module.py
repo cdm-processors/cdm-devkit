@@ -2,6 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from cocas.code_block import Section
+from cocas.location import CodeLocation
 
 
 @dataclass
@@ -21,21 +22,26 @@ class ExternalEntry:
         return self.offset, self.entry_bytes, self.sign
 
 
-@dataclass
 class ObjectSectionRecord:
-    def __init__(self, section: Section, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        self.address: int = section.address
-        self.name: str = section.name
-        self.data = bytearray()
-        self.entries: dict[str, int] = dict(p for p in section.labels.items() if p[0] in section.ents)
+    def __init__(self, name: str, address: int, data: bytearray):
+        self.name = name
+        self.address = address
+        self.data = data
+        self.alignment = 1
+        self.entries: dict[str, int] = dict()
         self.external: dict[str, list[ExternalEntry]] = dict()
         self.relative: list[ExternalEntry] = []
         self.lower_parts: dict[int, int] = dict()
-        self.code_locations = section.code_locations
-        self.alignment = 1
+        self.code_locations: dict[int, CodeLocation] = dict()
 
+    @classmethod
+    def from_section(cls, section: Section, labels: dict[str, int], templates: dict[str, dict[str, int]]):
+        out = cls(section.name, section.address, bytearray())
+        out.entries = dict(p for p in section.labels.items() if p[0] in section.ents)
+        out.code_locations = section.code_locations
         for seg in section.segments:
-            seg.fill(self, section, labels, templates)
+            seg.fill(out, section, labels, templates)
+        return out
 
 
 @dataclass

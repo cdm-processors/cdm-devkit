@@ -98,7 +98,7 @@ def assemble(pn: ProgramNode, target_instructions, code_segments):
         update_varying_length([rsect], asects_labels, template_fields)
 
     obj = ObjectModule()
-    obj.asects = [ObjectSectionRecord(asect, asects_labels, template_fields) for asect in asects]
-    obj.rsects = [ObjectSectionRecord(rsect, asects_labels, template_fields) for rsect in rsects]
+    obj.asects = [ObjectSectionRecord.from_section(asect, asects_labels, template_fields) for asect in asects]
+    obj.rsects = [ObjectSectionRecord.from_section(rsect, asects_labels, template_fields) for rsect in rsects]
 
     return obj
