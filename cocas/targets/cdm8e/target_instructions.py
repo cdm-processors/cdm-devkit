@@ -1,10 +1,12 @@
-from cocas.ast_nodes import *
-from typing import get_origin, get_args, Union
+from typing import Union, get_args, get_origin
+
 import bitstruct
 
+from cocas.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
+
 from .code_segments import CodeSegments
 
 
@@ -18,6 +20,7 @@ def assert_args(args, *types, single_type=False):
         raise CdmTempException(f'Expected {len(ts)} arguments, but found {len(args)}')
 
     for i in range(len(args)):
+        # noinspection PyTypeHints
         if not isinstance(args[i], ts[i]):
             raise CdmTempException(f'Incompatible argument type {type(args[i])}')
         if isinstance(args[i], RegisterNode) and not 0 <= args[i].number <= 3:
@@ -66,7 +69,7 @@ class TargetInstructions(TargetInstructionsInterface):
         br_mnemonic = arguments[0]
         if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
                 or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
-            raise CdmTempException(f'Branch mnemonic must be single word')
+            raise CdmTempException('Branch mnemonic must be single word')
         goto = CodeSegments.GotoSegment(br_mnemonic.add_terms[0].name, arguments[1])
         goto.location = location
         return [goto]

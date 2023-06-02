@@ -7,8 +7,8 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-from .runner_state import RunnerState, RunnerFailure
 from ..factory import Case
+from .runner_state import RunnerFailure, RunnerState
 
 RUNNER_TIMEOUT: int = 10000
 

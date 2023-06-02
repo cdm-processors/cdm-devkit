@@ -1,12 +1,13 @@
+import re
 from copy import copy
 from dataclasses import dataclass
-from typing import get_origin, get_args, Callable, Union
-import re
+from typing import Callable, Union, get_args, get_origin
 
-from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode, LabelNode
+from cocas.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
-from cocas.error import CdmTempException, CdmException, CdmExceptionTag
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
+
 from .code_segments import CodeSegments, pack
 
 
@@ -97,7 +98,7 @@ class TargetInstructions(TargetInstructionsInterface):
                     segments.append(CodeSegments.ExpressionSegment(line.location, arg))
             elif isinstance(arg, str):
                 if command == 'dw':
-                    raise CdmTempException(f'Currently "dw" doesn\'t support strings')
+                    raise CdmTempException('Currently "dw" doesn\'t support strings')
                 encoded = arg.encode('utf-8')
                 segments.append(CodeSegments.BytesSegment(encoded, line.location))
                 size += len(encoded)
@@ -188,7 +189,7 @@ class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def const_only(arg: RelocatableExpressionNode):
         if arg.add_terms or arg.sub_terms:
-            raise CdmTempException(f'Constant number expected as shift value')
+            raise CdmTempException('Constant number expected as shift value')
         return arg.const_term
 
     @staticmethod
@@ -217,7 +218,7 @@ class TargetInstructions(TargetInstructionsInterface):
         else:
             raise CdmTempException(f'Expected 1-3 arguments, found {len(args)}')
         if not 0 <= val <= 8:
-            raise CdmTempException(f'Shift value out of range')
+            raise CdmTempException('Shift value out of range')
         if val == 0:
             return []
         return [

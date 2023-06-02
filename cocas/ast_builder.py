@@ -1,11 +1,31 @@
-from antlr4 import *
-from cocas.ast_nodes import *
-from cocas.ast_nodes import LabelDeclarationNode
+from base64 import b64decode
+
+from antlr4 import CommonTokenStream, InputStream
+
+from cocas.ast_nodes import (
+    AbsoluteSectionNode,
+    BreakStatementNode,
+    ConditionalStatementNode,
+    ConditionNode,
+    ContinueStatementNode,
+    InstructionNode,
+    LabelDeclarationNode,
+    LabelNode,
+    LocatableNode,
+    ProgramNode,
+    RegisterNode,
+    RelocatableExpressionNode,
+    RelocatableSectionNode,
+    TemplateFieldNode,
+    TemplateSectionNode,
+    UntilLoopNode,
+    WhileLoopNode,
+)
+from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.generated.AsmLexer import AsmLexer
 from cocas.generated.AsmParser import AsmParser
 from cocas.generated.AsmParserVisitor import AsmParserVisitor
-from base64 import b64decode
-from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException
+from cocas.location import CodeLocation
 
 
 # noinspection PyPep8Naming

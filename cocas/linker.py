@@ -1,8 +1,7 @@
+import itertools
 from dataclasses import astuple
 
-from cocas.assembler import ObjectSectionRecord, ObjectModule
-import itertools
-
+from cocas.assembler import ObjectModule, ObjectSectionRecord
 from cocas.error import CdmLinkException
 from cocas.location import CodeLocation
 

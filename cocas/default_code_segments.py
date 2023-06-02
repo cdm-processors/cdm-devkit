@@ -1,11 +1,12 @@
-from cocas.location import CodeLocation
 from dataclasses import dataclass, field
-
 from typing import TYPE_CHECKING
 
+from cocas.location import CodeLocation
+
 if TYPE_CHECKING:
-    from cocas.code_block import Section
     from assembler import ObjectSectionRecord
+
+    from cocas.code_block import Section
 
 
 class CodeSegmentsInterface:

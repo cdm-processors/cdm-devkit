@@ -1,12 +1,21 @@
 from dataclasses import dataclass
-from typing import Type, Callable, Any
+from typing import Any, Callable, Type
 
-from cocas import default_instructions, default_code_segments
-from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
-    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, BreakStatementNode, \
-    ContinueStatementNode, LocatableNode, SectionNode, AbsoluteSectionNode, \
-    RelocatableSectionNode
-from cocas.error import CdmTempException, CdmException, CdmExceptionTag
+from cocas import default_code_segments, default_instructions
+from cocas.ast_nodes import (
+    AbsoluteSectionNode,
+    BreakStatementNode,
+    ConditionalStatementNode,
+    ContinueStatementNode,
+    InstructionNode,
+    LabelDeclarationNode,
+    LocatableNode,
+    RelocatableSectionNode,
+    SectionNode,
+    UntilLoopNode,
+    WhileLoopNode,
+)
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 from cocas.location import CodeLocation
 
 

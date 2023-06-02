@@ -46,7 +46,8 @@ testpaths = [
 [tool.ruff]
 select = ["E", "F", "I"]
 exclude = [
-    "cocas/generated"
+    "cocas/generated",
+    "logisim/cdm8e"
 ]
 line-length = 120
 

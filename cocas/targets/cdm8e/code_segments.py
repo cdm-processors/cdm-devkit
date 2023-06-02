@@ -1,12 +1,13 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.ast_nodes import RelocatableExpressionNode, LabelNode, TemplateFieldNode
+from cocas.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
-from . import target_instructions
 from cocas.object_module import ExternalEntry
+
+from . import target_instructions
 
 TAG = CdmExceptionTag.ASM
 
@@ -109,7 +110,7 @@ class CodeSegments(CodeSegmentsInterface):
 
             val -= section.address + len(object_record.data)
             if not -2 ** 7 <= val < 2 ** 7:
-                _error(self, f'Destination address is too far')
+                _error(self, 'Destination address is too far')
 
             object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 

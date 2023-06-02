@@ -1,14 +1,15 @@
-from antlr4 import *
-from antlr4.TokenStreamRewriter import TokenStreamRewriter
+import re
+from base64 import b64encode
 from dataclasses import dataclass
 
-from cocas.location import CodeLocation
+from antlr4 import CommonTokenStream, FileStream, InputStream
+from antlr4.TokenStreamRewriter import TokenStreamRewriter
+
+from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag, CdmTempException
 from cocas.generated.MacroLexer import MacroLexer
 from cocas.generated.MacroParser import MacroParser
 from cocas.generated.MacroVisitor import MacroVisitor
-from base64 import b64encode
-import re
-from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException, CdmTempException
+from cocas.location import CodeLocation
 
 
 def unique(params: list[str]):
@@ -30,7 +31,7 @@ def unique(params: list[str]):
         while not register_available[i]:
             i += 1
             if i == 4:
-                raise CdmTempException(f'unique: not enough registers')
+                raise CdmTempException('unique: not enough registers')
         register_available[i] = False
         defined_vars[param] = f'r{i}'
     return defined_vars
@@ -77,7 +78,9 @@ def substitute_piece(piece, params: list[str], nonce: str, variables: dict[str, 
     elif isinstance(piece, MacroNonce):
         return nonce
     elif isinstance(piece, MacroVariable):
-        sub = lambda p: substitute_piece(p, params, nonce, variables)
+        def sub(p):
+            return substitute_piece(p, params, nonce, variables)
+
         var_name = ''.join(map(sub, piece.name_pieces))
         return variables[var_name]
     else:
@@ -85,8 +88,12 @@ def substitute_piece(piece, params: list[str], nonce: str, variables: dict[str, 
 
 
 def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, variables: dict[str, str]):
-    sub = lambda p: substitute_piece(p, params, nonce, variables)
-    sub_all = lambda ps: ''.join(map(sub, ps))
+    def sub(p):
+        return substitute_piece(p, params, nonce, variables)
+
+    def sub_all(ps):
+        return ''.join(map(sub, ps))
+
     label_part = sub_all(line.label_pieces)
     instruction_part = sub_all(line.instruction_pieces)
     parameter_parts = list(map(sub_all, line.parameter_pieces))
@@ -101,7 +108,8 @@ class ExpandMacrosVisitor(MacroVisitor):
         self.rewriter = rewriter
         self.filepath = filepath
 
-    def _generate_location_line(self, filepath: str, line: int, info: str = None) -> str:
+    @staticmethod
+    def _generate_location_line(filepath: str, line: int, info: str = None) -> str:
         if info is not None:
             info = " " + info
         else:
