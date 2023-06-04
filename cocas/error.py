@@ -10,6 +10,7 @@ from cocas.generated import AsmParser
 class CdmExceptionTag(Enum):
     MACRO = "Macro"
     ASM = "Assembler"
+    OBJ = "Object files"
     LINK = "Linker"
 
 

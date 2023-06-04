@@ -3,7 +3,7 @@ from typing import Any
 
 from cocas.error import CdmLinkException
 from cocas.location import CodeLocation
-from cocas.object_module import ObjectModule, ObjectSectionRecord, ExternalEntry
+from cocas.object_module import ExternalEntry, ObjectModule, ObjectSectionRecord
 
 
 def init_bins(asects: list[ObjectSectionRecord]):

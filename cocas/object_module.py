@@ -1,44 +1,29 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from cocas.code_block import Section
+from cocas.external_entry import ExternalEntry
 from cocas.location import CodeLocation
 
 
-@dataclass
-class ExternalEntry:
-    offset: int
-    entry_bytes: range
-    sign: int = field(default=1)
-    full_bytes: bool = field(default=True)
-
-    def __str__(self):
-        s = f'{self.sign * self.offset:02x}'
-        if not self.full_bytes:
-            s += f':{self.entry_bytes.start}:{self.entry_bytes.stop}'
-        return s
-
-    def as_tuple(self):
-        return self.offset, self.entry_bytes, self.sign
-
-
 class ObjectSectionRecord:
-    def __init__(self, name: str, address: int, data: bytearray):
+    def __init__(self, name: str, address: int, data: bytearray,
+                 entries: dict[str, int], relative: list[ExternalEntry],
+                 code_locations: dict[int, CodeLocation], alignment=1):
         self.name = name
         self.address = address
         self.data = data
-        self.alignment = 1
-        self.entries: dict[str, int] = dict()
-        self.external: dict[str, list[ExternalEntry]] = dict()
-        self.relative: list[ExternalEntry] = []
+        self.entries = entries
+        self.relative = relative
+        self.code_locations = code_locations
+        self.alignment = alignment
+        self.external: defaultdict[str, list[ExternalEntry]] = defaultdict(list)
         self.lower_parts: dict[int, int] = dict()
-        self.code_locations: dict[int, CodeLocation] = dict()
 
     @classmethod
     def from_section(cls, section: Section, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        out = cls(section.name, section.address, bytearray())
-        out.entries = dict(p for p in section.labels.items() if p[0] in section.ents)
-        out.code_locations = section.code_locations
+        entries = dict(p for p in section.labels.items() if p[0] in section.ents)
+        out = cls(section.name, section.address, bytearray(), entries, [], section.code_locations)
         for seg in section.segments:
             seg.fill(out, section, labels, templates)
         return out
