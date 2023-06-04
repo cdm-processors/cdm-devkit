@@ -68,13 +68,13 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         return name, ObjectSectionRecord(name, 0, data, entries, rel, {}, 1)
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
-        addr = self.visitAddress(ctx.address())
+        addr = self.visitNumber(ctx.number())
         data = self.visitData(ctx.data())
         return addr, ObjectSectionRecord('$abs', addr, data, {}, [], {})
 
     def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext):
         label = self.visitLabel(ctx.label())
-        address = self.visitAddress(ctx.address())
+        address = self.visitNumber(ctx.number())
         return label, address
 
     def visitName_record(self, ctx: ObjectFileParser.Name_recordContext):
@@ -95,18 +95,22 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
     def visitData(self, ctx: ObjectFileParser.DataContext):
         return bytearray(map(self.visitByte, ctx.byte()))
 
-    def visitAddress(self, ctx: ObjectFileParser.AddressContext):
-        return int(ctx.getText(), 16)
+    def visitNumber(self, ctx: ObjectFileParser.NumberContext):
+        try:
+            return int(ctx.getText(), 16)
+        except ValueError:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               f'Not a 16-bit number: {ctx.getText()}')
 
     def visitByte(self, ctx: ObjectFileParser.ByteContext):
-        num = int(ctx.getText(), 16)
+        num = self.visitNumber(ctx.number())
         if num > 255:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Too big number{ctx.getText()}, expected byte')
+                               f'Too big number {ctx.getText()}, expected byte')
         return num
 
     def visitEntry_usage(self, ctx: ObjectFileParser.Entry_usageContext):
-        addr = self.visitAddress(ctx.address())
+        addr = self.visitNumber(ctx.number())
         # TODO: fix ranges
         return ExternalEntry(addr, range(0, 2))
 
@@ -125,7 +129,7 @@ def import_object(input_stream: InputStream, filepath: str) -> ObjectModule:
     token_stream.fill()
     parser = ObjectFileParser(token_stream)
     parser.removeErrorListeners()
-    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))
+    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
     ctx = parser.object_file()
     visitor = ImportObjectFileVisitor(filepath)
     result = visitor.visit(ctx)

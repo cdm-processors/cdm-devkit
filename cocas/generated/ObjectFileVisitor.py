@@ -64,13 +64,13 @@ class ObjectFileVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ObjectFileParser#address.
-    def visitAddress(self, ctx:ObjectFileParser.AddressContext):
+    # Visit a parse tree produced by ObjectFileParser#byte.
+    def visitByte(self, ctx:ObjectFileParser.ByteContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ObjectFileParser#byte.
-    def visitByte(self, ctx:ObjectFileParser.ByteContext):
+    # Visit a parse tree produced by ObjectFileParser#number.
+    def visitNumber(self, ctx:ObjectFileParser.NumberContext):
         return self.visitChildren(ctx)
 
 
