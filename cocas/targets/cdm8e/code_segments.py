@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.code_block import Section
-from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import ExternalEntry
 

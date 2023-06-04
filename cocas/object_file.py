@@ -61,13 +61,16 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
 
     def visitRsect_block(self, ctx: ObjectFileParser.Rsect_blockContext):
         name = self.visitName_record(ctx.name_record())
+        if ctx.alig_record():
+            align = self.visitAlig_record(ctx.alig_record())
+        else:
+            align = self.target_params.default_alignment()
         data = self.visitData_record(ctx.data_record())
         rel = self.visitRel_record(ctx.rel_record())
         entries = {}
         for label, address in map(self.visitNtry_record, ctx.ntry_record()):
             entries[label] = address
-        # TODO: alignment
-        return name, ObjectSectionRecord(name, 0, data, entries, rel, {}, 1)
+        return name, ObjectSectionRecord(name, 0, data, entries, rel, {}, align)
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
         addr = self.visitNumber(ctx.number())
@@ -81,6 +84,9 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
 
     def visitName_record(self, ctx: ObjectFileParser.Name_recordContext):
         return self.visitName(ctx.name())
+
+    def visitAlig_record(self, ctx: ObjectFileParser.Alig_recordContext):
+        return self.visitNumber(ctx.number())
 
     def visitData_record(self, ctx: ObjectFileParser.Data_recordContext):
         return self.visitData(ctx.data())

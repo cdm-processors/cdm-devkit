@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
+from cocas.abstract_params import TargetParamsInterface
 from cocas.code_block import Section
 from cocas.external_entry import ExternalEntry
 from cocas.location import CodeLocation
@@ -45,7 +46,7 @@ def sect_entry_to_str(pair: tuple[str, ExternalEntry]):
     return f'{name} {entry}'
 
 
-def export_obj(obj: ObjectModule) -> list[str]:
+def export_obj(obj: ObjectModule, target_params: TargetParamsInterface) -> list[str]:
     result = []
     for asect in obj.asects:
         s = data_to_str(asect.data)
@@ -55,6 +56,8 @@ def export_obj(obj: ObjectModule) -> list[str]:
             result.append(f'NTRY {label} {address:02x}\n')
     for rsect in obj.rsects:
         result.append(f'NAME {rsect.name}\n')
+        if rsect.alignment != target_params.default_alignment():
+            result.append(f'ALIG {rsect.alignment:02x}\n')
         s = data_to_str(rsect.data)
         result.append(f'DATA {s}\n')
         result.append(f'REL  {" ".join(map(str, rsect.relative))}\n')

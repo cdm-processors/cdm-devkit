@@ -1,5 +1,5 @@
-from cocas.ast_nodes import InstructionNode
 from cocas.abstract_code_segments import CodeSegmentsInterface
+from cocas.ast_nodes import InstructionNode
 from cocas.location import CodeLocation
 
 

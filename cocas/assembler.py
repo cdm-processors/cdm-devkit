@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Type
 
-from cocas.ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
-from cocas.code_block import Section
 from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.abstract_instructions import TargetInstructionsInterface
+from cocas.ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
+from cocas.code_block import Section
 from cocas.error import CdmExceptionTag
 from cocas.location import CodeLocation
 from cocas.object_module import ObjectModule, ObjectSectionRecord

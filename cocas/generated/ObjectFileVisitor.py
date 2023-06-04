@@ -39,6 +39,11 @@ class ObjectFileVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#alig_record.
+    def visitAlig_record(self, ctx:ObjectFileParser.Alig_recordContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#data_record.
     def visitData_record(self, ctx:ObjectFileParser.Data_recordContext):
         return self.visitChildren(ctx)

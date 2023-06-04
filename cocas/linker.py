@@ -1,5 +1,4 @@
 import itertools
-import json
 from typing import Any
 
 from cocas.abstract_params import TargetParamsInterface

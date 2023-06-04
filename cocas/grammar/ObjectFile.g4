@@ -16,6 +16,7 @@ asect_block:
 
 rsect_block:
     name_record
+    alig_record?
     data_record
     rel_record
     ntry_record*
@@ -24,6 +25,7 @@ rsect_block:
 abs_record: ABS number COLON data NEWLINE*;
 ntry_record: NTRY label number NEWLINE*;
 name_record: NAME name NEWLINE*;
+alig_record: ALIG number NEWLINE*;
 data_record: DATA data NEWLINE*;
 rel_record: REL entry_usage* NEWLINE*;
 xtrn_record: XTRN label COLON (name entry_usage)* NEWLINE*;
@@ -41,6 +43,7 @@ minus: MINUS;
 ABS : 'ABS';
 NTRY: 'NTRY';
 NAME: 'NAME';
+ALIG: 'ALIG';
 DATA: 'DATA';
 REL : 'REL';
 XTRN: 'XTRN';
