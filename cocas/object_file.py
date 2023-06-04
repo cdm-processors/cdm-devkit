@@ -2,6 +2,7 @@ import bisect
 
 from antlr4 import CommonTokenStream, InputStream
 
+from cocas.abstract_params import TargetParamsInterface
 from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.external_entry import ExternalEntry
 from cocas.generated.ObjectFileLexer import ObjectFileLexer
@@ -11,9 +12,10 @@ from cocas.object_module import ObjectModule, ObjectSectionRecord
 
 
 class ImportObjectFileVisitor(ObjectFileVisitor):
-    def __init__(self, filepath):
+    def __init__(self, filepath, target_params: TargetParamsInterface):
         super().__init__()
         self.file = filepath
+        self.target_params = target_params
 
     def visitObject_file(self, ctx: ObjectFileParser.Object_fileContext):
         asects, asect_addr = self.visitAsect_block(ctx.asect_block())
@@ -111,8 +113,15 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
 
     def visitEntry_usage(self, ctx: ObjectFileParser.Entry_usageContext):
         addr = self.visitNumber(ctx.number())
-        # TODO: fix ranges
-        return ExternalEntry(addr, range(0, 2))
+        sign = -1 if ctx.minus() else 1
+        if ctx.range_():
+            return ExternalEntry(addr, self.visitRange(ctx.range_()), sign, False)
+        else:
+            entry_size = self.target_params.max_entry_size()
+            return ExternalEntry(addr, range(0, entry_size), sign, True)
+
+    def visitRange(self, ctx: ObjectFileParser.RangeContext):
+        return range(self.visitNumber(ctx.number(0)), self.visitNumber(ctx.number(1)))
 
     def visitLabel(self, ctx: ObjectFileParser.LabelContext):
         return ctx.getText()
@@ -120,8 +129,12 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
     def visitName(self, ctx: ObjectFileParser.NameContext):
         return ctx.getText()
 
+    def visitMinus(self, ctx: ObjectFileParser.MinusContext):
+        pass
 
-def import_object(input_stream: InputStream, filepath: str) -> ObjectModule:
+
+def import_object(input_stream: InputStream, filepath: str,
+                  target_params: TargetParamsInterface) -> ObjectModule:
     lexer = ObjectFileLexer(input_stream)
     lexer.removeErrorListeners()
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
@@ -131,6 +144,6 @@ def import_object(input_stream: InputStream, filepath: str) -> ObjectModule:
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
     ctx = parser.object_file()
-    visitor = ImportObjectFileVisitor(filepath)
+    visitor = ImportObjectFileVisitor(filepath, target_params)
     result = visitor.visit(ctx)
     return result

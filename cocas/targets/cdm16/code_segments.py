@@ -6,7 +6,7 @@ import bitstruct
 
 from cocas.ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.code_block import Section
-from cocas.default_code_segments import CodeSegmentsInterface
+from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.location import CodeLocation
 from cocas.object_module import ExternalEntry, ObjectSectionRecord

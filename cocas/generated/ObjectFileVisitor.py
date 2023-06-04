@@ -69,6 +69,11 @@ class ObjectFileVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#range.
+    def visitRange(self, ctx:ObjectFileParser.RangeContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#number.
     def visitNumber(self, ctx:ObjectFileParser.NumberContext):
         return self.visitChildren(ctx)
@@ -81,6 +86,11 @@ class ObjectFileVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ObjectFileParser#name.
     def visitName(self, ctx:ObjectFileParser.NameContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#minus.
+    def visitMinus(self, ctx:ObjectFileParser.MinusContext):
         return self.visitChildren(ctx)
 
 

@@ -87,6 +87,7 @@ def main():
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
     code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
+    target_params = importlib.import_module(f'cocas.targets.{target}.target_params', 'cocas').TargetParams
 
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
@@ -108,7 +109,7 @@ def main():
                 if args.compile:
                     continue
                 input_stream = antlr4.InputStream(data)
-                obj = import_object(input_stream, str(path.absolute()))
+                obj = import_object(input_stream, str(path.absolute()), target_params)
             else:
                 input_stream = antlr4.InputStream(data)
                 macro_expanded_input_stream = process_macros(input_stream, library_macros, str(path.absolute()))
@@ -130,7 +131,7 @@ def main():
                 handle_os_error(e)
     else:
         try:
-            data, code_locations = link(objects)
+            data, code_locations = link(objects, target_params)
         except CdmLinkException as e:
             log_error(CdmExceptionTag.LINK.value, e.message)
             return 1

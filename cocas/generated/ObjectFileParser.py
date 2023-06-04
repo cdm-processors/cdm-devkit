@@ -10,56 +10,62 @@ else:
 
 def serializedATN():
     return [
-        4,1,11,155,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,12,171,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
-        2,14,7,14,1,0,5,0,32,8,0,10,0,12,0,35,9,0,1,0,1,0,5,0,39,8,0,10,
-        0,12,0,42,9,0,1,0,4,0,45,8,0,11,0,12,0,46,3,0,49,8,0,1,0,5,0,52,
-        8,0,10,0,12,0,55,9,0,1,0,1,0,1,1,1,1,4,1,61,8,1,11,1,12,1,62,1,2,
-        1,2,1,2,1,2,5,2,69,8,2,10,2,12,2,72,9,2,1,3,1,3,1,3,1,3,1,3,5,3,
-        79,8,3,10,3,12,3,82,9,3,1,4,1,4,1,4,1,4,5,4,88,8,4,10,4,12,4,91,
-        9,4,1,5,1,5,1,5,5,5,96,8,5,10,5,12,5,99,9,5,1,6,1,6,1,6,5,6,104,
-        8,6,10,6,12,6,107,9,6,1,7,1,7,5,7,111,8,7,10,7,12,7,114,9,7,1,7,
-        5,7,117,8,7,10,7,12,7,120,9,7,1,8,1,8,1,8,1,8,1,8,1,8,5,8,128,8,
-        8,10,8,12,8,131,9,8,1,8,5,8,134,8,8,10,8,12,8,137,9,8,1,9,5,9,140,
-        8,9,10,9,12,9,143,9,9,1,10,1,10,1,11,1,11,1,12,1,12,1,13,1,13,1,
-        14,1,14,1,14,0,0,15,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,0,1,
-        1,0,7,8,156,0,33,1,0,0,0,2,60,1,0,0,0,4,64,1,0,0,0,6,73,1,0,0,0,
-        8,83,1,0,0,0,10,92,1,0,0,0,12,100,1,0,0,0,14,108,1,0,0,0,16,121,
-        1,0,0,0,18,141,1,0,0,0,20,144,1,0,0,0,22,146,1,0,0,0,24,148,1,0,
-        0,0,26,150,1,0,0,0,28,152,1,0,0,0,30,32,5,10,0,0,31,30,1,0,0,0,32,
-        35,1,0,0,0,33,31,1,0,0,0,33,34,1,0,0,0,34,48,1,0,0,0,35,33,1,0,0,
-        0,36,40,3,2,1,0,37,39,3,4,2,0,38,37,1,0,0,0,39,42,1,0,0,0,40,38,
-        1,0,0,0,40,41,1,0,0,0,41,49,1,0,0,0,42,40,1,0,0,0,43,45,3,4,2,0,
-        44,43,1,0,0,0,45,46,1,0,0,0,46,44,1,0,0,0,46,47,1,0,0,0,47,49,1,
-        0,0,0,48,36,1,0,0,0,48,44,1,0,0,0,49,53,1,0,0,0,50,52,3,16,8,0,51,
-        50,1,0,0,0,52,55,1,0,0,0,53,51,1,0,0,0,53,54,1,0,0,0,54,56,1,0,0,
-        0,55,53,1,0,0,0,56,57,5,0,0,1,57,1,1,0,0,0,58,61,3,6,3,0,59,61,3,
-        8,4,0,60,58,1,0,0,0,60,59,1,0,0,0,61,62,1,0,0,0,62,60,1,0,0,0,62,
-        63,1,0,0,0,63,3,1,0,0,0,64,65,3,10,5,0,65,66,3,12,6,0,66,70,3,14,
-        7,0,67,69,3,8,4,0,68,67,1,0,0,0,69,72,1,0,0,0,70,68,1,0,0,0,70,71,
-        1,0,0,0,71,5,1,0,0,0,72,70,1,0,0,0,73,74,5,1,0,0,74,75,3,24,12,0,
-        75,76,5,9,0,0,76,80,3,18,9,0,77,79,5,10,0,0,78,77,1,0,0,0,79,82,
-        1,0,0,0,80,78,1,0,0,0,80,81,1,0,0,0,81,7,1,0,0,0,82,80,1,0,0,0,83,
-        84,5,2,0,0,84,85,3,26,13,0,85,89,3,24,12,0,86,88,5,10,0,0,87,86,
-        1,0,0,0,88,91,1,0,0,0,89,87,1,0,0,0,89,90,1,0,0,0,90,9,1,0,0,0,91,
-        89,1,0,0,0,92,93,5,3,0,0,93,97,3,28,14,0,94,96,5,10,0,0,95,94,1,
-        0,0,0,96,99,1,0,0,0,97,95,1,0,0,0,97,98,1,0,0,0,98,11,1,0,0,0,99,
-        97,1,0,0,0,100,101,5,4,0,0,101,105,3,18,9,0,102,104,5,10,0,0,103,
-        102,1,0,0,0,104,107,1,0,0,0,105,103,1,0,0,0,105,106,1,0,0,0,106,
-        13,1,0,0,0,107,105,1,0,0,0,108,112,5,5,0,0,109,111,3,20,10,0,110,
-        109,1,0,0,0,111,114,1,0,0,0,112,110,1,0,0,0,112,113,1,0,0,0,113,
-        118,1,0,0,0,114,112,1,0,0,0,115,117,5,10,0,0,116,115,1,0,0,0,117,
-        120,1,0,0,0,118,116,1,0,0,0,118,119,1,0,0,0,119,15,1,0,0,0,120,118,
-        1,0,0,0,121,122,5,6,0,0,122,123,3,26,13,0,123,129,5,9,0,0,124,125,
-        3,28,14,0,125,126,3,20,10,0,126,128,1,0,0,0,127,124,1,0,0,0,128,
-        131,1,0,0,0,129,127,1,0,0,0,129,130,1,0,0,0,130,135,1,0,0,0,131,
-        129,1,0,0,0,132,134,5,10,0,0,133,132,1,0,0,0,134,137,1,0,0,0,135,
-        133,1,0,0,0,135,136,1,0,0,0,136,17,1,0,0,0,137,135,1,0,0,0,138,140,
-        3,22,11,0,139,138,1,0,0,0,140,143,1,0,0,0,141,139,1,0,0,0,141,142,
-        1,0,0,0,142,19,1,0,0,0,143,141,1,0,0,0,144,145,3,24,12,0,145,21,
-        1,0,0,0,146,147,3,24,12,0,147,23,1,0,0,0,148,149,5,7,0,0,149,25,
-        1,0,0,0,150,151,5,7,0,0,151,27,1,0,0,0,152,153,7,0,0,0,153,29,1,
-        0,0,0,17,33,40,46,48,53,60,62,70,80,89,97,105,112,118,129,135,141
+        2,14,7,14,2,15,7,15,2,16,7,16,1,0,5,0,36,8,0,10,0,12,0,39,9,0,1,
+        0,1,0,5,0,43,8,0,10,0,12,0,46,9,0,1,0,4,0,49,8,0,11,0,12,0,50,3,
+        0,53,8,0,1,0,5,0,56,8,0,10,0,12,0,59,9,0,1,0,1,0,1,1,1,1,4,1,65,
+        8,1,11,1,12,1,66,1,2,1,2,1,2,1,2,5,2,73,8,2,10,2,12,2,76,9,2,1,3,
+        1,3,1,3,1,3,1,3,5,3,83,8,3,10,3,12,3,86,9,3,1,4,1,4,1,4,1,4,5,4,
+        92,8,4,10,4,12,4,95,9,4,1,5,1,5,1,5,5,5,100,8,5,10,5,12,5,103,9,
+        5,1,6,1,6,1,6,5,6,108,8,6,10,6,12,6,111,9,6,1,7,1,7,5,7,115,8,7,
+        10,7,12,7,118,9,7,1,7,5,7,121,8,7,10,7,12,7,124,9,7,1,8,1,8,1,8,
+        1,8,1,8,1,8,5,8,132,8,8,10,8,12,8,135,9,8,1,8,5,8,138,8,8,10,8,12,
+        8,141,9,8,1,9,5,9,144,8,9,10,9,12,9,147,9,9,1,10,3,10,150,8,10,1,
+        10,1,10,1,10,3,10,155,8,10,1,11,1,11,1,12,1,12,1,12,1,12,1,13,1,
+        13,1,14,1,14,1,15,1,15,1,16,1,16,1,16,0,0,17,0,2,4,6,8,10,12,14,
+        16,18,20,22,24,26,28,30,32,0,1,1,0,7,8,172,0,37,1,0,0,0,2,64,1,0,
+        0,0,4,68,1,0,0,0,6,77,1,0,0,0,8,87,1,0,0,0,10,96,1,0,0,0,12,104,
+        1,0,0,0,14,112,1,0,0,0,16,125,1,0,0,0,18,145,1,0,0,0,20,149,1,0,
+        0,0,22,156,1,0,0,0,24,158,1,0,0,0,26,162,1,0,0,0,28,164,1,0,0,0,
+        30,166,1,0,0,0,32,168,1,0,0,0,34,36,5,11,0,0,35,34,1,0,0,0,36,39,
+        1,0,0,0,37,35,1,0,0,0,37,38,1,0,0,0,38,52,1,0,0,0,39,37,1,0,0,0,
+        40,44,3,2,1,0,41,43,3,4,2,0,42,41,1,0,0,0,43,46,1,0,0,0,44,42,1,
+        0,0,0,44,45,1,0,0,0,45,53,1,0,0,0,46,44,1,0,0,0,47,49,3,4,2,0,48,
+        47,1,0,0,0,49,50,1,0,0,0,50,48,1,0,0,0,50,51,1,0,0,0,51,53,1,0,0,
+        0,52,40,1,0,0,0,52,48,1,0,0,0,53,57,1,0,0,0,54,56,3,16,8,0,55,54,
+        1,0,0,0,56,59,1,0,0,0,57,55,1,0,0,0,57,58,1,0,0,0,58,60,1,0,0,0,
+        59,57,1,0,0,0,60,61,5,0,0,1,61,1,1,0,0,0,62,65,3,6,3,0,63,65,3,8,
+        4,0,64,62,1,0,0,0,64,63,1,0,0,0,65,66,1,0,0,0,66,64,1,0,0,0,66,67,
+        1,0,0,0,67,3,1,0,0,0,68,69,3,10,5,0,69,70,3,12,6,0,70,74,3,14,7,
+        0,71,73,3,8,4,0,72,71,1,0,0,0,73,76,1,0,0,0,74,72,1,0,0,0,74,75,
+        1,0,0,0,75,5,1,0,0,0,76,74,1,0,0,0,77,78,5,1,0,0,78,79,3,26,13,0,
+        79,80,5,9,0,0,80,84,3,18,9,0,81,83,5,11,0,0,82,81,1,0,0,0,83,86,
+        1,0,0,0,84,82,1,0,0,0,84,85,1,0,0,0,85,7,1,0,0,0,86,84,1,0,0,0,87,
+        88,5,2,0,0,88,89,3,28,14,0,89,93,3,26,13,0,90,92,5,11,0,0,91,90,
+        1,0,0,0,92,95,1,0,0,0,93,91,1,0,0,0,93,94,1,0,0,0,94,9,1,0,0,0,95,
+        93,1,0,0,0,96,97,5,3,0,0,97,101,3,30,15,0,98,100,5,11,0,0,99,98,
+        1,0,0,0,100,103,1,0,0,0,101,99,1,0,0,0,101,102,1,0,0,0,102,11,1,
+        0,0,0,103,101,1,0,0,0,104,105,5,4,0,0,105,109,3,18,9,0,106,108,5,
+        11,0,0,107,106,1,0,0,0,108,111,1,0,0,0,109,107,1,0,0,0,109,110,1,
+        0,0,0,110,13,1,0,0,0,111,109,1,0,0,0,112,116,5,5,0,0,113,115,3,20,
+        10,0,114,113,1,0,0,0,115,118,1,0,0,0,116,114,1,0,0,0,116,117,1,0,
+        0,0,117,122,1,0,0,0,118,116,1,0,0,0,119,121,5,11,0,0,120,119,1,0,
+        0,0,121,124,1,0,0,0,122,120,1,0,0,0,122,123,1,0,0,0,123,15,1,0,0,
+        0,124,122,1,0,0,0,125,126,5,6,0,0,126,127,3,28,14,0,127,133,5,9,
+        0,0,128,129,3,30,15,0,129,130,3,20,10,0,130,132,1,0,0,0,131,128,
+        1,0,0,0,132,135,1,0,0,0,133,131,1,0,0,0,133,134,1,0,0,0,134,139,
+        1,0,0,0,135,133,1,0,0,0,136,138,5,11,0,0,137,136,1,0,0,0,138,141,
+        1,0,0,0,139,137,1,0,0,0,139,140,1,0,0,0,140,17,1,0,0,0,141,139,1,
+        0,0,0,142,144,3,22,11,0,143,142,1,0,0,0,144,147,1,0,0,0,145,143,
+        1,0,0,0,145,146,1,0,0,0,146,19,1,0,0,0,147,145,1,0,0,0,148,150,3,
+        32,16,0,149,148,1,0,0,0,149,150,1,0,0,0,150,151,1,0,0,0,151,154,
+        3,26,13,0,152,153,5,9,0,0,153,155,3,24,12,0,154,152,1,0,0,0,154,
+        155,1,0,0,0,155,21,1,0,0,0,156,157,3,26,13,0,157,23,1,0,0,0,158,
+        159,3,26,13,0,159,160,5,9,0,0,160,161,3,26,13,0,161,25,1,0,0,0,162,
+        163,5,7,0,0,163,27,1,0,0,0,164,165,5,7,0,0,165,29,1,0,0,0,166,167,
+        7,0,0,0,167,31,1,0,0,0,168,169,5,10,0,0,169,33,1,0,0,0,19,37,44,
+        50,52,57,64,66,74,84,93,101,109,116,122,133,139,145,149,154
     ]
 
 class ObjectFileParser ( Parser ):
@@ -73,10 +79,10 @@ class ObjectFileParser ( Parser ):
     sharedContextCache = PredictionContextCache()
 
     literalNames = [ "<INVALID>", "'ABS'", "'NTRY'", "'NAME'", "'DATA'", 
-                     "'REL'", "'XTRN'", "<INVALID>", "'$abs'", "':'" ]
+                     "'REL'", "'XTRN'", "<INVALID>", "'$abs'", "':'", "'-'" ]
 
     symbolicNames = [ "<INVALID>", "ABS", "NTRY", "NAME", "DATA", "REL", 
-                      "XTRN", "WORD", "ABS_SECTION", "COLON", "NEWLINE", 
+                      "XTRN", "WORD", "ABS_SECTION", "COLON", "MINUS", "NEWLINE", 
                       "WS" ]
 
     RULE_object_file = 0
@@ -91,14 +97,16 @@ class ObjectFileParser ( Parser ):
     RULE_data = 9
     RULE_entry_usage = 10
     RULE_byte = 11
-    RULE_number = 12
-    RULE_label = 13
-    RULE_name = 14
+    RULE_range = 12
+    RULE_number = 13
+    RULE_label = 14
+    RULE_name = 15
+    RULE_minus = 16
 
     ruleNames =  [ "object_file", "asect_block", "rsect_block", "abs_record", 
                    "ntry_record", "name_record", "data_record", "rel_record", 
-                   "xtrn_record", "data", "entry_usage", "byte", "number", 
-                   "label", "name" ]
+                   "xtrn_record", "data", "entry_usage", "byte", "range", 
+                   "number", "label", "name", "minus" ]
 
     EOF = Token.EOF
     ABS=1
@@ -110,8 +118,9 @@ class ObjectFileParser ( Parser ):
     WORD=7
     ABS_SECTION=8
     COLON=9
-    NEWLINE=10
-    WS=11
+    MINUS=10
+    NEWLINE=11
+    WS=12
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -175,41 +184,41 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 33
+            self.state = 37
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 30
+            while _la==11:
+                self.state = 34
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 35
+                self.state = 39
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 48
+            self.state = 52
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [1, 2]:
-                self.state = 36
-                self.asect_block()
                 self.state = 40
+                self.asect_block()
+                self.state = 44
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la==3:
-                    self.state = 37
+                    self.state = 41
                     self.rsect_block()
-                    self.state = 42
+                    self.state = 46
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
                 pass
             elif token in [3]:
-                self.state = 44 
+                self.state = 48 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 43
+                    self.state = 47
                     self.rsect_block()
-                    self.state = 46 
+                    self.state = 50 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
                     if not (_la==3):
@@ -219,17 +228,17 @@ class ObjectFileParser ( Parser ):
             else:
                 raise NoViableAltException(self)
 
-            self.state = 53
+            self.state = 57
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==6:
-                self.state = 50
+                self.state = 54
                 self.xtrn_record()
-                self.state = 55
+                self.state = 59
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 56
+            self.state = 60
             self.match(ObjectFileParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -280,25 +289,25 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 60 
+            self.state = 64 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 60
+                self.state = 64
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [1]:
-                    self.state = 58
+                    self.state = 62
                     self.abs_record()
                     pass
                 elif token in [2]:
-                    self.state = 59
+                    self.state = 63
                     self.ntry_record()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 62 
+                self.state = 66 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==1 or _la==2):
@@ -358,19 +367,19 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 64
+            self.state = 68
             self.name_record()
-            self.state = 65
+            self.state = 69
             self.data_record()
-            self.state = 66
-            self.rel_record()
             self.state = 70
+            self.rel_record()
+            self.state = 74
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==2:
-                self.state = 67
+                self.state = 71
                 self.ntry_record()
-                self.state = 72
+                self.state = 76
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -429,21 +438,21 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 73
+            self.state = 77
             self.match(ObjectFileParser.ABS)
-            self.state = 74
+            self.state = 78
             self.number()
-            self.state = 75
+            self.state = 79
             self.match(ObjectFileParser.COLON)
-            self.state = 76
-            self.data()
             self.state = 80
+            self.data()
+            self.state = 84
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 77
+            while _la==11:
+                self.state = 81
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 82
+                self.state = 86
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -499,19 +508,19 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 83
+            self.state = 87
             self.match(ObjectFileParser.NTRY)
-            self.state = 84
+            self.state = 88
             self.label()
-            self.state = 85
-            self.number()
             self.state = 89
+            self.number()
+            self.state = 93
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 86
+            while _la==11:
+                self.state = 90
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 91
+                self.state = 95
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -563,17 +572,17 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 92
+            self.state = 96
             self.match(ObjectFileParser.NAME)
-            self.state = 93
-            self.name()
             self.state = 97
+            self.name()
+            self.state = 101
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 94
+            while _la==11:
+                self.state = 98
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 99
+                self.state = 103
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -625,17 +634,17 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 100
+            self.state = 104
             self.match(ObjectFileParser.DATA)
-            self.state = 101
-            self.data()
             self.state = 105
+            self.data()
+            self.state = 109
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 102
+            while _la==11:
+                self.state = 106
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 107
+                self.state = 111
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -690,25 +699,25 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 108
-            self.match(ObjectFileParser.REL)
             self.state = 112
+            self.match(ObjectFileParser.REL)
+            self.state = 116
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==7:
-                self.state = 109
+            while _la==7 or _la==10:
+                self.state = 113
                 self.entry_usage()
-                self.state = 114
+                self.state = 118
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 118
+            self.state = 122
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 115
+            while _la==11:
+                self.state = 119
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 120
+                self.state = 124
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -777,31 +786,31 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 121
+            self.state = 125
             self.match(ObjectFileParser.XTRN)
-            self.state = 122
+            self.state = 126
             self.label()
-            self.state = 123
+            self.state = 127
             self.match(ObjectFileParser.COLON)
-            self.state = 129
+            self.state = 133
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==7 or _la==8:
-                self.state = 124
+                self.state = 128
                 self.name()
-                self.state = 125
+                self.state = 129
                 self.entry_usage()
-                self.state = 131
+                self.state = 135
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 135
+            self.state = 139
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==10:
-                self.state = 132
+            while _la==11:
+                self.state = 136
                 self.match(ObjectFileParser.NEWLINE)
-                self.state = 137
+                self.state = 141
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -847,13 +856,13 @@ class ObjectFileParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 141
+            self.state = 145
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==7:
-                self.state = 138
+                self.state = 142
                 self.byte()
-                self.state = 143
+                self.state = 147
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -877,6 +886,17 @@ class ObjectFileParser ( Parser ):
             return self.getTypedRuleContext(ObjectFileParser.NumberContext,0)
 
 
+        def minus(self):
+            return self.getTypedRuleContext(ObjectFileParser.MinusContext,0)
+
+
+        def COLON(self):
+            return self.getToken(ObjectFileParser.COLON, 0)
+
+        def range_(self):
+            return self.getTypedRuleContext(ObjectFileParser.RangeContext,0)
+
+
         def getRuleIndex(self):
             return ObjectFileParser.RULE_entry_usage
 
@@ -893,10 +913,29 @@ class ObjectFileParser ( Parser ):
 
         localctx = ObjectFileParser.Entry_usageContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_entry_usage)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 144
+            self.state = 149
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==10:
+                self.state = 148
+                self.minus()
+
+
+            self.state = 151
             self.number()
+            self.state = 154
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==9:
+                self.state = 152
+                self.match(ObjectFileParser.COLON)
+                self.state = 153
+                self.range_()
+
+
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -935,7 +974,57 @@ class ObjectFileParser ( Parser ):
         self.enterRule(localctx, 22, self.RULE_byte)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 146
+            self.state = 156
+            self.number()
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class RangeContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def number(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(ObjectFileParser.NumberContext)
+            else:
+                return self.getTypedRuleContext(ObjectFileParser.NumberContext,i)
+
+
+        def COLON(self):
+            return self.getToken(ObjectFileParser.COLON, 0)
+
+        def getRuleIndex(self):
+            return ObjectFileParser.RULE_range
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitRange" ):
+                return visitor.visitRange(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def range_(self):
+
+        localctx = ObjectFileParser.RangeContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 24, self.RULE_range)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 158
+            self.number()
+            self.state = 159
+            self.match(ObjectFileParser.COLON)
+            self.state = 160
             self.number()
         except RecognitionException as re:
             localctx.exception = re
@@ -971,10 +1060,10 @@ class ObjectFileParser ( Parser ):
     def number(self):
 
         localctx = ObjectFileParser.NumberContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_number)
+        self.enterRule(localctx, 26, self.RULE_number)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 148
+            self.state = 162
             self.match(ObjectFileParser.WORD)
         except RecognitionException as re:
             localctx.exception = re
@@ -1010,10 +1099,10 @@ class ObjectFileParser ( Parser ):
     def label(self):
 
         localctx = ObjectFileParser.LabelContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_label)
+        self.enterRule(localctx, 28, self.RULE_label)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 150
+            self.state = 164
             self.match(ObjectFileParser.WORD)
         except RecognitionException as re:
             localctx.exception = re
@@ -1052,17 +1141,56 @@ class ObjectFileParser ( Parser ):
     def name(self):
 
         localctx = ObjectFileParser.NameContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_name)
+        self.enterRule(localctx, 30, self.RULE_name)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 152
+            self.state = 166
             _la = self._input.LA(1)
             if not(_la==7 or _la==8):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class MinusContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def MINUS(self):
+            return self.getToken(ObjectFileParser.MINUS, 0)
+
+        def getRuleIndex(self):
+            return ObjectFileParser.RULE_minus
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitMinus" ):
+                return visitor.visitMinus(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def minus(self):
+
+        localctx = ObjectFileParser.MinusContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 32, self.RULE_minus)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 168
+            self.match(ObjectFileParser.MINUS)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

@@ -1,6 +1,8 @@
 import itertools
+import json
 from typing import Any
 
+from cocas.abstract_params import TargetParamsInterface
 from cocas.error import CdmLinkException
 from cocas.location import CodeLocation
 from cocas.object_module import ExternalEntry, ObjectModule, ObjectSectionRecord
@@ -90,7 +92,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[tuple[Any, ObjectModule]]):
+def link(objects: list[tuple[Any, ObjectModule]], _: TargetParamsInterface):
     asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
     rsects = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
 

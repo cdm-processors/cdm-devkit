@@ -29,12 +29,14 @@ rel_record: REL entry_usage* NEWLINE*;
 xtrn_record: XTRN label COLON (name entry_usage)* NEWLINE*;
 
 data: byte*;
-entry_usage: number;
+entry_usage: minus? number (COLON range)?;
 byte: number;
+range: number COLON number;
 
 number: WORD;
 label: WORD;
 name: WORD | ABS_SECTION;
+minus: MINUS;
 
 ABS : 'ABS';
 NTRY: 'NTRY';
@@ -47,5 +49,6 @@ WORD: [a-zA-Z_0-9]+;
 ABS_SECTION: '$abs';
 
 COLON: ':';
+MINUS: '-';
 NEWLINE: '\r'? '\n' ;
 WS : (' ' | '\t') -> skip ;

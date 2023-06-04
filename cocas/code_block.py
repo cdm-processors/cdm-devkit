@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Type
 
-from cocas import default_code_segments, default_instructions
+from cocas.abstract_code_segments import CodeSegmentsInterface
+from cocas.abstract_instructions import TargetInstructionsInterface
 from cocas.ast_nodes import (
     AbsoluteSectionNode,
     BreakStatementNode,
@@ -22,8 +23,8 @@ from cocas.location import CodeLocation
 @dataclass
 class CodeBlock:
     def __init__(self, address: int, lines: list,
-                 target_instructions: Type[default_instructions.TargetInstructionsInterface],
-                 code_segments: Type[default_code_segments.CodeSegmentsInterface]):
+                 target_instructions: Type[TargetInstructionsInterface],
+                 code_segments: Type[CodeSegmentsInterface]):
         self.target_instructions = target_instructions
         self.code_segments = code_segments
         self.address = address
@@ -165,8 +166,8 @@ class CodeBlock:
 @dataclass
 class Section(CodeBlock):
     def __init__(self, sn: SectionNode,
-                 target_instructions: Type[default_instructions.TargetInstructionsInterface],
-                 code_segments: Type[default_code_segments.CodeSegmentsInterface]):
+                 target_instructions: Type[TargetInstructionsInterface],
+                 code_segments: Type[CodeSegmentsInterface]):
         if isinstance(sn, AbsoluteSectionNode):
             self.name = '$abs'
             address = sn.address

@@ -14,5 +14,8 @@ class ExternalEntry:
             s += f':{self.entry_bytes.start}:{self.entry_bytes.stop}'
         return s
 
+    def __repr__(self):
+        return str(self)
+
     def as_tuple(self):
         return self.offset, self.entry_bytes, self.sign
