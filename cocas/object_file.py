@@ -18,6 +18,21 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         self.target_params = target_params
 
     def visitObject_file(self, ctx: ObjectFileParser.Object_fileContext):
+        exp_header = self.target_params.object_file_header()
+        target_name = self.target_params.name()
+        if ctx.targ_record():
+            header = self.visitTarg_record(ctx.targ_record())
+            if header != exp_header:
+                if exp_header:
+                    raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                                       f'Wrong target header {header}, expected {exp_header}')
+                else:
+                    raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                                       f'Expected no header for {target_name} target, got {header}')
+        elif exp_header is not None:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               f'Expected non-empty target header for {target_name}, got empty')
+
         asects, asect_addr = self.visitAsect_block(ctx.asect_block())
         rsects = {}
         for block in ctx.rsect_block():
@@ -71,6 +86,9 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         for label, address in map(self.visitNtry_record, ctx.ntry_record()):
             entries[label] = address
         return name, ObjectSectionRecord(name, 0, data, entries, rel, {}, align)
+
+    def visitTarg_record(self, ctx: ObjectFileParser.Targ_recordContext):
+        return self.visitName(ctx.name())
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
         addr = self.visitNumber(ctx.number())

@@ -24,6 +24,11 @@ class ObjectFileVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#targ_record.
+    def visitTarg_record(self, ctx:ObjectFileParser.Targ_recordContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#abs_record.
     def visitAbs_record(self, ctx:ObjectFileParser.Abs_recordContext):
         return self.visitChildren(ctx)

@@ -2,6 +2,7 @@ grammar ObjectFile;
 
 object_file:
     NEWLINE*
+    targ_record?
     ( asect_block
       rsect_block*
     | rsect_block+
@@ -22,6 +23,7 @@ rsect_block:
     ntry_record*
 ;
 
+targ_record: TARG name NEWLINE*;
 abs_record: ABS number COLON data NEWLINE*;
 ntry_record: NTRY label number NEWLINE*;
 name_record: NAME name NEWLINE*;
@@ -40,6 +42,7 @@ label: WORD;
 name: WORD | ABS_SECTION;
 minus: MINUS;
 
+TARG: 'TARG';
 ABS : 'ABS';
 NTRY: 'NTRY';
 NAME: 'NAME';

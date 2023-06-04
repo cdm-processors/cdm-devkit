@@ -48,6 +48,8 @@ def sect_entry_to_str(pair: tuple[str, ExternalEntry]):
 
 def export_obj(obj: ObjectModule, target_params: TargetParamsInterface) -> list[str]:
     result = []
+    if target_params.object_file_header():
+        result.append(f'TARG {target_params.object_file_header()}\n')
     for asect in obj.asects:
         s = data_to_str(asect.data)
         result.append(f'ABS  {asect.address:02x}: {s}\n')
