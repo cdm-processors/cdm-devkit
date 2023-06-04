@@ -122,7 +122,10 @@ def main():
 
     if args.compile:
         for path, obj in objects:
-            obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
+            if args.output:
+                obj_path = args.output
+            else:
+                obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
             lines = export_obj(obj)
             try:
                 with open(obj_path, 'w') as file:
@@ -136,7 +139,7 @@ def main():
             log_error(CdmExceptionTag.LINK.value, e.message)
             return 1
         try:
-            if args.output is not None:
+            if args.output:
                 write_image(args.output, data)
             else:
                 write_image("out.img", data)
