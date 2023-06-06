@@ -1,3 +1,4 @@
+import base64
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -46,13 +47,36 @@ def sect_entry_to_str(pair: tuple[str, ExternalEntry]):
     return f'{name} {entry}'
 
 
-def export_obj(obj: ObjectModule, target_params: TargetParamsInterface) -> list[str]:
+def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
+    if not cl:
+        return []
+    res = []
+    cur_file = None
+    cur_items = []
+    # Much code in case that code locations will somehow be from different files
+    for byte, loc in cl.items():
+        if loc.file != cur_file:
+            if cur_file is not None:
+                file = base64.b64encode(bytes(cur_file, 'utf-8'))
+                res.append(f'LOC  fp-{file.decode("utf-8")} {" ".join(cur_items)}\n')
+                cur_items = []
+            cur_file = loc.file
+        cur_items.append(f'{byte:02x}:{loc.line:02x}:{loc.column:02x}')
+    if cur_file is not None:
+        file = base64.b64encode(bytes(cur_file, 'utf-8'))
+        res.append(f'LOC  fp-{file.decode("utf-8")} {" ".join(cur_items)}\n')
+    return res
+
+
+def export_obj(obj: ObjectModule, target_params: TargetParamsInterface, debug: bool) -> list[str]:
     result = []
     if target_params.object_file_header():
         result.append(f'TARG {target_params.object_file_header()}\n')
     for asect in obj.asects:
         s = data_to_str(asect.data)
         result.append(f'ABS  {asect.address:02x}: {s}\n')
+        if debug:
+            result += export_code_locations(asect.code_locations)
     for asect in obj.asects:
         for label, address in asect.entries.items():
             result.append(f'NTRY {label} {address:02x}\n')
@@ -62,6 +86,8 @@ def export_obj(obj: ObjectModule, target_params: TargetParamsInterface) -> list[
             result.append(f'ALIG {rsect.alignment:02x}\n')
         s = data_to_str(rsect.data)
         result.append(f'DATA {s}\n')
+        if debug:
+            result += export_code_locations(rsect.code_locations)
         result.append(f'REL  {" ".join(map(str, rsect.relative))}\n')
         for label, address in rsect.entries.items():
             result.append(f'NTRY {label} {address:02x}\n')

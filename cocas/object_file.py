@@ -1,3 +1,5 @@
+import base64
+import binascii
 import bisect
 
 from antlr4 import CommonTokenStream, InputStream
@@ -8,6 +10,7 @@ from cocas.external_entry import ExternalEntry
 from cocas.generated.ObjectFileLexer import ObjectFileLexer
 from cocas.generated.ObjectFileParser import ObjectFileParser
 from cocas.generated.ObjectFileVisitor import ObjectFileVisitor
+from cocas.location import CodeLocation
 from cocas.object_module import ObjectModule, ObjectSectionRecord
 
 
@@ -64,7 +67,7 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
 
     def visitAsect_block(self, ctx: ObjectFileParser.Asect_blockContext):
         asects = {}
-        for addr, record in map(self.visitAbs_record, ctx.abs_record()):
+        for addr, record in map(self.visitAbs_block, ctx.abs_block()):
             asects[addr] = record
         if not asects and ctx.ntry_record():
             asects[0] = ObjectSectionRecord('$abs', 0, bytearray(), {}, [], {}, 1)
@@ -73,6 +76,13 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
             ind = max(bisect.bisect_right(asect_addr, addr) - 1, 0)
             asects[asect_addr[ind]].entries[label] = addr
         return asects, asect_addr
+
+    def visitAbs_block(self, ctx: ObjectFileParser.Abs_blockContext):
+        addr, asect = self.visitAbs_record(ctx.abs_record())
+        for cl in map(self.visitLoc_record, ctx.loc_record()):
+            for byte, loc in cl.items():
+                asect.code_locations[byte] = loc
+        return addr, asect
 
     def visitRsect_block(self, ctx: ObjectFileParser.Rsect_blockContext):
         name = self.visitName_record(ctx.name_record())
@@ -85,15 +95,25 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         entries = {}
         for label, address in map(self.visitNtry_record, ctx.ntry_record()):
             entries[label] = address
-        return name, ObjectSectionRecord(name, 0, data, entries, rel, {}, align)
+        code_locations = {}
+        for cl in map(self.visitLoc_record, ctx.loc_record()):
+            code_locations |= cl
+        return name, ObjectSectionRecord(name, 0, data, entries, rel, code_locations, align)
 
     def visitTarg_record(self, ctx: ObjectFileParser.Targ_recordContext):
-        return self.visitName(ctx.name())
+        return self.visitLabel(ctx.label())
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
         addr = self.visitNumber(ctx.number())
         data = self.visitData(ctx.data())
         return addr, ObjectSectionRecord('$abs', addr, data, {}, [], {})
+
+    def visitLoc_record(self, ctx: ObjectFileParser.Loc_recordContext):
+        file = self.visitPath_base64(ctx.path_base64())
+        res = {}
+        for byte, line, col in map(self.visitLocation, ctx.location()):
+            res[byte] = CodeLocation(file, line, col)
+        return res
 
     def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext):
         label = self.visitLabel(ctx.label())
@@ -101,7 +121,7 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         return label, address
 
     def visitName_record(self, ctx: ObjectFileParser.Name_recordContext):
-        return self.visitName(ctx.name())
+        return self.visitSection(ctx.section())
 
     def visitAlig_record(self, ctx: ObjectFileParser.Alig_recordContext):
         return self.visitNumber(ctx.number())
@@ -114,8 +134,8 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
 
     def visitXtrn_record(self, ctx: ObjectFileParser.Xtrn_recordContext):
         label = self.visitLabel(ctx.label())
-        entries = [(self.visitName(n), self.visitEntry_usage(e))
-                   for (n, e) in zip(ctx.name(), ctx.entry_usage())]
+        entries = [(self.visitSection(n), self.visitEntry_usage(e))
+                   for (n, e) in zip(ctx.section(), ctx.entry_usage())]
         return label, entries
 
     def visitData(self, ctx: ObjectFileParser.DataContext):
@@ -147,11 +167,25 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
     def visitRange(self, ctx: ObjectFileParser.RangeContext):
         return range(self.visitNumber(ctx.number(0)), self.visitNumber(ctx.number(1)))
 
+    def visitLocation(self, ctx: ObjectFileParser.LocationContext):
+        return self.visitNumber(ctx.number(0)), self.visitNumber(ctx.number(1)), \
+            self.visitNumber(ctx.number(2))
+
     def visitLabel(self, ctx: ObjectFileParser.LabelContext):
         return ctx.getText()
 
-    def visitName(self, ctx: ObjectFileParser.NameContext):
+    def visitSection(self, ctx: ObjectFileParser.SectionContext):
         return ctx.getText()
+
+    def visitPath_base64(self, ctx: ObjectFileParser.Path_base64Context):
+        try:
+            return base64.b64decode(ctx.getText()[3:]).decode('utf-8')
+        except binascii.Error:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               'Not a valid Base64 string')
+        except UnicodeDecodeError:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               'Not a valid Base64 representation of unicode string')
 
     def visitMinus(self, ctx: ObjectFileParser.MinusContext):
         pass
