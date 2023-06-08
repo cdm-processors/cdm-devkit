@@ -39,6 +39,28 @@
 + **C, V, Z, N** - arithmetic flags, have the same meaning as in CdM-8/8e
 + **R** - reserved, these bit fields are not used
 
+## Startup and IVT
+
+Upon startup, processor loads its initial **PC** and **PS** values from the first vector of IVT.
+
+**IVT** *(Interrupt Vector Table)* is located at the beginning of program memory. Single vector is 4 bytes long and 
+consists of **PC** and **SP** values, each 2 bytes long.
+
+So, for the startup vector initial **PC** value is located at the address 0x0000 and initial **PS** 
+value is located at the address 0x0002.
+
+The rest of IVT is laid out like this:
+
+| Vector no. | Offset |                   Name                   |
+|:----------:|:------:|:----------------------------------------:|
+|     0      | 0x0000 |              Startup/Reset               |
+|     1      | 0x0004 |               Unaligned SP               | 
+|     2      | 0x0008 |               Unaligned PC               |
+|     3      | 0x000C |           Invalid instruction            |
+|     4      | 0x0010 |               Double fault               |
+|    ...     |  ...   | External interrupts <br/> and exceptions |
+
+
 ## Instruction operands
 
 **Operands used in the instructions can have the following types:**
