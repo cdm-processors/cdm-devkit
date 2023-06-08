@@ -1,16 +1,18 @@
 import re
-from copy import copy
 from dataclasses import dataclass
-from typing import Callable, Union, get_args, get_origin
+from typing import Callable, get_args, get_origin
+
+from bitstruct import pack
 
 from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.abstract_instructions import TargetInstructionsInterface
 from cocas.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 
-from .code_segments import CodeSegments, pack
+from .code_segments import CodeSegments
 
 
+# noinspection DuplicatedCode
 def assert_args(args, *types):
     ts = [((t,) if get_origin(t) is None else get_args(t)) for t in types]
     for i in range(len(args)):
@@ -38,10 +40,10 @@ def handle_frame_pointer(line: InstructionNode):
                 line.arguments[i] = RegisterNode(7)
 
 
+# noinspection DuplicatedCode
 class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def assemble_instruction(line: InstructionNode, temp_storage: dict) -> list[CodeSegmentsInterface.CodeSegment]:
-        handle_frame_pointer(line)
         try:
             for h in TargetInstructions.handlers:
                 if line.mnemonic in h.instructions:
@@ -70,10 +72,10 @@ class TargetInstructions(TargetInstructionsInterface):
     def ds(line: InstructionNode, _, __):
         assert_args(line.arguments, RelocatableExpressionNode)
         arg = line.arguments[0]
-        if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-            raise CdmTempException('Const number expected')
         if arg.const_term < 0:
             raise CdmTempException('Cannot specify negative size in "ds"')
+        if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
+            raise CdmTempException('Const number expected')
         return [CodeSegments.BytesSegment(bytes(arg.const_term), line.location)]
 
     @staticmethod
@@ -82,23 +84,10 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmTempException('At least one argument must be provided')
         segments = []
         size = 0
-        command = line.mnemonic
         for arg in line.arguments:
             if isinstance(arg, RelocatableExpressionNode):
-                if command == 'db':
-                    if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                        raise CdmTempException('Only constants allowed for 1 byte')
-                    if -128 < arg.const_term < 256:
-                        segments.append(CodeSegments.BytesSegment((arg.const_term % 256).to_bytes(1, 'little'),
-                                                                  line.location))
-                        size += 2
-                    else:
-                        raise CdmTempException(f'Number is not a byte: {arg.const_term}')
-                else:
-                    segments.append(CodeSegments.ExpressionSegment(line.location, arg))
+                segments.append(CodeSegments.ExpressionSegment(line.location, arg))
             elif isinstance(arg, str):
-                if command == 'dw':
-                    raise CdmTempException('Currently "dw" doesn\'t support strings')
                 encoded = arg.encode('utf-8')
                 segments.append(CodeSegments.BytesSegment(encoded, line.location))
                 size += len(encoded)
@@ -108,15 +97,12 @@ class TargetInstructions(TargetInstructionsInterface):
 
     @staticmethod
     def align(line: InstructionNode, _, __):
-        if len(line.arguments) > 0:
-            assert_args(line.arguments, RelocatableExpressionNode)
-            arg: RelocatableExpressionNode = line.arguments[0]
-            if arg.add_terms or arg.sub_terms:
-                raise CdmTempException('Const number expected')
-            alignment = arg.const_term
-        else:
-            alignment = 2
-        if alignment < 0:
+        assert_args(line.arguments, RelocatableExpressionNode)
+        arg: RelocatableExpressionNode = line.arguments[0]
+        if arg.add_terms or arg.sub_terms:
+            raise CdmTempException('Const number expected')
+        alignment = arg.const_term
+        if alignment <= 0:
             raise CdmTempException('Alignment should be positive')
         elif alignment == 1:
             return []
@@ -143,11 +129,6 @@ class TargetInstructions(TargetInstructionsInterface):
             assert_args(line.arguments, RegisterNode)
             reg = line.arguments[0]
         return TargetInstructions.assemble_instruction(InstructionNode("pop", [reg]), temp_storage)
-
-    @staticmethod
-    def ldi(line: InstructionNode, _, __) -> list[CodeSegmentsInterface.CodeSegment]:
-        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-        return [CodeSegments.LdiSegment(line.location, *line.arguments)]
 
     @dataclass
     class BranchCode:
@@ -179,197 +160,38 @@ class TargetInstructions(TargetInstructionsInterface):
             raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
                                f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
-        return [CodeSegments.Branch(line.location, branch_code, line.arguments[0])]
+        return [CodeSegments.BytesSegment(pack('u4u4', 0xE, branch_code), line.location),
+                CodeSegments.ExpressionSegment(line.location, line.arguments[0])]
 
     @staticmethod
-    def op0(line: InstructionNode, _, op_number: int):
+    def zero(line: InstructionNode, _, opcode: int):
         assert_count_args(line.arguments)
-        return [CodeSegments.InstructionBytesSegment(pack("u5p7u4", 0b00000, op_number), line.location)]
+        return [CodeSegments.BytesSegment(bytearray([opcode]), line.location)]
 
     @staticmethod
-    def const_only(arg: RelocatableExpressionNode):
-        if arg.add_terms or arg.sub_terms:
-            raise CdmTempException('Constant number expected as shift value')
-        return arg.const_term
+    def unary(line: InstructionNode, _, opcode: int):
+        assert_args(line.arguments, RegisterNode)
+        data = pack('u6u2', opcode // 4, line.arguments[0].number)
+        return [CodeSegments.BytesSegment(bytearray(data), line.location)]
 
     @staticmethod
-    def shifts(line: InstructionNode, _, op_number: int):
-        args = line.arguments
-        if len(args) == 3:
-            assert_args(args, RegisterNode, RegisterNode, RelocatableExpressionNode)
-            rs = args[0].number
-            rd = args[1].number
-            val = TargetInstructions.const_only(args[2])
-        elif len(args) == 2 and isinstance(args[1], RegisterNode):
-            assert_args(args, RegisterNode, RegisterNode)
-            rs = args[0].number
-            rd = args[1].number
-            val = 1
-        elif len(args) == 2:
-            assert_args(args, RegisterNode, RelocatableExpressionNode)
-            rs = args[0].number
-            rd = args[0].number
-            val = TargetInstructions.const_only(args[1])
-        elif len(args) == 1:
-            assert_args(args, RegisterNode)
-            rs = args[0].number
-            rd = args[0].number
-            val = 1
-        else:
-            raise CdmTempException(f'Expected 1-3 arguments, found {len(args)}')
-        if not 0 <= val <= 8:
-            raise CdmTempException('Shift value out of range')
-        if val == 0:
-            return []
-        return [
-            CodeSegments.InstructionBytesSegment(pack("u4u3u3u3u3", 0b0001, op_number, val - 1, rs, rd), line.location)]
+    def binary(line: InstructionNode, _, opcode: int):
+        assert_args(line.arguments, RegisterNode, RegisterNode)
+        data = pack('u4u2u2', opcode // 16, line.arguments[0].number, line.arguments[1].number)
+        return [CodeSegments.BytesSegment(bytearray(data), line.location)]
 
     @staticmethod
-    def op1(line: InstructionNode, _, op_number: int):
-        assert_count_args(line.arguments, RegisterNode)
-        reg = line.arguments[0].number
-        return [CodeSegments.InstructionBytesSegment(pack("u3p6u4u3", 0b001, op_number, reg), line.location)]
+    def imm(line: InstructionNode, _, opcode: int):
+        assert_args(line.arguments, RelocatableExpressionNode)
+        return [CodeSegments.BytesSegment(bytearray([opcode]), line.location),
+                CodeSegments.ExpressionSegment(line.location, line.arguments[0])]
 
     @staticmethod
-    def op2(line: InstructionNode, _, op_number: int):
-        assert_count_args(line.arguments, RegisterNode, RegisterNode)
-        rs = line.arguments[0].number
-        rd = line.arguments[1].number
-        return [CodeSegments.InstructionBytesSegment(pack("u5p1u4u3u3", 0b01000, op_number, rs, rd), line.location)]
-
-    @staticmethod
-    def alu3_ind(line: InstructionNode, _, op_number: int):
-        assert_count_args(line.arguments, RegisterNode, RegisterNode)
-        rs = line.arguments[0].number
-        rd = line.arguments[1].number
-        return [CodeSegments.InstructionBytesSegment(pack("u5p2u3u3u3", 0b01001, op_number, rs, rd), line.location)]
-
-    @staticmethod
-    def mem(line: InstructionNode, _, op_number: int):
-        if len(line.arguments) == 2:
-            assert_args(line.arguments, RegisterNode, RegisterNode)
-            addr1 = line.arguments[0].number
-            arg = line.arguments[1].number
-            return [
-                CodeSegments.InstructionBytesSegment(pack("u5p1u4u3u3", 0b01010, op_number, addr1, arg), line.location)]
-        elif len(line.arguments) == 3:
-            assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
-            addr1 = line.arguments[0].number
-            addr2 = line.arguments[1].number
-            arg = line.arguments[2].number
-            return [CodeSegments.InstructionBytesSegment(pack("u4u3u3u3u3", 0b1010, op_number, addr1, addr2, arg),
-                                                         line.location)]
-        else:
-            raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
-
-    @staticmethod
-    def alu2(line: InstructionNode, _, op_number: int):
-        if len(line.arguments) == 2:
-            assert_args(line.arguments, RegisterNode, RegisterNode)
-            rd = line.arguments[1].number
-        elif len(line.arguments) == 1:
-            assert_args(line.arguments, RegisterNode)
-            rd = line.arguments[0].number
-        else:
-            raise CdmTempException(f'Expected 1 or 2 arguments, found {len(line.arguments)}')
-        rs = line.arguments[0].number
-        return [CodeSegments.InstructionBytesSegment(pack("u5p2u3u3u3", 0b01011, op_number, rs, rd), line.location)]
-
-    @staticmethod
-    def imm6(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
-        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-        return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments)]
-
-    @staticmethod
-    def imm6_word(line: InstructionNode, _, op_number: int) -> list[CodeSegmentsInterface.CodeSegment]:
-        assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-        return [CodeSegments.Imm6(line.location, False, op_number, *line.arguments, word=True)]
-
-    @staticmethod
-    def alu3(line: InstructionNode, _, op_number: int):
-        if len(line.arguments) == 3:
-            assert_args(line.arguments, RegisterNode, RegisterNode, RegisterNode)
-            arg1 = line.arguments[0].number
-            arg2 = line.arguments[1].number
-            dest = line.arguments[2].number
-            return [CodeSegments.InstructionBytesSegment(pack("u4u3u3u3u3", 0b1011, op_number, arg2, arg1, dest),
-                                                         line.location)]
-        elif len(line.arguments) == 2:
-            assert_args(line.arguments, RegisterNode, RegisterNode)
-            arg1 = line.arguments[0].number
-            arg2 = line.arguments[1].number
-            return [CodeSegments.InstructionBytesSegment(pack("u4u3u3u3u3", 0b1011, op_number, arg2, arg1, arg2),
-                                                         line.location)]
-        else:
-            raise CdmTempException(f'Expected 2 or 3 arguments, found {len(line.arguments)}')
-
-    @staticmethod
-    def special(line: InstructionNode, temp_storage: dict, _):
-        if line.mnemonic == 'add':
-            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
-                assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-                return [CodeSegments.Imm6(line.location, False, 6, *line.arguments)]
-            else:
-                return TargetInstructions.alu3(line, temp_storage, 4)
-        elif line.mnemonic == 'sub':
-            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
-                assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-                return [CodeSegments.Imm6(line.location, True, 6, *line.arguments)]
-            else:
-                return TargetInstructions.alu3(line, temp_storage, 6)
-        elif line.mnemonic == 'cmp':
-            if len(line.arguments) == 2 and isinstance(line.arguments[1], RelocatableExpressionNode):
-                return [CodeSegments.Imm6(line.location, False, 7, *line.arguments)]
-            else:
-                return TargetInstructions.alu3_ind(line, temp_storage, 6)
-        elif line.mnemonic == 'int':
-            assert_count_args(line.arguments, RelocatableExpressionNode)
-            arg = line.arguments[0]
-            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                raise CdmTempException('Const number expected')
-            if arg.const_term < 0:
-                raise CdmTempException('Interrupt number must be not negative')
-            return [CodeSegments.InstructionBytesSegment(pack("u3u4s9", 0b100, 0, arg.const_term), line.location)]
-        elif line.mnemonic == 'reset':
-            if len(line.arguments) == 0:
-                arg = RelocatableExpressionNode(None, [], [], 0)
-            elif len(line.arguments) == 1:
-                assert_args(line.arguments, RelocatableExpressionNode)
-                arg = line.arguments[0]
-            else:
-                raise CdmTempException(f'Expected 0 or 1 arguments, found {len(line.arguments)}')
-            if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                raise CdmTempException('Const number expected')
-            if arg.const_term < 0:
-                raise CdmTempException('Vector number must be not negative')
-            return [CodeSegments.InstructionBytesSegment(pack("u3u4s9", 0b100, 1, arg.const_term), line.location)]
-        elif line.mnemonic == 'addsp':
-            assert_count_args(line.arguments, Union[RelocatableExpressionNode, RegisterNode])
-            if isinstance(line.arguments[0], RelocatableExpressionNode):
-                arg = copy(line.arguments[0])
-                if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
-                    raise CdmTempException('Const number expected')
-                if arg.const_term % 2 == 1:
-                    raise CdmTempException('Only even numbers can be added to stack pointer')
-                arg.const_term //= 2
-                return [CodeSegments.Imm9(line.location, False, 2, arg)]
-            else:
-                reg = line.arguments[0].number
-                return [CodeSegments.InstructionBytesSegment(pack("u3p6u4u3", 0b001, 10, reg), line.location)]
-        elif line.mnemonic == 'jsr':
-            if len(line.arguments) == 1 and isinstance(line.arguments[0], RegisterNode):
-                jsrr = copy(line)
-                jsrr.mnemonic = 'jsrr'
-                return TargetInstructions.assemble_instruction(jsrr, temp_storage)
-            assert_count_args(line.arguments, RelocatableExpressionNode)
-            return [CodeSegments.Branch(line.location, 0, line.arguments[0], operation='jsr')]
-        elif line.mnemonic == 'push':
-            assert_count_args(line.arguments, Union[RegisterNode, RelocatableExpressionNode])
-            if isinstance(line.arguments[0], RegisterNode):
-                reg = line.arguments[0].number
-                return [CodeSegments.InstructionBytesSegment(pack("u3p6u4u3", 0b001, 0, reg), line.location)]
-            else:
-                return [CodeSegments.Imm9(line.location, False, 1, *line.arguments)]
+    def unary_imm(line: InstructionNode, _, opcode: int):
+        assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
+        data = pack('u6u2', opcode // 4, line.arguments[0].number)
+        return [CodeSegments.BytesSegment(bytearray(data), line.location),
+                CodeSegments.ExpressionSegment(line.location, line.arguments[1])]
 
     @dataclass
     class Handler:
@@ -377,29 +199,54 @@ class TargetInstructions(TargetInstructionsInterface):
         instructions: dict[str, int]
 
     handlers: list[Handler]
-
     handlers = [
         Handler(ds, {'ds': -1}),
-        Handler(dc, {'dc': -1, 'db': -1, 'dw': -1}),
+        Handler(dc, {'dc': -1}),
         Handler(align, {'align': -1}),
         Handler(save, {'save': -1}),
         Handler(restore, {'restore': -1}),
-        Handler(ldi, {'ldi': -1}),
-        Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'rti': 9,
-                      'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
-        Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'rol': 3, 'ror': 4, 'rcl': 5, 'rcr': 6}),
-        Handler(op1, {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
-                      'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
-        Handler(op2, {'move': 0}),
-        Handler(alu3_ind, {'bit': 0}),
-        Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
-        Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
-        Handler(imm6, {'lsb': 1, 'lssb': 2, 'ssb': 4}),
-        Handler(imm6_word, {'lsw': 0, 'ssw': 3}),
-        Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
+        Handler(zero, {
+            'pushall': 0xCE,
+            'popall': 0xCF,
+            'rts': 0xD7,
+            'halt': 0xD4,
+            'wait': 0xD5,
+            'ioi': 0xD8,
+            'rti': 0xD9,
+            'crc': 0xDA
+        }),
+        Handler(unary, {
+            'not': 0x80,
+            'neg': 0x84,
+            'dec': 0x88,
+            'inc': 0x8C,
+            'shr': 0x90,
+            'shla': 0x94,
+            'shra': 0x98,
+            'rol': 0x9C,
+            'push': 0xC0,
+            'pop': 0xC4
+        }),
+        Handler(binary, {
+            'move': 0x00,
+            'add': 0x10,
+            'addc': 0x20,
+            'sub': 0x30,
+            'and': 0x40,
+            'or': 0x50,
+            'xor': 0x60,
+            'cmp': 0x70,
+            'st': 0xA0,
+            'ld': 0xB0,
+            'ldc': 0xF0
+        }),
+        Handler(imm, {
+            'osix': 0xDB,
+            'addsp': 0xCC,
+            'setsp': 0xCD
+        }),
+        Handler(unary_imm, {
+            'ldsa': 0xC8,
+            'ldi': 0xD0
+        })
     ]
-
-    @staticmethod
-    def assembly_directives() -> set[str]:
-        return super().assembly_directives()
