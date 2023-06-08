@@ -18,4 +18,6 @@ class TargetInstructionsInterface:
             -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 
-    assembly_directives: dict
+    @staticmethod
+    def assembly_directives() -> set[str]:
+        pass
