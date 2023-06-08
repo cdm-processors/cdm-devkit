@@ -1,12 +1,21 @@
 from dataclasses import dataclass
-from typing import Type, Callable, Any
+from typing import Any, Callable, Type
 
-from cocas import default_instructions, default_code_segments
-from cocas.ast_nodes import LabelDeclarationNode, InstructionNode, \
-    ConditionalStatementNode, WhileLoopNode, UntilLoopNode, BreakStatementNode, \
-    ContinueStatementNode, LocatableNode, SectionNode, AbsoluteSectionNode, \
-    RelocatableSectionNode
-from cocas.error import CdmTempException, CdmException, CdmExceptionTag
+from cocas import default_code_segments, default_instructions
+from cocas.ast_nodes import (
+    AbsoluteSectionNode,
+    BreakStatementNode,
+    ConditionalStatementNode,
+    ContinueStatementNode,
+    InstructionNode,
+    LabelDeclarationNode,
+    LocatableNode,
+    RelocatableSectionNode,
+    SectionNode,
+    UntilLoopNode,
+    WhileLoopNode,
+)
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 from cocas.location import CodeLocation
 
 
@@ -37,7 +46,7 @@ class CodeBlock:
     def append_label(self, label_name):
         self.labels[label_name] = self.address + self.size
 
-    def append_branch_instruction(self, location, mnemonic, label_name, inverse):
+    def append_branch_instruction(self, location, mnemonic, label_name, inverse=False):
         self.code_locations[self.size] = location
         br = self.target_instructions.make_branch_instruction(location, mnemonic, label_name, inverse)
         self.segments += br
@@ -91,23 +100,24 @@ class CodeBlock:
             if cond.conjunction is None:
                 self.append_branch_instruction(cond.location, cond.branch_mnemonic, else_label, True)
             elif cond.conjunction == 'or':
-                self.append_branch_instruction(cond.location, cond.branch_mnemonic, then_label, False)
+                self.append_branch_instruction(cond.location, cond.branch_mnemonic, then_label)
                 self.append_label(next_or_label)
                 next_or += 1
                 next_or_label = f'{or_label}{next_or}'
             elif cond.conjunction == 'and':
                 self.append_branch_instruction(cond.location, cond.branch_mnemonic, next_or_label, True)
 
-        self.append_label(next_or_label)
         self.append_label(then_label)
         self.assemble_lines(line.then_lines, temp_storage)
 
         if len(line.else_lines) > 0:
-            self.append_branch_instruction(line.else_location, 'anything', finally_label, False)
+            self.append_branch_instruction(line.else_location, 'anything', finally_label)
+            self.append_label(next_or_label)
             self.append_label(else_label)
             self.assemble_lines(line.else_lines, temp_storage)
             self.append_label(finally_label)
         else:
+            self.append_label(next_or_label)
             self.append_label(else_label)
 
     def assemble_while_loop(self, line: WhileLoopNode, temp_storage):
@@ -120,7 +130,7 @@ class CodeBlock:
         self.assemble_lines(line.condition_lines, temp_storage)
         self.append_branch_instruction(line.stays_location, line.branch_mnemonic, finally_label, True)
         self.assemble_lines(line.lines, temp_storage)
-        self.append_branch_instruction(line.while_location, 'anything', cond_label, False)
+        self.append_branch_instruction(line.while_location, 'anything', cond_label)
         self.append_label(finally_label)
         self.loop_stack.pop()
 
@@ -143,13 +153,13 @@ class CodeBlock:
         if len(self.loop_stack) == 0:
             raise Exception('"break" not allowed outside of a loop')
         _, finally_label = self.loop_stack[-1]
-        self.append_branch_instruction(line.location, 'anything', finally_label, False)
+        self.append_branch_instruction(line.location, 'anything', finally_label)
 
     def assemble_continue_statement(self, line: ContinueStatementNode, _):
         if len(self.loop_stack) == 0:
             raise Exception('"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
-        self.append_branch_instruction(line.location, 'anything', cond_label, False)
+        self.append_branch_instruction(line.location, 'anything', cond_label)
 
 
 @dataclass

@@ -1,11 +1,31 @@
-from antlr4 import *
-from cocas.ast_nodes import *
-from cocas.ast_nodes import LabelDeclarationNode
+from base64 import b64decode
+
+from antlr4 import CommonTokenStream, InputStream
+
+from cocas.ast_nodes import (
+    AbsoluteSectionNode,
+    BreakStatementNode,
+    ConditionalStatementNode,
+    ConditionNode,
+    ContinueStatementNode,
+    InstructionNode,
+    LabelDeclarationNode,
+    LabelNode,
+    LocatableNode,
+    ProgramNode,
+    RegisterNode,
+    RelocatableExpressionNode,
+    RelocatableSectionNode,
+    TemplateFieldNode,
+    TemplateSectionNode,
+    UntilLoopNode,
+    WhileLoopNode,
+)
+from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.generated.AsmLexer import AsmLexer
 from cocas.generated.AsmParser import AsmParser
 from cocas.generated.AsmParserVisitor import AsmParserVisitor
-from base64 import b64decode
-from cocas.error import AntlrErrorListener, CdmExceptionTag, CdmException
+from cocas.location import CodeLocation
 
 
 # noinspection PyPep8Naming
@@ -119,10 +139,10 @@ class BuildAstVisitor(AsmParserVisitor):
         return self.visitCode_block(ctx.code_block())
 
     def visitWhile_loop(self, ctx: AsmParser.While_loopContext):
-        condition_lines = self.visitWhile_condition(ctx.while_condition())
-        lines = self.visitCode_block(ctx.code_block())
         while_loc = self._ctx_location(ctx)
+        condition_lines = self.visitWhile_condition(ctx.while_condition())
         mnem_loc = self._ctx_location(ctx.branch_mnemonic())
+        lines = self.visitCode_block(ctx.code_block())
         return WhileLoopNode(condition_lines, ctx.branch_mnemonic().getText(), lines, while_loc, mnem_loc)
 
     def visitWhile_condition(self, ctx: AsmParser.While_conditionContext):

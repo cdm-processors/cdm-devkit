@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from typing import Type
 
-from cocas.ast_nodes import TemplateSectionNode, LabelDeclarationNode, InstructionNode, ProgramNode
+from cocas.ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmExceptionTag
 from cocas.location import CodeLocation
-from cocas.object_module import ObjectSectionRecord, ObjectModule
+from cocas.object_module import ObjectModule, ObjectSectionRecord
 
 TAG = CdmExceptionTag.ASM
 
@@ -36,7 +36,7 @@ class Template:
                     self.labels[label_name] = size
 
             elif isinstance(line, InstructionNode):
-                if line.mnemonic not in target_instructions.assembly_directives:
+                if line.mnemonic not in target_instructions.assembly_directives():
                     raise Exception('Only "dc" and "ds" allowed in templates')
                 for seg in target_instructions.assemble_instruction(line, temp_storage):
                     size += seg.size

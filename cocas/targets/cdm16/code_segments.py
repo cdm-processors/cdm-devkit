@@ -4,12 +4,12 @@ from typing import Optional
 
 import bitstruct
 
-from cocas.ast_nodes import RelocatableExpressionNode, LabelNode, TemplateFieldNode, RegisterNode
+from cocas.ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.code_block import Section
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.location import CodeLocation
-from cocas.object_module import ObjectSectionRecord, ExternalEntry
+from cocas.object_module import ExternalEntry, ObjectSectionRecord
 
 
 def pack(fmt, *args):
@@ -54,7 +54,7 @@ class CodeSegments(CodeSegmentsInterface):
                 object_record.alignment = lcm(object_record.alignment, self.alignment)
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int], _):
-            new_size = (-section.address - pos) % self.alignment
+            new_size = (-pos) % self.alignment
             if new_size == self.alignment:
                 new_size = 0
             diff = new_size - self.size
@@ -280,7 +280,7 @@ class CodeSegments(CodeSegmentsInterface):
     def parse_expression(expr: RelocatableExpressionNode, section: Section, labels: dict[str, int],
                          templates: dict[str, dict[str, int]], segment: CodeSegment) -> ParsedExpression:
         if expr.byte_specifier is not None:
-            _error(segment, f'No byte specifiers allowed in CdM-16')
+            _error(segment, 'No byte specifiers allowed in CdM-16')
         result = CodeSegments.ParsedExpression(expr.const_term)
         for term, sign in [(t, 1) for t in expr.add_terms] + [(t, -1) for t in expr.sub_terms]:
             if isinstance(term, LabelNode):

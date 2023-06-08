@@ -1,12 +1,13 @@
+import re
 from copy import copy
 from dataclasses import dataclass
-from typing import get_origin, get_args, Callable, Union
-import re
+from typing import Callable, Union, get_args, get_origin
 
-from cocas.ast_nodes import InstructionNode, RegisterNode, RelocatableExpressionNode, LabelNode
+from cocas.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.default_instructions import TargetInstructionsInterface
-from cocas.error import CdmTempException, CdmException, CdmExceptionTag
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
+
 from .code_segments import CodeSegments, pack
 
 
@@ -97,7 +98,7 @@ class TargetInstructions(TargetInstructionsInterface):
                     segments.append(CodeSegments.ExpressionSegment(line.location, arg))
             elif isinstance(arg, str):
                 if command == 'dw':
-                    raise CdmTempException(f'Currently "dw" doesn\'t support strings')
+                    raise CdmTempException('Currently "dw" doesn\'t support strings')
                 encoded = arg.encode('utf-8')
                 segments.append(CodeSegments.BytesSegment(encoded, line.location))
                 size += len(encoded)
@@ -115,7 +116,7 @@ class TargetInstructions(TargetInstructionsInterface):
             alignment = arg.const_term
         else:
             alignment = 2
-        if alignment < 0:
+        if alignment <= 0:
             raise CdmTempException('Alignment should be positive')
         elif alignment == 1:
             return []
@@ -188,7 +189,7 @@ class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def const_only(arg: RelocatableExpressionNode):
         if arg.add_terms or arg.sub_terms:
-            raise CdmTempException(f'Constant number expected as shift value')
+            raise CdmTempException('Constant number expected as shift value')
         return arg.const_term
 
     @staticmethod
@@ -217,7 +218,7 @@ class TargetInstructions(TargetInstructionsInterface):
         else:
             raise CdmTempException(f'Expected 1-3 arguments, found {len(args)}')
         if not 0 <= val <= 8:
-            raise CdmTempException(f'Shift value out of range')
+            raise CdmTempException('Shift value out of range')
         if val == 0:
             return []
         return [
@@ -376,6 +377,7 @@ class TargetInstructions(TargetInstructionsInterface):
         instructions: dict[str, int]
 
     handlers: list[Handler]
+
     handlers = [
         Handler(ds, {'ds': -1}),
         Handler(dc, {'dc': -1, 'db': -1, 'dw': -1}),
@@ -397,3 +399,7 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
         Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
     ]
+
+    @staticmethod
+    def assembly_directives() -> set[str]:
+        return super().assembly_directives()

@@ -1,8 +1,9 @@
+from enum import Enum
 from typing import Union
 
 from antlr4.error.ErrorListener import ErrorListener
 from colorama import Fore, Style
-from enum import Enum
+
 from cocas.generated import AsmParser
 
 

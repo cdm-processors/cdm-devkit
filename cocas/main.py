@@ -12,7 +12,7 @@ import colorama
 
 from cocas.assembler import assemble
 from cocas.ast_builder import build_ast
-from cocas.error import CdmException, log_error, CdmLinkException, CdmExceptionTag
+from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
 
@@ -37,7 +37,7 @@ def write_image(filename: str, arr: bytearray):
                     f.write(bytes(f'# {i:#2x}\n', 'UTF-8'))
                 else:
                     for _ in range(zeroes):
-                        f.write(bytes(f'00\n', 'UTF-8'))
+                        f.write(bytes('00\n', 'UTF-8'))
                 zeroes = 0
             f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
     f.close()
