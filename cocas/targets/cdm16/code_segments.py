@@ -54,7 +54,7 @@ class CodeSegments(CodeSegmentsInterface):
                 object_record.alignment = lcm(object_record.alignment, self.alignment)
 
         def update_varying_length(self, pos, section: Section, labels: dict[str, int], _):
-            new_size = (-section.address - pos) % self.alignment
+            new_size = (-pos) % self.alignment
             if new_size == self.alignment:
                 new_size = 0
             diff = new_size - self.size
