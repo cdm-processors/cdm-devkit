@@ -377,6 +377,7 @@ class TargetInstructions(TargetInstructionsInterface):
         instructions: dict[str, int]
 
     handlers: list[Handler]
+
     handlers = [
         Handler(ds, {'ds': -1}),
         Handler(dc, {'dc': -1, 'db': -1, 'dw': -1}),
@@ -398,3 +399,7 @@ class TargetInstructions(TargetInstructionsInterface):
         Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
         Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
     ]
+
+    @staticmethod
+    def assembly_directives() -> set[str]:
+        return super().assembly_directives()
