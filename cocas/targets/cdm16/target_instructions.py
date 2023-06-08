@@ -116,7 +116,7 @@ class TargetInstructions(TargetInstructionsInterface):
             alignment = arg.const_term
         else:
             alignment = 2
-        if alignment < 0:
+        if alignment <= 0:
             raise CdmTempException('Alignment should be positive')
         elif alignment == 1:
             return []
