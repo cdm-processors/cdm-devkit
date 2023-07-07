@@ -99,4 +99,8 @@ class InstructionDecoder:
         self.mnemonics = mnemonics
 
     def get_instruction(self, number: int) -> str:
-        return self.mnemonics[number]
+        try:
+            inst = self.mnemonics[number]
+        except KeyError:
+            inst = "<invalid>"
+        return inst

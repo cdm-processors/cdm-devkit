@@ -242,6 +242,9 @@ def decode(image: bytearray) -> DecodedSection:
 
             (inst, inst_group) = decode_inst(word)
 
+            if inst.inst == "<invalid>":
+                inst: Instruction = Instruction("<invalid>", [])
+
             inst.addr = current_addr
             inst.inst_bytes = [lower_byte, higher_byte]
 
