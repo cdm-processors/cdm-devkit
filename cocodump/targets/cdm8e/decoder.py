@@ -57,7 +57,6 @@ def decode(image: bytearray) -> DecodedSection:
 
                 current_addr += 1
 
-                # TODO: Refactor
                 if inst_gr == InstructionGroup.BRANCHES:
                     inst: BranchInstruction
 

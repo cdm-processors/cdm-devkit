@@ -263,14 +263,12 @@ def decode(image: bytearray) -> DecodedSection:
 
                 word = (higher_byte << 8) | lower_byte
 
+                inst.args.append(hex(word))
+
                 if inst_group == InstructionGroup.BR_ABS or \
                         (inst_group == InstructionGroup.ZERO_OP and inst.inst == "jsr"):
                     inst: BranchInstruction
-                    inst.args.append(hex(word))
-                    inst.br_addr = int(inst.args[0], 16)
-
-                if inst_group == InstructionGroup.ONE_OP and inst.inst == "ldi":
-                    inst.args.append(hex(word))
+                    inst.br_addr = word
 
                 current_addr += 2
 

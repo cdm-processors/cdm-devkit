@@ -123,15 +123,12 @@ def decode(image: bytearray) -> DecodedSection:
 
                 current_addr += 1
 
-                # TODO: Refactor
+                inst.args.append(hex(byte))
+
                 if inst_gr == InstructionGroup.BRANCHES or \
                         inst.inst in ["jsr"]:
                     inst: BranchInstruction
-
                     inst.br_addr = byte
-                    inst.args.append(hex(byte))
-                else:
-                    inst.args.append(hex(byte))
 
             section.add_inst(inst)
 

@@ -28,3 +28,7 @@ def list_target_decoders() -> list[str]:
     available_targets = list(map(lambda x: str(x.name), targets_dir.iterdir()))
 
     return available_targets
+
+
+def normalize_target_name(name: str) -> str:
+    return name.replace('-', '').lower()
