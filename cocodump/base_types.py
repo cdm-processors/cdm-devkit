@@ -7,6 +7,7 @@ class Instruction:
     addr: int
     inst_bytes: bytearray
     labels: list[str]
+    comment: str | None
 
     def __init__(self, inst: str, args: list[str], addr: int = None, inst_bytes: bytearray = None) -> None:
         self.inst = inst
@@ -14,6 +15,7 @@ class Instruction:
         self.addr = addr
         self.inst_bytes = inst_bytes
         self.labels = []
+        self.comment = None
 
     def has_labels(self) -> bool:
         return len(self.labels) > 0
@@ -34,8 +36,14 @@ class Instruction:
             f"{' ' * (15 - len(self.inst_bytes) * 3)}"
 
     def emit(self) -> str:
-        return self.emit_base() + \
+        string = self.emit_base() + \
             f"{self.inst} {', '.join(self.args)}"
+
+        if self.comment is not None:
+            string += f"{' ' * (20 - len(self.inst + ', '.join(self.args)))}" \
+                f"# {self.comment}"
+
+        return string
 
 
 class BranchInstruction(Instruction):
@@ -54,11 +62,8 @@ class BranchInstruction(Instruction):
         else:
             return self.emit_base() + \
                 f"{self.inst} {self.br_label}" \
-                f"\t\t# {self.inst} {self.args[0]}"
-
-
-class LabeledInstruction:
-    ...
+                f"{' ' * (20 - len(self.inst + self.br_label))}" \
+                f"# {self.inst} {self.args[0]}"
 
 
 class DecodedSection:
