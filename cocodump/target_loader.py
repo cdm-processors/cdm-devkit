@@ -6,13 +6,13 @@ from cocodump.base_types import DecodedSection
 
 
 class TargetDecoder:
-    _decode_func: Callable[[bytearray], DecodedSection]
+    _decode_func: Callable[[bytearray, bool], DecodedSection]
 
-    def __init__(self, func: Callable[[bytearray], DecodedSection]) -> None:
+    def __init__(self, func: Callable[[bytearray, bool], DecodedSection]) -> None:
         self._decode_func = func
 
-    def decode(self, image: bytearray) -> DecodedSection:
-        return self._decode_func(image)
+    def decode(self, image: bytearray, has_ivt: bool = False) -> DecodedSection:
+        return self._decode_func(image, has_ivt)
 
 
 def import_target_decoder(target_name: str):

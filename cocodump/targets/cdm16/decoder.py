@@ -1,5 +1,6 @@
-from cocodump.base_types import BranchInstruction, DecodedSection, Instruction
+from cocodump.base_types import BranchInstruction, DecodedSection, Instruction, InterruptVectorInstruction
 from cocodump.targets.cdm16.asm import InstructionGroup, inst_decoders, registers
+from cocodump.targets.cdm16.ivt import ivt_descriptions
 
 
 def normalize_imm6(val: int):
@@ -225,13 +226,51 @@ def decode_inst(instruction: int) -> tuple[Instruction, InstructionGroup]:
     return decoded_instruction, decoded_inst_group
 
 
-def decode(image: bytearray) -> DecodedSection:
+def decode(image: bytearray, has_ivt: bool = False) -> DecodedSection:
     section = DecodedSection()
 
     image.append(0)
 
     section_iter = iter(image)
     current_addr = 0
+
+    started_ivt_decode = False
+
+    if has_ivt and len(image) >= 10:
+        started_ivt_decode = True
+
+        for vector in ivt_descriptions:
+            addr_lower_byte = next(section_iter)
+            addr_higher_byte = next(section_iter)
+
+            address = (addr_higher_byte << 8) | addr_lower_byte
+
+            ps_lower_byte = next(section_iter)
+            ps_higher_byte = next(section_iter)
+
+            initial_ps = (ps_higher_byte << 8) | ps_lower_byte
+
+            current_addr += 4
+
+            inst = InterruptVectorInstruction(
+                "dc",
+                [
+                    hex(address),
+                    hex(initial_ps)
+                ]
+            )
+
+            inst.addr = vector.addr
+            inst.inst_bytes = [
+                addr_lower_byte,
+                addr_higher_byte,
+                ps_lower_byte,
+                ps_higher_byte
+            ]
+
+            inst.comment = vector.desc
+
+            section.add_inst(inst)
 
     while True:
         try:
@@ -279,5 +318,19 @@ def decode(image: bytearray) -> DecodedSection:
 
         except StopIteration:
             break
+
+    if started_ivt_decode:
+        for vector in ivt_descriptions:
+            addr = int(
+                section.memory[vector.addr].args[0],
+                16
+            )
+
+            try:
+                section.memory[addr].add_label(vector.label)
+                section.memory[vector.addr].comment += f" ({hex(addr)})"
+                section.memory[vector.addr].args[0] = vector.label
+            except KeyError:
+                pass
 
     return section

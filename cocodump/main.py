@@ -29,7 +29,7 @@ def main():
 
     raw_bytes = read_img(Path(args.source))
 
-    decoded_bytes = decoder.decode(raw_bytes)
+    decoded_bytes = decoder.decode(raw_bytes, args.ivt)
 
     decoded_bytes.place_labels()
 

@@ -98,7 +98,7 @@ def decode_inst(instruction: int) -> tuple[Instruction, InstructionGroup | int]:
     return decoded_inst, high_nibble
 
 
-def decode(image: bytearray) -> DecodedSection:
+def decode(image: bytearray, has_ivt: bool = False) -> DecodedSection:
     section = DecodedSection()
 
     section_iter = iter(image)

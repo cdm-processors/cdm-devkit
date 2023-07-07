@@ -9,6 +9,8 @@ class Instruction:
     labels: list[str]
     comment: str | None
 
+    TEXT_ALIGN = 20
+
     def __init__(self, inst: str, args: list[str], addr: int = None, inst_bytes: bytearray = None) -> None:
         self.inst = inst
         self.args = args
@@ -37,11 +39,14 @@ class Instruction:
 
     def emit(self) -> str:
         string = self.emit_base() + \
-            f"{self.inst} {', '.join(self.args)}"
+                 f"{self.inst} {', '.join(self.args)}"
+
+        content_length = len(self.inst + ', '.join(self.args))
+        align_length = (content_length // self.TEXT_ALIGN + 1) * self.TEXT_ALIGN
 
         if self.comment is not None:
-            string += f"{' ' * (20 - len(self.inst + ', '.join(self.args)))}" \
-                f"# {self.comment}"
+            string += f"{' ' * (align_length - content_length)}" \
+                      f"# {self.comment}"
 
         return string
 
@@ -60,10 +65,17 @@ class BranchInstruction(Instruction):
             return self.emit_base() + \
                 f"{self.inst} {hex(self.br_addr)}"
         else:
+            content_length = len(self.inst + self.br_label)
+            align_length = (content_length // self.TEXT_ALIGN + 1) * self.TEXT_ALIGN
+
             return self.emit_base() + \
                 f"{self.inst} {self.br_label}" \
-                f"{' ' * (20 - len(self.inst + self.br_label))}" \
+                f"{' ' * (align_length - content_length)}" \
                 f"# {self.inst} {self.args[0]}"
+
+
+class InterruptVectorInstruction(Instruction):
+    TEXT_ALIGN = 40
 
 
 class DecodedSection:

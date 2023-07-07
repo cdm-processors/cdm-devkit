@@ -12,9 +12,8 @@ def parse_args():
     parser.add_argument("-t", "--target", type=str, default="cdm16",
                         help="target processor, CdM-16 is default")
 
-    # TODO: IVT Decoding
-    parser.add_argument("--no-ivt", dest="no_ivt", action="store_true",
-                        default=False, help=argparse.SUPPRESS)
+    parser.add_argument("--ivt", dest="ivt", action="store_true",
+                        default=False, help="try to decode IVT")
 
     return parser.parse_args()
 
