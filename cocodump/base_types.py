@@ -28,6 +28,9 @@ class Instruction:
     def add_label(self, label: str) -> None:
         self.labels.append(label)
 
+    def equals_bytes(self, other: "Instruction") -> bool:
+        return self.inst_bytes == other.inst_bytes
+
     def emit_base(self) -> str:
         label_str = "".join([f"{x}:\n" for x in self.labels])
 
@@ -76,6 +79,22 @@ class BranchInstruction(Instruction):
 
 class InterruptVectorInstruction(Instruction):
     TEXT_ALIGN = 40
+
+
+class FoldedInstruction(Instruction):
+    size: int
+
+    def __init__(self, inst: Instruction, size: int) -> None:
+        self.size = size
+        super().__init__(
+            inst.inst,
+            inst.args,
+            inst.addr,
+            inst.inst_bytes
+        )
+
+    def emit(self) -> str:
+        return (' ' * 12) + "..."
 
 
 class DecodedSection:

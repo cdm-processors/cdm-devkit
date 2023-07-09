@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from cocodump.args import args, parse_args
+from cocodump.asm_emitter import emit_asm
 from cocodump.reader import read_img
 from cocodump.target_loader import import_target_decoder, list_target_decoders, normalize_target_name
 
@@ -29,12 +30,11 @@ def main():
 
     raw_bytes = read_img(Path(args.source))
 
-    decoded_bytes = decoder.decode(raw_bytes, args.ivt)
+    decoded_section = decoder.decode(raw_bytes, args.ivt)
 
-    decoded_bytes.place_labels()
+    decoded_section.place_labels()
 
-    for inst in decoded_bytes.to_instructions():
-        print(inst.emit())
+    emit_asm(decoded_section, not args.no_fold, args.fold_threshold)
 
 
 if __name__ == "__main__":

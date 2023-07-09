@@ -15,6 +15,12 @@ def parse_args():
     parser.add_argument("--ivt", dest="ivt", action="store_true",
                         default=False, help="try to decode IVT")
 
+    parser.add_argument("--fold-threshold", dest="fold_threshold", type=int, action="store",
+                        default=15, help="minimal amount of repeating instructions to be folded")
+
+    parser.add_argument("--no-fold", dest="no_fold", action="store_true",
+                        default=False, help="don't fold repeating instructions")
+
     return parser.parse_args()
 
 
