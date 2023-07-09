@@ -162,7 +162,8 @@ class CodeSegments(CodeSegmentsInterface):
             if mnemonic not in target_instructions.TargetInstructions.simple_instructions['branch']:
                 _error(self, f'Invalid branch mnemonic: {mnemonic}')
             if self.is_expanded:
-                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][mnemonic]
+                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][
+                    f'bn{self.branch_mnemonic}']
                 jmp_opcode = target_instructions.TargetInstructions.simple_instructions['long']['jmp']
                 object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
                 CodeSegments.LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
