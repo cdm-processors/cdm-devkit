@@ -34,7 +34,7 @@ def main():
 
     decoded_section.place_labels()
 
-    emit_asm(decoded_section, not args.no_fold, args.fold_threshold)
+    emit_asm(decoded_section, not args.no_fold, args.fold_threshold, args.colored)
 
 
 if __name__ == "__main__":

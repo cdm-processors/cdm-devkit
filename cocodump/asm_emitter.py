@@ -49,11 +49,11 @@ def fold_instructions(instructions: list[Instruction], fold_threshold: int) -> l
     return folded_instructions
 
 
-def emit_asm(section: DecodedSection, fold: bool = True, fold_threshold: int = 15) -> None:
+def emit_asm(section: DecodedSection, fold: bool = True, fold_threshold: int = 15, colored: bool = False) -> None:
     instructions = section.to_instructions()
 
     if fold:
         instructions = fold_instructions(instructions, fold_threshold)
 
     for inst in instructions:
-        print(inst.emit())
+        print(inst.emit(colored))

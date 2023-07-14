@@ -21,6 +21,9 @@ def parse_args():
     parser.add_argument("--no-fold", dest="no_fold", action="store_true",
                         default=False, help="don't fold repeating instructions")
 
+    parser.add_argument("--colored", dest="colored", action="store_true",
+                        default=False, help="colorize output")
+
     return parser.parse_args()
 
 

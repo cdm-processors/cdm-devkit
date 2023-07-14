@@ -1,3 +1,6 @@
+from colorama import Fore, Style
+
+from cocodump.colorizer import colorize, colorize_argument
 from cocodump.label_generator import get_label
 
 
@@ -31,25 +34,42 @@ class Instruction:
     def equals_bytes(self, other: "Instruction") -> bool:
         return self.inst_bytes == other.inst_bytes
 
-    def emit_base(self) -> str:
+    def emit_base(self, colored: bool = False) -> str:
         label_str = "".join([f"{x}:\n" for x in self.labels])
 
-        return label_str + \
-            f"{' ' * 2}" \
-            f"{format(self.addr, '04x')}: " \
-            f"{' '.join([format(x, '02x') for x in self.inst_bytes])}" \
-            f"{' ' * (15 - len(self.inst_bytes) * 3)}"
+        address_str = f"{' ' * 2}{format(self.addr, '04x')}: "
 
-    def emit(self) -> str:
-        string = self.emit_base() + \
-                 f"{self.inst} {', '.join(self.args)}"
+        bytes_str = f"{' '.join([format(x, '02x') for x in self.inst_bytes])}" \
+                    f"{' ' * (15 - len(self.inst_bytes) * 3)}"
+
+        if colored:
+            label_str = colorize(label_str, Fore.LIGHTYELLOW_EX)
+            address_str = colorize(address_str, Style.NORMAL)
+            bytes_str = colorize(bytes_str, Style.DIM)
+
+        return label_str + address_str + bytes_str
+
+    def emit(self, colored: bool = False) -> str:
+        inst_str = self.inst
+        arg_str = ', '.join(self.args)
+
+        if colored:
+            inst_str = colorize(inst_str, Fore.LIGHTBLUE_EX)
+            colored_args = [colorize_argument(arg) for arg in self.args]
+            arg_str = ', '.join(colored_args)
+
+        string = self.emit_base(colored) + f"{inst_str} {arg_str}"
 
         content_length = len(self.inst + ', '.join(self.args))
         align_length = (content_length // self.TEXT_ALIGN + 1) * self.TEXT_ALIGN
 
         if self.comment is not None:
-            string += f"{' ' * (align_length - content_length)}" \
-                      f"# {self.comment}"
+            comment_str = f"{' ' * (align_length - content_length)}" \
+                          f"# {self.comment}"
+            if colored:
+                comment_str = colorize(comment_str, Fore.GREEN)
+
+            string += comment_str
 
         return string
 
@@ -63,18 +83,28 @@ class BranchInstruction(Instruction):
         self.br_addr = br_addr
         self.br_label = None
 
-    def emit(self) -> str:
+    def emit(self, colored: bool = False) -> str:
+        inst_str = self.inst
+
+        if colored:
+            inst_str = colorize(inst_str, Fore.LIGHTBLUE_EX)
+
         if self.br_label is None:
-            return self.emit_base() + \
-                f"{self.inst} {hex(self.br_addr)}"
+            return self.emit_base(colored) + \
+                f"{inst_str} {hex(self.br_addr)}"
         else:
             content_length = len(self.inst + self.br_label)
             align_length = (content_length // self.TEXT_ALIGN + 1) * self.TEXT_ALIGN
 
-            return self.emit_base() + \
-                f"{self.inst} {self.br_label}" \
-                f"{' ' * (align_length - content_length)}" \
-                f"# {self.inst} {self.args[0]}"
+            label_str = self.br_label
+            comment_str = f"{' ' * (align_length - content_length)}" \
+                          f"# {self.inst} {self.args[0]}"
+
+            if colored:
+                label_str = colorize(label_str, Fore.LIGHTYELLOW_EX)
+                comment_str = colorize(comment_str, Fore.GREEN)
+
+            return self.emit_base(colored) + f"{inst_str} {label_str}" + comment_str
 
 
 class InterruptVectorInstruction(Instruction):
@@ -93,7 +123,7 @@ class FoldedInstruction(Instruction):
             inst.inst_bytes
         )
 
-    def emit(self) -> str:
+    def emit(self, colored: bool = False) -> str:
         return (' ' * 12) + "..."
 
 
