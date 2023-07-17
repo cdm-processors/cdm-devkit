@@ -3,34 +3,40 @@ package org.cdm.logisim.emulator.cdm16;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.InstanceState;
-import org.cdm.logisim.emulator.ExceptionHandler;
-import org.cdm.logisim.emulator.InterruptHandler;
-import org.cdm.logisim.emulator.GenericProcessor;
+import org.cdm.logisim.emulator.cdm16.units.FetchUnit;
+import org.cdm.logisim.emulator.cdm16.units.ImmComputationUnit;
+import org.cdm.logisim.emulator.cdm16.units.alu.Alu;
+import org.cdm.logisim.emulator.cdm16.units.alu.AluInputParameters;
+import org.cdm.logisim.emulator.cdm16.units.alu.AluOutputParameters;
+import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoder;
+import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderInputParameters;
+import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderOutputParameters;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.cdm.logisim.emulator.cdm16.Arithmetic.toBoolean;
 
-public class Processor implements GenericProcessor, ExceptionHandler, InterruptHandler {
+import java.util.ArrayList;
+import java.util.List;
 
-    public static int MAX_INT = 0xFFFF;
+public class Processor {
+
+    public static int MAX_PHASE = 7;
     public static int DELAY = 1;
 
-    private int[] mainMicrocode;
-    private int[] exceptionMicrocode;
+    private final int[] mainMicrocode;
+    private final int[] exceptionMicrocode;
 
     private int microcommand;
+    private int microcommandAddress;
 
-    private Map<String, Integer> signals = new HashMap<>();
+    private final RegisterFile registerFile = new RegisterFile();
 
-    private ProcessorState state = new ProcessorState();
+    private final Register fp = registerFile.getFramePointer();
+    private final RegisterCounter pc = new RegisterCounter("pc");
+    private final RegisterCounter sp = new RegisterCounter("sp");
+    private final StatusRegister ps = new StatusRegister("ps");
 
-    private Register[] gpRegisters = state.registers;
-    private Register fp = state.fp;
-    private RegisterCounter pc = state.pc;
-    private RegisterCounter sp = state.sp;
-    private StatusRegister ps = state.ps;
-
-    private Register ir = new Register("ir");
+    private final Register ir = new Register("ir");
 
     private boolean fetch = true;
 
@@ -38,116 +44,123 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
 
     private int phase = 0;
 
-    private Bus bus0 = new Bus("bus0");
-    private Bus bus1 = new Bus("bus1");
-    private Bus busA = new Bus("busA");
-    private Bus busD = new Bus("busD", false);
+    private final Bus bus0 = new Bus("bus0");
+    private final Bus bus1 = new Bus("bus1");
+    private final Bus busA = new Bus("busA");
+    private final Bus busD = new Bus("busD");
 
-    private Bus[] buses = new Bus[] {
+    private final Bus[] buses = new Bus[] {
             bus0,
             bus1,
             busD,
             busA
     };
 
-    private Latch holdLatch = new Latch();
-    private Latch waitLatch = new Latch();
-    private Latch haltLatch = new Latch();
-    private Latch faultLatch = new Latch();
+    private final Latch holdLatch = new Latch();
+    private final Latch waitLatch = new Latch();
+    private final Latch haltLatch = new Latch();
+    private final Latch faultLatch = new Latch();
 
-    //private boolean br_rel_nop;
+    private final Register externalExceptionVectorRegister = new Register("exc_vec_reg");
 
-    //private int alu_func;
-    //private int shift_count_d;
-    //private int alu_op_type;
+    private final Register internalExceptionVectorRegister = new Register("exc_internal_vec_reg");
+    private final Latch exceptionLatch = new Latch();
+    private final Latch startupLatch = new Latch();
 
-    //private boolean arith_carry;
-
-    //private int imm;
-    //private int imm_type;
-
-    //private int rd;
-    //private int rs0;
-    //private int rs1;
-
-    //private int alu_flags;
+    private InstructionDecoderOutputParameters decoderSignals;
+    private AluOutputParameters aluSignals;
+    private ExceptionControlUnitOutputParameters ecuSignals;
 
     public Processor() {
         // Insert path to microcode
         mainMicrocode = MicrocodeLoader.loadFromFile("C:\\Users\\comp_i5\\Desktop\\cdm16\\cdm16_decoder.img");
+        exceptionMicrocode = MicrocodeLoader.loadFromFile("C:\\Users\\comp_i5\\Desktop\\cdm16\\cdm16_decoder_exc.img");
 
         initialize();
     }
 
-    public void externalInterrupt(InstanceState state, int interruptNumber) {
-        //System.out.println("externalInterrupt" + interruptNumber);
-    }
+    public void externalInterrupt(InstanceState state, int interruptNumber) {}
 
-    public void externalException(InstanceState state, int exceptionNumber) {
-        //System.out.println("externalException " + exceptionNumber);
-    }
+    public void externalException(InstanceState state, int exceptionNumber) {}
 
-    public void clockRising(InstanceState state) {
-        //System.out.println("clockRising");
-
-        if (clockSuspended()) {
-            return;
-        }
-
-        if (signals.get("halt") != null && signals.get("halt") == 1) {
-            haltLatch.set();
-            status = Status.HALTED;
-        }
-
-        if (signals.get("wait") != null && signals.get("wait") == 1) {
-            waitLatch.set();
-            status = Status.WAITING;
-        }
-    }
+    public void clockRising(InstanceState state) {}
 
     public void clockFalling(InstanceState state) {
-        //System.out.println("clockFalling");
-
         if (clockSuspended()) {
+            updateWaitLatch(toBoolean(state.getPort(Ports.IRQ)));
+            updateStatus();
+
             return;
         }
 
+        // Pre-latch
+        updateProcessorState(state);
+
+        // Latch
         updateRegisters();
 
-        for (Bus bus : buses) {
-            bus.clear();
+        updateExceptionLatches(state);
+
+        updateClockControlLatches(
+                decoderSignals.haltInstruction() && !ecuSignals.exc_triggered(),
+                decoderSignals.waitInstruction() && !ecuSignals.exc_triggered(),
+                toBoolean(state.getPort(Ports.IRQ)),
+                ecuSignals.critical_fault()
+        );
+        updateStatus();
+
+        if (fetch) {
+            int instruction = FetchUnit.fetchInstruction(
+                    busD.getValue(),
+                    state.getPort(Ports.INT_NUMBER).toIntValue(),
+                    internalExceptionVectorRegister.getValue(),
+                    externalExceptionVectorRegister.getValue(),
+                    state.getPort(Ports.EXC_NUMBER).toIntValue(),
+                    fetch,
+                    toBoolean(state.getPort(Ports.EXC)),
+                    ecuSignals.exc_triggered(),
+                    ecuSignals.latch_int(),
+                    startupLatch.getValue()
+            );
+
+            ir.setValue(instruction);
         }
 
-        signals.clear();
+        if (startupLatch.getValue()) {
+            startupLatch.reset();
+        }
 
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.CUT)) {
             phase = 0;
             fetch = !fetch;
         } else {
             phase++;
+
+            if (phase > MAX_PHASE) {
+                phase = 0;
+                status = Status.FAULT;
+            }
         }
 
-        int microcommandAddress = phase << 7;
+        // Post-latch
+        for (Bus bus : buses) {
+            bus.clear();
+        }
 
         if (fetch) {
-            microcommandAddress += Instructions.FETCH;
-            signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
-            signals.put("alu_func", ALU_3op.ADC);
+            decoderSignals = InstructionDecoder.getFetchSignals();
         } else {
-            microcommandAddress += decodeInstruction(ir.getValue());
+            decoderSignals = InstructionDecoder.compute(new InstructionDecoderInputParameters(
+                    ir.getValue(),
+                    ps.getFlags()
+            ));
         }
 
-        microcommand = mainMicrocode[microcommandAddress];
-
-        updateDatapath();
+        microcommandAddress = decoderSignals.microcodeAddress() + (phase << 7);
     }
 
     public void update(InstanceState state) {
-        //System.out.println("update");
-
-        if (state.getPort(Ports.CLK).toIntValue() == 0) {
-            holdLatch.setValue(state.getPort(Ports.HOLD).toIntValue() > 0);
-        }
+        updateProcessorState(state);
 
         updateExternal(state);
     }
@@ -155,16 +168,216 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
     private void initialize() {
         fetch = true;
 
-        microcommand = mainMicrocode[Instructions.FETCH];
-        signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
-        signals.put("alu_func", ALU_3op.ADC);
+        decoderSignals = InstructionDecoder.getFetchSignals();
+        microcommandAddress = decoderSignals.microcodeAddress();
+
+        startupLatch.set();
+    }
+
+    private void updateProcessorState(InstanceState state) {
+        if (!toBoolean(state.getPort(Ports.CLK))) {
+            holdLatch.setValue(toBoolean(state.getPort(Ports.HOLD)));
+        }
+
+        microcommand = mainMicrocode[microcommandAddress];
+
+        updateDatapath();
+        readDataBus(state);
+
+        var excInfo = ExceptionChecker.compute(new ExceptionCheckerInputParameters(
+                microcommand,
+                busD.getValue(),
+                ir.getValue(),
+                exceptionLatch.getValue()
+        ));
+
+        boolean exc_trig_ext = toBoolean(state.getPort(Ports.EXC));
+        boolean irq = toBoolean(state.getPort(Ports.IRQ));
+
+        ecuSignals = ExceptionControlUnit.compute(new ExceptionControlUnitInputParameters(
+                excInfo.exc_trig_sp(),
+                excInfo.exc_trig_pc(),
+                excInfo.exc_trig_invalid_inst(),
+                exc_trig_ext,
+                excInfo.double_fault(),
+                exceptionLatch.getValue(),
+                decoderSignals.intInstruction(),
+                decoderSignals.rtiInstruction(),
+                irq,
+                ps.getInterruptStatus(),
+                fetch
+        ));
+
+        if (ecuSignals.exc_triggered()) {
+            microcommand = exceptionMicrocode[microcommandAddress];
+        }
+
+        boolean suspendMicrocode = (status == Status.HALTED) || (status == Status.FAULT) ||
+                startupLatch.getValue() || (fetch && ecuSignals.latch_int());
+
+        if (suspendMicrocode) {
+            microcommand = 0x8000000;
+        }
 
         updateDatapath();
     }
 
+    private void updateRegisters() {
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_LATCH)) {
+            pc.setValue(busD.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_LATCH)) {
+            sp.setValue(busD.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_FLAGS)) {
+            ps.setFlags(aluSignals.flags());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_WORD)) {
+            ps.setValue(busD.getValue());
+        }
+        if (decoderSignals.eiInstruction() && !ecuSignals.exc_triggered()) {
+            ps.setInterrupt();
+        }
+        if (decoderSignals.diInstruction() && !ecuSignals.exc_triggered()) {
+            ps.clearInterrupt();
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_LATCH)) {
+            registerFile.setRegisterValue(decoderSignals.rd(), busD.getValue());
+        }
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_INC)) {
+            if (!decoderSignals.br_rel_nop()) {
+                if (ecuSignals.exc_triggered()) {
+                    pc.dec(2);
+                } else {
+                    pc.inc(2);
+                }
+            }
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_INC)) {
+            sp.inc(2);
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
+            sp.dec(2);
+        }
+    }
+
+    private void updateDatapath() {
+        int imm = ImmComputationUnit.computeImmediate(
+                decoderSignals.imm_d(),
+                microcommand,
+                decoderSignals.imm_type(),
+                decoderSignals.intInstruction(),
+                phase
+        );
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT0)) {
+            bus0.setValue(registerFile.getRegisterValue(decoderSignals.rs0()));
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT1)) {
+            bus1.setValue(registerFile.getRegisterValue(decoderSignals.rs1()));
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRTD)) {
+            busD.setValue(registerFile.getRegisterValue(decoderSignals.rd()));
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.FP_ASRT0)) {
+            bus0.setValue(fp.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRT1)) {
+            bus1.setValue(imm);
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRTD)) {
+            busD.setValue(imm);
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRT0)) {
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
+                RegisterCounter spClone = sp.clone();
+                spClone.dec(2);
+                bus0.setValue(spClone.getValue());
+            } else {
+                bus0.setValue(sp.getValue());
+            }
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRTD)) {
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
+                RegisterCounter spClone = sp.clone();
+                spClone.dec(2);
+                busD.setValue(spClone.getValue());
+            } else {
+                busD.setValue(sp.getValue());
+            }
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRT0)) {
+            bus0.setValue(pc.getValue());
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRTD)) {
+            if (decoderSignals.jsrInstruction()
+                    && MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRTD)) {
+                RegisterCounter pcClone = pc.clone();
+                pcClone.inc(2);
+                busD.setValue(pcClone.getValue());
+            } else {
+                busD.setValue(pc.getValue());
+            }
+        }
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_ASRTD)) {
+            busD.setValue(ps.getValue());
+        }
+
+        boolean cIn;
+
+        if (decoderSignals.arith_carry()) {
+            cIn = ps.getCarry();
+        } else {
+            //cIn = inc_address && MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM);
+            cIn = false;
+        }
+
+        aluSignals = Alu.compute(new AluInputParameters(
+                bus0.getValue(),
+                bus1.getValue(),
+                cIn,
+                decoderSignals.alu_func(),
+                decoderSignals.alu_op_type(),
+                decoderSignals.shift_count_d()
+        ));
+
+        busA.setValue(aluSignals.S());
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.ALU_ASRTD)) {
+            busD.setValue(busA.getValue());
+        }
+    }
+
+    private void readDataBus(InstanceState state) {
+        if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM)) {
+            return;
+        }
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
+            int externalBusD;
+
+            if (state.getPort(Ports.DATA_IN).isFullyDefined()) {
+                externalBusD = state.getPort(Ports.DATA_IN).toIntValue();
+            } else {
+                externalBusD = 0;
+            }
+
+            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SIGN_EXTEND)) {
+                externalBusD = Arithmetic.signExtend(externalBusD);
+            }
+
+            busD.setValue(externalBusD);
+        }
+    }
+
     private void updateExternal(InstanceState state) {
-        for (int i = 0; i < gpRegisters.length; ++i) {
-            state.setPort(Ports.R0 + i, Value.createKnown(BitWidth.create(16), gpRegisters[i].getValue()), DELAY);
+        for (int i = 0; i < registerFile.getRegisterCount(); ++i) {
+            state.setPort(
+                    Ports.R0 + i,
+                    Value.createKnown(BitWidth.create(16), registerFile.getRegisterValue(i)),
+                    DELAY
+            );
         }
 
         state.setPort(Ports.PC, Value.createKnown(BitWidth.create(16), pc.getValue()), DELAY);
@@ -203,555 +416,89 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             state.setPort(Ports.MEM, Value.FALSE, DELAY);
         }
 
+        if (ecuSignals.int_ack()) {
+            state.setPort(Ports.IAck, Value.TRUE, DELAY);
+        } else {
+            state.setPort(Ports.IAck, Value.FALSE, DELAY);
+        }
+
         state.setPort(Ports.ADDRESS, Value.createKnown(BitWidth.create(16), busA.getValue()), DELAY);
 
         if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM)) {
             return;
         }
 
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
-            int externalBusD = state.getPort(Ports.DATA_IN).toIntValue();
-
-            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SIGN_EXTEND)) {
-                externalBusD = signExtend(externalBusD);
-            }
-
-            busD.setValue(externalBusD);
-        } else {
+        if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
             state.setPort(Ports.DATA_OUT, Value.createKnown(BitWidth.create(16), busD.getValue()), DELAY);
         }
     }
 
-    private void updateRegisters() {
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_LATCH)) {
-            pc.setValue(busD.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_LATCH)) {
-            sp.setValue(busD.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_FLAGS)) {
-            ps.setFlags(signals.get("alu_flags"));
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_LATCH_WORD)) {
-            ps.setWord(busD.getValue());
-        }
-        if (signals.get("ei") != null && signals.get("ei") == 1) {
-            ps.setInterrupt();
-        }
-        if (signals.get("di") != null && signals.get("di") == 1) {
-            ps.clearInterrupt();
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_LATCH)) {
-            gpRegisters[signals.get("rd")].setValue(busD.getValue());
+    private void updateExceptionLatches(InstanceState state) {
+        if (toBoolean(state.getPort(Ports.EXC))) {
+            externalExceptionVectorRegister.setValue(state.getPort(Ports.EXC_NUMBER).toIntValue());
         }
 
-        if (fetch) {
-            ir.setValue(busD.getValue());
+        if (ecuSignals.exc_internal_vec_reg_en()) {
+            internalExceptionVectorRegister.setValue(ecuSignals.exc_internal_vec_reg_output());
         }
 
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_INC)) {
-            Integer br_rel_nop = signals.get("br_rel_nop");
-            if (br_rel_nop == null || br_rel_nop == 0) {
-                pc.inc(2);
-            }
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_INC)) {
-            sp.inc(2);
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
-            sp.dec(2);
+        boolean set = ecuSignals.exc_latch_output();
+        boolean reset = ecuSignals.reset_exc();
+
+        if (set && !reset) {
+            exceptionLatch.set();
+        } else if (!set && reset) {
+            exceptionLatch.reset();
         }
     }
 
-    private void updateDatapath() {
-        computeImmediate();
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT0)) {
-            bus0.setValue(gpRegisters[signals.get("rs0")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRT1)) {
-            bus1.setValue(gpRegisters[signals.get("rs1")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.R_ASRTD)) {
-            busD.setValue(gpRegisters[signals.get("rd")].getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.FP_ASRT0)) {
-            bus0.setValue(fp.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRT1)) {
-            bus1.setValue(signals.get("imm"));
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_ASRTD)) {
-            busD.setValue(signals.get("imm"));
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRT0)) {
-            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
-                RegisterCounter spClone = sp.clone();
-                spClone.dec(2);
-                bus0.setValue(spClone.getValue());
-            } else {
-                bus0.setValue(sp.getValue());
-            }
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_ASRTD)) {
-            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SP_DEC)) {
-                RegisterCounter spClone = sp.clone();
-                spClone.dec(2);
-                busD.setValue(spClone.getValue());
-            } else {
-                busD.setValue(sp.getValue());
-            }
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRT0)) {
-            bus0.setValue(pc.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_ASRTD)) {
-            busD.setValue(pc.getValue());
-        }
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PS_ASRTD)) {
-            busD.setValue(ps.getValue());
+    private void updateClockControlLatches(
+            boolean halt,
+            boolean wait,
+            boolean irq,
+            boolean critical_fault
+    ) {
+        if (wait && !irq) {
+            waitLatch.set();
         }
 
-        alu();
+        if (halt) {
+            haltLatch.set();
+        }
 
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.ALU_ASRTD)) {
-            busD.setValue(busA.getValue());
+        if (critical_fault) {
+            faultLatch.set();
         }
     }
 
-    private int decodeInstruction(int instruction) {
-        int inst_group = (instruction >> 13) & 0b111; // higher 3 bits
-
-        boolean X =  ((instruction >> 12) & 1) > 0; // 12th bit
-        boolean Y = ((instruction >> 11) & 1) > 0; // 11th bit
-
-        int op_type_d0 = instruction & 0b1111;
-        int op_type_d1 = (instruction >> 3) & 0b1111;
-        int op_type_d2 = (instruction >> 6) & 0b1111;
-        int op_type_d3 = (instruction >> 9) & 0b1111;
-
-        int br_abs_flags_d = op_type_d0;
-        int br_rel_flags_d = op_type_d3;
-
-        int rd_d = instruction & 0b111;
-        int rs0_d = (instruction >> 3) & 0b111;
-        int rs1_d = (instruction >> 6) & 0b111;
-
-        int alu_op_d0 = rs1_d;
-        int alu_op_d1 = (instruction >> 9) & 0b111;
-
-        int microcode_address = 0;
-
-        int switch_alu_func0 = 0;
-        int switch_alu_func1 = 0;
-
-        int imm6_d = (instruction >> 3) & 0b111111;
-        int imm9_d = instruction & 0b111111111;
-
-        signals.put("shift_count_d", rs1_d);
-
-        switch (inst_group) {
-            case 0b000:
-                if (X) {
-                    microcode_address = Instructions.SHIFTS;
-                    signals.put("alu_op_type", ALU_InstructionGroups.SHIFTS);
-                    switch_alu_func0 = 1;
-                } else {
-                    if (Y) {
-                        if (checkFlags(br_abs_flags_d)) {
-                            microcode_address = Instructions.BR_ABS;
-                        } else {
-                            microcode_address = Instructions.BR_ABS_NOP;
-                        }
-                    } else {
-                        microcode_address = InstructionGroups.ZERO_OP + op_type_d0;
-                    }
-                }
-                break;
-
-            case 0b001:
-                microcode_address = InstructionGroups.ONE_OP + op_type_d1;
-
-            case 0b010:
-                if (X) {
-                    if (Y) {
-                        microcode_address = Instructions.ALU_2;
-                        signals.put("alu_op_type", ALU_InstructionGroups.ALU_2);
-                        switch_alu_func1 = 1;
-                    } else {
-                        microcode_address = InstructionGroups.MEM_2 + op_type_d2;
-                    }
-                } else {
-                    if (Y) {
-                        microcode_address = Instructions.ALU_3_IND;
-                        signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
-                        signals.put("rs1", rd_d);
-                        switch_alu_func1 = 1;
-                    } else {
-                        microcode_address = InstructionGroups.TWO_OP + op_type_d2;
-                    }
-                }
-                break;
-
-            case 0b011:
-                microcode_address = InstructionGroups.IMM_6 + op_type_d3;
-                signals.put("rs0", rd_d);
-                signals.put("imm_type", IMM_Type.IMM_6);
-                break;
-
-            case 0b100:
-                microcode_address = InstructionGroups.IMM_9 + op_type_d3;
-                break;
-
-            case 0b101:
-                if (X) {
-                    microcode_address = Instructions.ALU_3;
-                    signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
-                    switch_alu_func0 = 1;
-                } else {
-                    microcode_address = InstructionGroups.MEM_3 + op_type_d3;
-                }
-                break;
-
-            case 0b110:
-                if (checkFlags(br_rel_flags_d)) {
-                    microcode_address = Instructions.BR_REL_N;
-                } else {
-                    microcode_address = Instructions.BR_REL_NOP;
-                    signals.put("br_rel_nop", 1);
-                }
-                break;
-
-            case 0b111:
-                if (checkFlags(br_rel_flags_d)) {
-                    microcode_address = Instructions.BR_REL_P;
-                } else {
-                    microcode_address = Instructions.BR_REL_NOP;
-                    signals.put("br_rel_nop", 1);
-                }
-                break;
-        }
-
-        if (signals.get("alu_op_type") == null) {
-            signals.put("alu_op_type", ALU_InstructionGroups.ALU_3);
-        }
-
-        signals.put("rd", rd_d);
-
-        if (signals.get("rs1") == null) {
-            signals.put("rs1", rs1_d);
-        }
-
-        if (signals.get("rs0") == null) {
-            signals.put("rs0", rs0_d);
-        }
-
-        signals.put("arith_carry", switch_alu_func0);
-
-        if ((switch_alu_func0 > 0) || (switch_alu_func1 > 0)) {
-            if ((switch_alu_func1 > 0)) {
-                signals.put("alu_func", alu_op_d0);
-            } else {
-                signals.put("alu_func", alu_op_d1);
-            }
-        } else {
-            if ((microcode_address & 0b1110000) == InstructionGroups.IMM_6 || op_type_d3 >= 0b1110) {
-                signals.put("alu_func", ALU_3op.SUB);
-            } else {
-                signals.put("alu_func", ALU_3op.ADC);
-            }
-        }
-
-        if (signals.get("imm_type") == null) {
-            signals.put("imm_type", IMM_Type.IMM_9);
-        }
-
-        if (signals.get("imm_type") ==  IMM_Type.IMM_6) {
-            signals.put("imm_d", imm6_d);
-        } else if (signals.get("imm_type") ==  IMM_Type.IMM_9) {
-            signals.put("imm_d", imm9_d);
-        }
-
-        if (microcode_address == InstructionGroups.IMM_9) {
-            signals.put("int", 1);
-        }
-
-        if (microcode_address == 0b1000) {
-            signals.put("jsr", 1);
-        }
-
-        switch (microcode_address) {
-            case 0x4:
-                signals.put("halt", 1);
-                break;
-            case 0x5:
-                signals.put("wait", 1);
-                break;
-            case 0x6:
-                signals.put("ei", 1);
-                break;
-            case 0x7:
-                signals.put("di", 1);
-                break;
-        }
-
-        return microcode_address;
-    }
-
-    private boolean checkFlags(int flags) {
-        int cccc = flags & 0x000F;
-        int reverse = cccc & 1;
-        int ccc = cccc >> 1;
-
-        int psFlags = ps.getFlags();
-
-        int C = (psFlags >> 3) & 1;
-        int V = (psFlags >> 2) & 1;
-        int Z = (psFlags >> 1) & 1;
-        int N = (psFlags >> 0) & 1;
-
-        int dcsn = 0;
-
-        switch (ccc) {
-            case 0:
-                dcsn = Z;
-                break;
-            case 1:
-                dcsn = C;
-                break;
-            case 2:
-                dcsn = N;
-                break;
-            case 3:
-                dcsn = V;
-                break;
-            case 4:
-                dcsn = C & (~Z) & 1;
-                break;
-            case 5:
-                dcsn = ~(N ^ V) & 1;
-                break;
-            case 6:
-                dcsn = (~Z) & ~(N ^ V) & 1;
-                break;
-            case 7:
-                dcsn = 1;
-                break;
-        }
-
-        dcsn = reverse ^ dcsn;
-
-        return dcsn != 0;
-    }
-
-    private void computeImmediate() {
-        int imm = signals.get("imm_d");
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
-            if (signals.get("imm_type") == IMM_Type.IMM_6) {
-                imm |= 0b1111111111000000;
-            } else {
-                imm |= 0b1111111000000000;
-            }
-        }
-
-        if (signals.get("int") != null && signals.get("int") == 1) {
-            imm <<= 2;
-
-            if (phase % 2 == 1) {
-                imm |= 2;
-            }
-        } else {
-            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.IMM_SHIFT)) {
-                imm <<= 1;
-            }
-        }
-
-        signals.put("imm", imm);
-    }
-
-    private int signExtend(int value) {
-        if ((value & 0xFF) >= 0x80) {
-            return value | 0xFF00;
-        } else {
-            return value & 0xFF;
+    private void updateWaitLatch(boolean irq) {
+        if (waitLatch.getValue() && irq) {
+            waitLatch.reset();
         }
     }
 
-    private void alu() {
-        if (!bus0.isSet()) {
-            bus0.setValue(0);
+    private void updateStatus() {
+        List<Integer> enabledLatches = new ArrayList<>();
+        enabledLatches.add(Status.RUNNING);
+
+        if (waitLatch.getValue()) {
+            enabledLatches.add(Status.WAITING);
         }
 
-        if (!bus1.isSet()) {
-            bus1.setValue(0);
+        if (haltLatch.getValue()) {
+            enabledLatches.add(Status.HALTED);
         }
 
-        Integer op_type = signals.get("alu_op_type");
-        Integer func = signals.get("alu_func");
-
-        if (op_type == null || func == null) {
-            System.err.println("ALU signals are not calculated yet!");
-            busA.setValue(0);
-            return;
+        if (faultLatch.getValue()) {
+            enabledLatches.add(Status.FAULT);
         }
 
-        Integer rs0 = bus0.getValue();
-        Integer rs1 = bus1.getValue();
-
-        Integer rd = 0;
-
-        Integer arith_carry = signals.get("arith_carry");
-        Integer cIn = 0;
-        Integer cOut = 0;
-        Integer vOut = 0;
-
-        Integer ZN = 0;
-
-        if (arith_carry != null && arith_carry > 0) {
-            cIn = (ps.getFlags() >> 3) & 1;
-        }
-
-        switch (op_type) {
-            case ALU_InstructionGroups.ALU_3:
-                switch (func) {
-                    case ALU_3op.AND:
-                        rd = rs0 & rs1;
-                        break;
-                    case ALU_3op.OR:
-                        rd = rs0 | rs1;
-                        break;
-                    case ALU_3op.XOR:
-                        rd = rs0 ^ rs1;
-                        break;
-                    case ALU_3op.BIC:
-                        rd = rs0 & (~rs1);
-                        break;
-                    case ALU_3op.ADD:
-                        rd = rs0 + rs1;
-                        cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
-                        break;
-                    case ALU_3op.ADC:
-                        rd = rs0 + rs1 + cIn;
-                        cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
-                        break;
-                    case ALU_3op.SUB:
-                        rd = rs0 + (~rs1) + 1;
-                        cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
-                        break;
-                    case ALU_3op.SBC:
-                        rd = rs0 + (~rs1) + cIn;
-                        cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
-                        break;
-                }
-                break;
-            case ALU_InstructionGroups.ALU_2:
-                switch (func) {
-                    case ALU_2op.NEG:
-                        rd = -rs0;
-                        break;
-                    case ALU_2op.NOT:
-                        rd = ~rs0;
-                        break;
-                    case ALU_2op.SXT:
-                        rd = signExtend(rs0);
-                        break;
-                    case ALU_2op.SCL:
-                        rd = rs0 & 0x00FF;
-                        break;
-                }
-                break;
-            case ALU_InstructionGroups.SHIFTS:
-                Integer shiftCount = signals.get("shift_count_d");
-
-                if (shiftCount != null) {
-                    shiftCount++;
-                } else {
-                    System.err.println("shift_count_d is not calculated");
-                    return;
-                }
-
-                switch (func) {
-                    case ALU_Shifts.SHL:
-                        rd = rs0 << shiftCount;
-                        cOut = rs0 & (1 << (16 - shiftCount));
-                        break;
-                    case ALU_Shifts.SHR:
-                        rd = rs0 >>> shiftCount;
-                        cOut = rs0 & (1 << (shiftCount - 1));
-                        break;
-                    case ALU_Shifts.SHRA:
-                        rd = rs0 >> shiftCount;
-                        cOut = rs0 & (1 << (shiftCount - 1));
-                        break;
-                    case ALU_Shifts.ROL:
-                        rd = (rs0 << shiftCount) | (rs0 >> (16 - shiftCount));
-                        cOut = rs0 & (1 << (16 - shiftCount));
-                        break;
-                    case ALU_Shifts.ROR:
-                        rd = (rs0 >> shiftCount) | (rs0 << (16 - shiftCount));
-                        cOut = rs0 & (1 << (shiftCount - 1));
-                        break;
-                    case ALU_Shifts.RCL:
-                        rd = (rs0 << shiftCount) | (cIn << shiftCount - 1) | (rs0 >> (16 - shiftCount + 1));
-                        cOut = rs0 & (1 << (16 - shiftCount));
-                        break;
-                    case ALU_Shifts.RCR:
-                        rd = (rs0 >> shiftCount) | (cIn << (16 - shiftCount)) | (rs0 << (16 - shiftCount + 1));
-                        cOut = rs0 & (1 << (shiftCount - 1));
-                        break;
-                }
-                break;
-        }
-
-        ZN = checkZN(rd);
-        signals.put("alu_flags", encodeFlags(cOut, vOut, ZN));
-        busA.setValue(rd);
+        status = enabledLatches
+                .stream()
+                .max(Integer::compareTo)
+                .get();
     }
 
-    private int encodeFlags(int C, int V, int Z, int N) {
-
-        C &= 1;
-        V &= 1;
-        Z &= 1;
-        N &= 1;
-
-        return (C << 3) | (V << 2) | (Z << 1) | N;
-    }
-
-    private int encodeFlags(int C, int V, int ZN) {
-
-        C &= 1;
-        V &= 1;
-        ZN &= 0b11;
-
-        return  (C << 3) | (V << 2) | ZN;
-    }
-
-    private int checkZ(int value) {
-        return value == 0 ? 1 : 0;
-    }
-
-    private int checkN(int value) {
-        return value > (MAX_INT >> 1) ? 1 : 0;
-    }
-
-    private int checkC(int value) {
-        return (value & (MAX_INT + 1)) > 0 ? 1 : 0;
-    }
-
-    private int checkV(int rd, int rs0, int rs1) {
-        return ((rd > (MAX_INT >> 1)) && (rs0 <= (MAX_INT >> 1)) && (rs1 <= (MAX_INT >> 1))) ||
-                ((rd <= (MAX_INT >> 1)) && (rs0 > (MAX_INT >> 1)) && (rs1 > (MAX_INT >> 1))) ? 1 : 0;
-    }
-
-    private int checkZN(int value) {
-        return (checkZ(value) << 1) | checkN(value);
-    }
 
     private boolean clockSuspended() {
         return haltLatch.getValue() ||
@@ -800,6 +547,13 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         public static final int IMM_9 = 1;
     }
 
+    public static class ExceptionNumbers {
+        public static final int UNALIGNED_SP = 1;
+        public static final int UNALIGNED_PC = 2;
+        public static final int INVALID_INST = 3;
+        public static final int DOUBLE_FAULT = 4;
+        public static final int EXTERNAL_EXC = 7;
+    }
 
     public static class InstructionGroups {
         public static final int ZERO_OP = 0x00;
@@ -818,8 +572,8 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
         public static final int ALU_2 = 0x71;
         public static final int ALU_3_IND = 0x72;
         public static final int ALU_3 = 0x73;
-        public static final int BR_REL_N = 0x74;
-        public static final int BR_REL_P = 0x75;
+        public static final int BR_REL_P = 0x74;
+        public static final int BR_REL_N = 0x75;
         public static final int BR_ABS_NOP = 0x76;
         public static final int BR_REL_NOP = 0x76;
         public static final int FETCH = 0x77;
@@ -859,6 +613,4 @@ public class Processor implements GenericProcessor, ExceptionHandler, InterruptH
             return (value & signal) > 0;
         }
     }
-
-
 }

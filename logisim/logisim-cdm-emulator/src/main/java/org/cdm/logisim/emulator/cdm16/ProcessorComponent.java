@@ -31,10 +31,10 @@ public class ProcessorComponent extends InstanceFactory {
                 new Port(120, 50, "output", 1), //read
                 new Port(120, 60, "output", 1), //word
                 new Port(0, 30, "input", 1), //irq
-                new Port(0, 40, "input", 5), //intnumber
+                new Port(0, 40, "input", 6), //intnumber
                 new Port(0, 70, "input", 1), //exc
                 new Port(20, 120, "input", 1), //clk
-                new Port(0, 80, "input", 5), //excnumber
+                new Port(0, 80, "input", 6), //excnumber
                 new Port(0, 100, "input", 1), //hold
                 new Port(50, 120, "output", 2), //status
 

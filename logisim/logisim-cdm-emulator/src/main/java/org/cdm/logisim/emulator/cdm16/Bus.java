@@ -13,7 +13,7 @@ public class Bus extends NamedValuePrimitive {
     public Bus(String name) {
         super(name, BUS_BITS);
 
-        checkMultipleAssertion = true;
+        checkMultipleAssertion = false;
     }
 
     public Bus(String name, boolean checkMultipleAssertion) {
@@ -25,7 +25,8 @@ public class Bus extends NamedValuePrimitive {
     @Override
     public int getValue() {
         if (!isSet) {
-            System.err.println("Read of uninitialized bus " + name);
+            // These are tied to ground
+            return 0;
         }
 
         return super.getValue();
@@ -33,7 +34,6 @@ public class Bus extends NamedValuePrimitive {
 
     @Override
     public void setValue(int value) {
-
         if (isSet && checkMultipleAssertion) {
             System.err.println("Multiple assertion on " + name + " new value: " + value);
         }
