@@ -8,6 +8,9 @@ import org.cdm.logisim.emulator.cdm16.units.ImmComputationUnit;
 import org.cdm.logisim.emulator.cdm16.units.alu.Alu;
 import org.cdm.logisim.emulator.cdm16.units.alu.AluInputParameters;
 import org.cdm.logisim.emulator.cdm16.units.alu.AluOutputParameters;
+import org.cdm.logisim.emulator.cdm16.units.bus.BusController;
+import org.cdm.logisim.emulator.cdm16.units.bus.BusControllerInputParameters;
+import org.cdm.logisim.emulator.cdm16.units.bus.BusControllerOutputParameters;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoder;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderInputParameters;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderOutputParameters;
@@ -67,9 +70,12 @@ public class Processor {
     private final Latch exceptionLatch = new Latch();
     private final Latch startupLatch = new Latch();
 
+    private final BusController busController = new BusController();
+
     private InstructionDecoderOutputParameters decoderSignals;
     private AluOutputParameters aluSignals;
     private ExceptionControlUnitOutputParameters ecuSignals;
+    private BusControllerOutputParameters busControllerSignals;
 
     public Processor() {
         // Insert path to microcode
@@ -97,8 +103,6 @@ public class Processor {
         updateProcessorState(state);
 
         // Latch
-        updateRegisters();
-
         updateExceptionLatches(state);
 
         updateClockControlLatches(
@@ -108,6 +112,17 @@ public class Processor {
                 ecuSignals.critical_fault()
         );
         updateStatus();
+
+        busController.clockFalling(
+                readDataBus(state),
+                busControllerSignals.clk_inhibit()
+        );
+
+        if (busControllerSignals.clk_inhibit()) {
+            return;
+        }
+
+        updateRegisters();
 
         if (fetch) {
             int instruction = FetchUnit.fetchInstruction(
@@ -182,7 +197,18 @@ public class Processor {
         microcommand = mainMicrocode[microcommandAddress];
 
         updateDatapath();
-        readDataBus(state);
+
+        busControllerSignals = busController.update(new BusControllerInputParameters(
+                busD.getValue(),
+                readDataBus(state),
+                MicrocodeSignals.check(microcommand, MicrocodeSignals.SIGN_EXTEND),
+                toBoolean(busA.getValue() & 1),
+                MicrocodeSignals.check(microcommand, MicrocodeSignals.WORD)
+        ));
+
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
+            busD.setValue(busControllerSignals.to_bus());
+        }
 
         var excInfo = ExceptionChecker.compute(new ExceptionCheckerInputParameters(
                 microcommand,
@@ -329,8 +355,7 @@ public class Processor {
         if (decoderSignals.arith_carry()) {
             cIn = ps.getCarry();
         } else {
-            //cIn = inc_address && MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM);
-            cIn = false;
+            cIn = busController.inc_address() && MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM);
         }
 
         aluSignals = Alu.compute(new AluInputParameters(
@@ -349,25 +374,11 @@ public class Processor {
         }
     }
 
-    private void readDataBus(InstanceState state) {
-        if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM)) {
-            return;
-        }
-
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
-            int externalBusD;
-
-            if (state.getPort(Ports.DATA_IN).isFullyDefined()) {
-                externalBusD = state.getPort(Ports.DATA_IN).toIntValue();
-            } else {
-                externalBusD = 0;
-            }
-
-            if (MicrocodeSignals.check(microcommand, MicrocodeSignals.SIGN_EXTEND)) {
-                externalBusD = Arithmetic.signExtend(externalBusD);
-            }
-
-            busD.setValue(externalBusD);
+    private int readDataBus(InstanceState state) {
+        if (state.getPort(Ports.DATA_IN).isFullyDefined()) {
+            return state.getPort(Ports.DATA_IN).toIntValue();
+        } else {
+            return 0;
         }
     }
 
@@ -392,7 +403,8 @@ public class Processor {
             state.setPort(Ports.FETCH, Value.FALSE, DELAY);
         }
 
-        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.WORD)) {
+        if (MicrocodeSignals.check(microcommand, MicrocodeSignals.WORD)
+                && !(busControllerSignals.phase() || busControllerSignals.clk_inhibit())) {
             state.setPort(Ports.WORD, Value.TRUE, DELAY);
         } else {
             state.setPort(Ports.WORD, Value.FALSE, DELAY);
@@ -424,13 +436,15 @@ public class Processor {
 
         state.setPort(Ports.ADDRESS, Value.createKnown(BitWidth.create(16), busA.getValue()), DELAY);
 
-        if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM)) {
+        /*if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.MEM)) {
             return;
-        }
+        }*/
 
-        if (!MicrocodeSignals.check(microcommand, MicrocodeSignals.READ)) {
-            state.setPort(Ports.DATA_OUT, Value.createKnown(BitWidth.create(16), busD.getValue()), DELAY);
-        }
+        state.setPort(
+                Ports.DATA_OUT,
+                Value.createKnown(BitWidth.create(16), busControllerSignals.data_out()),
+                DELAY
+        );
     }
 
     private void updateExceptionLatches(InstanceState state) {

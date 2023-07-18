@@ -9,4 +9,8 @@ public class Register extends NamedValuePrimitive {
     public Register(String name) {
         super(name, REGISTER_BITS);
     }
+
+    public Register(String name, int bits) {
+        super(name, bits);
+    }
 }
