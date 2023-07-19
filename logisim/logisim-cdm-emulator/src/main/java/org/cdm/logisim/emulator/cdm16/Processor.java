@@ -78,9 +78,8 @@ public class Processor {
     private BusControllerOutputParameters busControllerSignals;
 
     public Processor() {
-        // Insert path to microcode
-        mainMicrocode = MicrocodeLoader.loadFromFile("C:\\Users\\comp_i5\\Desktop\\cdm16\\cdm16_decoder.img");
-        exceptionMicrocode = MicrocodeLoader.loadFromFile("C:\\Users\\comp_i5\\Desktop\\cdm16\\cdm16_decoder_exc.img");
+        mainMicrocode = MicrocodeLoader.loadFromResources(MicrocodeLoader.MAIN_MICROCODE);
+        exceptionMicrocode = MicrocodeLoader.loadFromResources(MicrocodeLoader.EXC_MICROCODE);
 
         initialize();
     }
