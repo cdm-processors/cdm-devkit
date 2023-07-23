@@ -25,6 +25,3 @@ def parse_args():
                         default=False, help="colorize output")
 
     return parser.parse_args()
-
-
-args = parse_args()

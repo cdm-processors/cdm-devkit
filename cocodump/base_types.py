@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from colorama import Fore, Style
 
 from cocodump.colorizer import colorize, colorize_argument
@@ -12,7 +14,9 @@ class Instruction:
     labels: list[str]
     comment: str | None
 
-    TEXT_ALIGN = 20
+    TEXT_ALIGN: ClassVar[int] = 20
+
+    __slots__ = ("inst", "args", "addr", "inst_bytes", "labels", "comment")
 
     def __init__(self, inst: str, args: list[str], addr: int = None, inst_bytes: bytearray = None) -> None:
         self.inst = inst
@@ -35,7 +39,7 @@ class Instruction:
         return self.inst_bytes == other.inst_bytes
 
     def emit_base(self, colored: bool = False) -> str:
-        label_str = "".join([f"{x}:\n" for x in self.labels])
+        label_str = "".join(f"{x}:\n" for x in self.labels)
 
         address_str = f"{' ' * 2}{format(self.addr, '04x')}: "
 
@@ -78,6 +82,8 @@ class BranchInstruction(Instruction):
     br_addr: int
     br_label: str | None
 
+    __slots__ = ("br_addr", "br_label")
+
     def __init__(self, inst: str, args: list[str], addr: int = None, br_addr: int = None) -> None:
         super().__init__(inst, args, addr)
         self.br_addr = br_addr
@@ -90,8 +96,8 @@ class BranchInstruction(Instruction):
             inst_str = colorize(inst_str, Fore.LIGHTBLUE_EX)
 
         if self.br_label is None:
-            return self.emit_base(colored) + \
-                f"{inst_str} {hex(self.br_addr)}"
+            return f"{self.emit_base(colored)}" \
+                   f"{inst_str} {hex(self.br_addr)}"
         else:
             content_length = len(self.inst + self.br_label)
             align_length = (content_length // self.TEXT_ALIGN + 1) * self.TEXT_ALIGN
@@ -104,15 +110,19 @@ class BranchInstruction(Instruction):
                 label_str = colorize(label_str, Fore.LIGHTYELLOW_EX)
                 comment_str = colorize(comment_str, Fore.GREEN)
 
-            return self.emit_base(colored) + f"{inst_str} {label_str}" + comment_str
+            return f"{self.emit_base(colored)}" \
+                   f"{inst_str} {label_str}" \
+                   f"{comment_str}"
 
 
 class InterruptVectorInstruction(Instruction):
-    TEXT_ALIGN = 40
+    TEXT_ALIGN: ClassVar[int] = 40
 
 
 class FoldedInstruction(Instruction):
     size: int
+
+    __slots__ = ("size", )
 
     def __init__(self, inst: Instruction, size: int) -> None:
         self.size = size
@@ -137,7 +147,6 @@ class DecodedSection:
         self.memory[inst.addr] = inst
 
     def place_labels(self) -> None:
-
         for loc in self.memory.keys():
             curr_inst = self.memory[loc]
 
@@ -155,7 +164,7 @@ class DecodedSection:
                     br_inst.add_label(new_label)
 
     def to_instructions(self) -> list[Instruction]:
-        return [self.memory[x] for x in self.memory.keys()]
+        return [self.memory[x] for x in sorted(self.memory.keys())]
 
 
 class InstructionDecoder:

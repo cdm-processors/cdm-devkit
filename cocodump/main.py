@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from cocodump.args import args, parse_args
+from cocodump.args import parse_args
 from cocodump.asm_emitter import emit_asm
 from cocodump.reader import read_img
 from cocodump.target_loader import import_target_decoder, list_target_decoders, normalize_target_name
 
 
 def main():
-    parse_args()
+    args = parse_args()
 
     available_targets = list_target_decoders()
 

@@ -45,6 +45,7 @@ def fold_instructions(instructions: list[Instruction], fold_threshold: int) -> l
         prev_inst = inst
 
     folded_instructions.pop()
+    instructions.pop()
 
     return folded_instructions
 
