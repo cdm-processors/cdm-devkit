@@ -31,7 +31,8 @@ After installation you get several components:
 
 - **CLI Programs**
     
-    - `cocas` - universal assembler for CdM processors
+    - `cocas` - assembler for CdM processors
+    - `cocodump` - disassembler for CdM processors
     - `synthm` - secondary decoder synthesis utility
     - *(coming soon)*
 
@@ -55,7 +56,7 @@ Check out our [Getting Stated](/docs/getting-started.md) guide.
 
 ## Documentation
 
-We are wokring on documentation, it will be available soon.
+We are working on documentation, it will be available soon.
 
 However, some docs are available in `docs/` directory.
 
@@ -65,11 +66,11 @@ You can report a bug with GitHub Issues.
 
 - Open new issue [here](https://github.com/cdm-processors/cdm-devkit/issues)
 
-- Use a tempate
+- Use a template
 
 - Provide a proper name and description of a problem
 
-- Provide information on how to repoduce a bug
+- Provide information on how to reproduce a bug
 
 ## Setting up development environment
 
@@ -81,7 +82,7 @@ You can report a bug with GitHub Issues.
 
     > `cocas` uses `ANTLR` to parse assembly language
     >
-    >    - `antlr4-python3-runtime` is needed to run `cocas` and is installed with other dependenices
+    >    - `antlr4-python3-runtime` is needed to run `cocas` and is installed with other dependencies
     >
     >   - However, if you want to fiddle with grammar files and generate new parser you would need to install `antlr4-tools`, this package is installed with development dependencies ([Read more](https://www.antlr.org))
 
@@ -95,7 +96,7 @@ You can report a bug with GitHub Issues.
 
 ## Building
 
-### Building indivilual projects
+### Building individual projects
 
 - **Python-based projects:**
 
@@ -136,19 +137,19 @@ Set `VERSION` variable if you want to specify project version
 >   - Run `choco install make` 
 > - You can read about other installation methods [here](https://gnuwin32.sourceforge.net/packages/make.htm)
 
-## Contibuting
+## Contributing
 
 - All contributions should be done via **pull requests**.
 
-- Commit messages should be written accoring to [these guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53)
+- Commit messages should be written according to [these guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53)
 
-- Commit messages should start with a **scope indetifier** - project name surrouneded by square brackets. That will help to determine which project commit belongs to.
+- Commit messages should start with a **scope identifier** - project name surrounded by square brackets. That will help to determine which project commit belongs to.
 
 **Example:** `[cocas] Add new feature`
 
-> Commits related to whlole repository shouldn't use scope indetifier
+> Commits related to whole repository shouldn't use scope identifier
 
-**Possible scope indetifiers are:**
+**Possible scope identifiers are:**
 
 - **General:**
     
@@ -157,14 +158,16 @@ Set `VERSION` variable if you want to specify project version
     - `examples`
     - `tests`
 
-- **Processor implemetations:**
+- **Processor implementations:**
 
     - `cdm*`
 
 - **Projects:**
 
     - `cocas`
-    - `cocemu`
+    - `cocoemu`
+    - `cocodump`
+    - `synthm`
     - `logisim-banked-memory`
     - `logisim-cdm-emulator`
     - `logisim-runner`
