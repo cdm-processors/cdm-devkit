@@ -30,6 +30,10 @@ def main():
 
     raw_bytes = read_img(Path(args.source))
 
+    if len(raw_bytes) == 0:
+        print(f"Got empty image: {args.source}")
+        exit(0)
+
     decoded_section = decoder.decode(raw_bytes, args.ivt)
 
     decoded_section.place_labels()
