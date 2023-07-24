@@ -1,29 +1,34 @@
 package org.cdm.logisim.emulator.cdm16.units.decoder;
 
-public record InstructionDecoderOutputParameters(
-        int microcodeAddress,
-        int shift_count_d,
+import lombok.Value;
+import lombok.experimental.Accessors;
 
-        int rs0,
-        int rs1,
-        int rd,
+@Value
+@Accessors(fluent = true)
+public class InstructionDecoderOutputParameters {
+    int microcodeAddress;
+    int shift_count_d;
 
-        int alu_op_type,
+    int rs0;
+    int rs1;
+    int rd;
 
-        boolean br_rel_nop,
+    int alu_op_type;
 
-        boolean arith_carry,
+    boolean br_rel_nop;
 
-        int alu_func,
+    boolean arith_carry;
 
-        int imm_type,
-        int imm_d,
+    int alu_func;
 
-        boolean intInstruction,
-        boolean jsrInstruction,
-        boolean rtiInstruction,
-        boolean haltInstruction,
-        boolean waitInstruction,
-        boolean eiInstruction,
-        boolean diInstruction
-) {}
+    int imm_type;
+    int imm_d;
+
+    boolean intInstruction;
+    boolean jsrInstruction;
+    boolean rtiInstruction;
+    boolean haltInstruction;
+    boolean waitInstruction;
+    boolean eiInstruction;
+    boolean diInstruction;
+}

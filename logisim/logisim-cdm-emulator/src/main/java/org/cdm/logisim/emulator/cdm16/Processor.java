@@ -209,12 +209,14 @@ public class Processor {
             busD.setValue(busControllerSignals.to_bus());
         }
 
-        var excInfo = ExceptionChecker.compute(new ExceptionCheckerInputParameters(
-                microcommand,
-                busD.getValue(),
-                ir.getValue(),
-                exceptionLatch.getValue()
-        ));
+        ExceptionCheckerOutputParameters excInfo =
+                ExceptionChecker.compute(new ExceptionCheckerInputParameters(
+                        microcommand,
+                        busD.getValue(),
+                        ir.getValue(),
+                        exceptionLatch.getValue()
+                ));
+
 
         boolean exc_trig_ext = toBoolean(state.getPort(Ports.EXC));
         boolean irq = toBoolean(state.getPort(Ports.IRQ));
