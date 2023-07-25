@@ -1,0 +1,12 @@
+registers:
+    r0: 1
+    r1: 0xffff
+    r2: 0xaab0
+    fp: 64
+    sp: 0xaab0
+    r4: 0xaab0
+    r5: 0xaab2
+    r3: 64
+    r6: 0x8765
+    ps: 0xffff
+    pc: 0xaab4

@@ -1,35 +1,57 @@
 [tool.poetry]
 name = "cdm-devkit"
-version = "0.1.0"
+version = "0.1.3"
 description = "Developer tools for CdM processors"
 authors = [
-    "leadpogrommer <ilyamerzlakov@gmail.com>",
+    "Ilya Merzlyakov <ilyamerzlakov@gmail.com>",
     "Nikolay Repin <n.repin@g.nsu.ru>",
     "Timofey Khrapovitskiy <vuki03@mail.ru>",
     "Mikhail Krasnikov <m.krasnikov1@g.nsu.ru>",
     "Nikita Tatarinov <n.tatarinov@g.nsu.ru>",
-    "Nikita Korotkov <n.korotkov@g.nsu.ru>"
+    "Nikita Korotkov <n.korotkov@g.nsu.ru>",
+    "Dmitriy Vashurin <kapkekes@yandex.ru>"
 ]
 
-#packages = [
-#    { include = "cdm_asm" },
-#    { include = "cocoemu" },
-#]
+packages = [
+    { include = "cocas" },
+    { include = "synthm" },
+    { include = "cocodump" }
+]
 
-#[tool.poetry.scripts]
-#cdm-asm = 'cdm_asm.main:main'
-#cdm-emu = 'cdm_emu.emulator:main'
+[tool.poetry.scripts]
+cocas = 'cocas.main:main'
+synthm = 'synthm.main:main'
+cocodump = 'cocodump.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
 bitstruct = "^8.14.1"
-antlr4-python3-runtime = "^4.10"
+antlr4-python3-runtime = "4.13.*"
 websocket-server = "^0.6.4"
 colorama = "^0.4.4"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
+[tool.poetry.group.dev.dependencies]
+antlr4-tools = "^0.2"
+ruff = "^0.0.253"
+strictyaml = "^1.6.2"
+pytest = "^7.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
+
+[tool.ruff]
+select = ["E", "F", "I"]
+exclude = [
+    "cocas/generated",
+    "logisim/cdm8e"
+]
+line-length = 120
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]

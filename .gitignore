@@ -250,8 +250,6 @@ pip-selfcheck.json
 
 
 test.*
-cdm_asm/generated/*
-!cdm_asm/generated/*.py
 logisim/backup
 
 gen
@@ -261,4 +259,5 @@ gen
 
 
 *.tokens
+*.interp
 notes.txt

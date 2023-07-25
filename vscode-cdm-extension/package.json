@@ -1,0 +1,118 @@
+{
+    "name": "vscode-cdm-extension",
+    "displayName": "CdM Processors",
+    "description": "Tools for CdM Processors",
+    "version": "1.0.0",
+    "engines": {
+        "vscode": "^1.0.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets"
+    ],
+    "icon": "icon.png",
+    "publisher": "cdm-processors",
+    "homepage": "https://github.com/cdm-processors/cdm-devkit",
+    "bugs": "https://github.com/cdm-processors/cdm-devkit/issues",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cdm-processors/cdm-devkit.git"
+    },
+    "keywords": [
+        "assembly",
+        "macro",
+        "assembler",
+        "cdm8",
+        "asm",
+        "cdm16",
+        "cdm",
+        "cdm8e"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "cdm8-assembly",
+                "aliases": [
+                    "CdM-8 Assembly",
+                    "cdm8-assembly"
+                ],
+                "extensions": [
+                    ".asm .h"
+                ],
+                "configuration": "./languages/assembly-language-configuration.json"
+            },
+            {
+                "id": "cdm8e-assembly",
+                "aliases": [
+                    "CdM-8e Assembly",
+                    "cdm8e-assembly"
+                ],
+                "extensions": [
+                    ".asm .h"
+                ],
+                "configuration": "./languages/assembly-language-configuration.json"
+            },
+            {
+                "id": "cdm16-assembly",
+                "aliases": [
+                    "CdM-16 Assembly",
+                    "cdm16-assembly"
+                ],
+                "extensions": [
+                    ".asm .h"
+                ],
+                "configuration": "./languages/assembly-language-configuration.json"
+            },
+            {
+                "id": "cdm-microcode",
+                "aliases": [
+                    "CdM Microcode",
+                    "cdm-microcode"
+                ],
+                "extensions": [
+                    ".def"
+                ],
+                "configuration": "./languages/microcode-language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "cdm8-assembly",
+                "scopeName": "source.asm.cdm8",
+                "path": "./syntaxes/cdm8-assembly.tmLanguage.json"
+            },
+            {
+                "language": "cdm8e-assembly",
+                "scopeName": "source.asm.cdm8e",
+                "path": "./syntaxes/cdm8e-assembly.tmLanguage.json"
+            },
+            {
+                "language": "cdm16-assembly",
+                "scopeName": "source.asm.cdm16",
+                "path": "./syntaxes/cdm16-assembly.tmLanguage.json"
+            },
+            {
+                "language": "cdm-microcode",
+                "scopeName": "source.cdm-microcode",
+                "path": "./syntaxes/cdm-microcode.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "cdm8-assembly",
+                "path": "./snippets/cdm-assembly-snippets.json"
+            },
+            {
+                "language": "cdm8e-assembly",
+                "path": "./snippets/cdm-assembly-snippets.json"
+            },
+            {
+                "language": "cdm16-assembly",
+                "path": "./snippets/cdm-assembly-snippets.json"
+            }
+        ]
+    },
+    "__metadata": {
+        "publisherDisplayName": "CdM Processors"
+    }
+}

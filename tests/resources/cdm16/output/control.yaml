@@ -1,0 +1,5 @@
+registers:
+    r0: 0x8000
+    r1: 0x0000
+    r2: 1
+    fp: 0xaabb
