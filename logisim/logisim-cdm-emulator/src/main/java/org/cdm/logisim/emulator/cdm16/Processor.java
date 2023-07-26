@@ -14,7 +14,12 @@ import org.cdm.logisim.emulator.cdm16.units.bus.BusControllerOutputParameters;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoder;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderInputParameters;
 import org.cdm.logisim.emulator.cdm16.units.decoder.InstructionDecoderOutputParameters;
-import org.cdm.logisim.emulator.cdm16.units.exceptions.*;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionChecker;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionCheckerInputParameters;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionCheckerOutputParameters;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionControlUnit;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionControlUnitInputParameters;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionControlUnitOutputParameters;
 
 import static org.cdm.logisim.emulator.cdm16.Arithmetic.toBoolean;
 
@@ -532,10 +537,10 @@ public class Processor {
         public static final int SHL = 0;
         public static final int SHR = 1;
         public static final int SHRA = 2;
-        public static final int ROR = 3;
-        public static final int ROL = 4;
-        public static final int RCR = 5;
-        public static final int RCL = 6;
+        public static final int ROL = 3;
+        public static final int ROR = 4;
+        public static final int RCL = 5;
+        public static final int RCR = 6;
     }
 
     public static class ALU_3op {

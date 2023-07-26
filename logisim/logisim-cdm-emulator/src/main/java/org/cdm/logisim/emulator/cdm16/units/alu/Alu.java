@@ -4,6 +4,11 @@ import org.cdm.logisim.emulator.cdm16.Processor;
 
 import org.cdm.logisim.emulator.cdm16.Arithmetic;
 
+import static org.cdm.logisim.emulator.cdm16.Arithmetic.normalize;
+import static org.cdm.logisim.emulator.cdm16.Arithmetic.testBit;
+import static org.cdm.logisim.emulator.cdm16.Arithmetic.toBoolean;
+import static org.cdm.logisim.emulator.cdm16.Arithmetic.toInteger;
+
 public class Alu {
 
     private static final int MAX_INT = Arithmetic.MAX_INT;
@@ -82,35 +87,39 @@ public class Alu {
                 switch (parameters.alu_func()) {
                     case Processor.ALU_Shifts.SHL:
                         rd = rs0 << shiftCount;
-                        cOut = rs0 & (1 << (16 - shiftCount));
+                        cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
                     case Processor.ALU_Shifts.SHR:
                         rd = rs0 >>> shiftCount;
-                        cOut = rs0 & (1 << (shiftCount - 1));
+                        cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
                     case Processor.ALU_Shifts.SHRA:
-                        rd = rs0 >> shiftCount;
-                        cOut = rs0 & (1 << (shiftCount - 1));
+                        int sign = checkN(rs0);
+                        int mask = toBoolean(sign) ? -1 : 0;
+                        rd = (rs0 >> shiftCount) | (mask << 16 - shiftCount);
+                        cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
                     case Processor.ALU_Shifts.ROL:
                         rd = (rs0 << shiftCount) | (rs0 >> (16 - shiftCount));
-                        cOut = rs0 & (1 << (16 - shiftCount));
+                        cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
                     case Processor.ALU_Shifts.ROR:
                         rd = (rs0 >> shiftCount) | (rs0 << (16 - shiftCount));
-                        cOut = rs0 & (1 << (shiftCount - 1));
+                        cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
                     case Processor.ALU_Shifts.RCL:
                         rd = (rs0 << shiftCount) | (cIn << shiftCount - 1) | (rs0 >> (16 - shiftCount + 1));
-                        cOut = rs0 & (1 << (16 - shiftCount));
+                        cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
                     case Processor.ALU_Shifts.RCR:
                         rd = (rs0 >> shiftCount) | (cIn << (16 - shiftCount)) | (rs0 << (16 - shiftCount + 1));
-                        cOut = rs0 & (1 << (shiftCount - 1));
+                        cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
                 }
                 break;
         }
+
+        rd = normalize(rd);
 
         ZN = checkZN(rd);
 
@@ -144,11 +153,11 @@ public class Alu {
     }
 
     private static int checkN(int value) {
-        return value > (MAX_INT >> 1) ? 1 : 0;
+        return toInteger(testBit(value, 15));
     }
 
     private static int checkC(int value) {
-        return (value & (MAX_INT + 1)) > 0 ? 1 : 0;
+        return toInteger(testBit(value, 16));
     }
 
     private static int checkV(int rd, int rs0, int rs1) {

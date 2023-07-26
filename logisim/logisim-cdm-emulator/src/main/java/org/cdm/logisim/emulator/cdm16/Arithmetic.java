@@ -14,6 +14,18 @@ public class Arithmetic {
         }
     }
 
+    public static boolean testBit(int value, int bitPosition) {
+        return toBoolean((value >> bitPosition) & 1);
+    }
+
+    public static int normalize(int value) {
+        return value & MAX_INT;
+    }
+
+    public static int toInteger(boolean value) {
+        return value ? 1 : 0;
+    }
+
     public static boolean toBoolean(int value) {
         return value != 0;
     }
