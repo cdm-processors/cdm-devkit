@@ -1,0 +1,38 @@
+memory:
+    # =========== Add tests ==========
+    # Ordinary test case
+    0xfffe: 0b0000
+    0xfffc: 1
+    # Zero test case
+    0xfffa: 0b1110
+    0xfff8: 1
+    # Negative (Overflow) test case
+    0xfff6: 0b0101
+    0xfff4: 1
+    # 0xfff2: 
+    # 0xfff0: 
+    # 0xffee: 
+    # 0xffec: 
+    # 0xffea: 
+    # 0xffe8: 
+    # 0xffe6: 
+    # 0xffe4: 
+    # 0xffe2: 
+    # 0xffe0: 
+    # 0xffde: 
+    # 0xffdc: 
+    # 0xffda: 
+    # 0xffd8: 
+    # 0xffd6: 
+    # 0xffd4: 
+    # 0xffd2: 
+    # 0xffd0: 
+    # 0xffce: 
+    # 0xffcc: 
+    # 0xffca: 
+    # 0xffc8: 
+    # 0xffc6: 
+    # 0xffc4: 
+    # 0xffc2: 
+    # 0xffc0: 
+    # 0xffbe: 
