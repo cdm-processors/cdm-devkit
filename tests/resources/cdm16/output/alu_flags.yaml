@@ -1,22 +1,32 @@
 memory:
     # =========== Add tests ==========
     # Ordinary test case
-    0xfffe: 0b0000
-    0xfffc: 1
+    0xfffe: # No flags
+    0xfffc: 31
+
     # Zero test case
-    0xfffa: 0b1110
-    0xfff8: 1
-    # Negative (Overflow) test case
-    0xfff6: 0b0101
-    0xfff4: 1
-    # 0xfff2: 
-    # 0xfff0: 
-    # 0xffee: 
-    # 0xffec: 
-    # 0xffea: 
-    # 0xffe8: 
-    # 0xffe6: 
-    # 0xffe4: 
+    0xfffa: 10 # Carry and Zero flags
+    0xfff8: 
+
+    # Overflow (negative overflow) test case
+    0xfff6: 5 # Overflow and Negative flags
+    0xfff4: 32825
+
+    # Carry (unsigned overflow) test case
+    0xfff2: 8 # Carry flag
+    0xfff0: 59
+
+    # Just zero test case
+    0xffee: 2 # Zero flag
+    0xffec: 
+
+    # Just negative case
+    0xffea: 1       # Negative flag
+    0xffe8: 0xfffb  # -5
+    
+    # Negative plus negative case
+    0xffe6: 9       # Carry and Negative flags
+    0xffe4: 0xfffe  # -2
     # 0xffe2: 
     # 0xffe0: 
     # 0xffde: 

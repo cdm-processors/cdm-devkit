@@ -29,52 +29,65 @@ main>
 
     # ========================= Add tests =======================
     # Ordinary test case
-    if
-        ldi r1, 15
-        ldi r2, 16
-        ldi r0, 31
+    ldi r1, 15
+    ldi r2, 16
+    add r2, r1
+    pups
+    push r1
 
-        add r2, r1
-        pups
-        cmp r0, r1
-    is eq
-        push 1
-    else
-        push 0
-    fi
     # Zero test case
-    if
-        ldi r1, 15
-        ldi r2, -15
-        ldi r0, 0
+    ldi r1, 15
+    ldi r2, -15
+    add r2, r1
+    pups
+    push r1
 
-        add r2, r1
-        pups
-        cmp r0, r1
-    is eq
-        push 1
-    else
-        push 0
-    fi
-    # Negative (Overflow) test case
-    if
-        ldi r1, 117
-        ldi r2, 65
-        ldi r0, 182
+    # Overflow (negative overflow) test case
+    ldi r1, 32760
+    ldi r2, 65
+    add r2, r1
+    pups
+    push r1
 
-        add r2, r1
-        pups
-        cmp r0, r1
-    is eq
-        push 1
-    else
-        push 0
-    fi
+    # Carry (unsigned overflow) test case
+    ldi r1, 65530
+    ldi r2, 65
+    add r2, r1
+    pups
+    push r1
+
+    # Just zero test case
+    ldi r1, 0
+    ldi r2, 0
+    add r2, r1
+    pups
+    push r1
+
+    # Just negative case
+    ldi r1, 0
+    ldi r2, -5
+    add r2, r1
+    pups
+    push r1
+
+    # Negative plus negative case
+    ldi r1, -1
+    ldi r2, -1
+    add r2, r1
+    pups
+    push r1
+
+    # Negative overflow case
+    ldi r1, -1
+    ldi r2, -1
+    add r2, r1
+    pups
+    push r1
 
     # ========================= Sub tests =======================
 
-    stps r0
-    and r2, r1
+    # stps r0
+    # and r2, r1
     # check for zeros
 
     halt
