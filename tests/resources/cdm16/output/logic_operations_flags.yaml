@@ -1,0 +1,81 @@
+memory:
+    # =========== And tests ==========
+    # Zero test case
+    0xfffe: 18 # Zero flag
+    0xfffc: 1
+
+    # Negative test case
+    0xfffa: 17 # Negative flag
+    0xfff8: 1
+
+    # Common test case
+    0xfff6: 16 # No flags
+    0xfff4: 1
+
+    # =========== Or tests ==========
+    # Zero test case
+    0xfff2: 18 # Zero flag
+    0xfff0: 1
+
+    # Negative test case
+    0xffee: 17 # Negative flag
+    0xffec: 1
+
+    # Common test case
+    0xffea: 16 # No flags
+    0xffe8: 1
+
+    # =========== Xor tests ==========
+    # Zero test case
+    0xffe6: 18 # Zero flag
+    0xffe4: 1
+
+    # Negative test case
+    0xffe2: 17 # Negative flag
+    0xffe0: 1
+
+    # Common test case
+    0xffde: 16 # No flags
+    0xffdc: 1
+
+    # =========== Xor tests ==========
+    # Zero test case
+    0xffda: 18 # Zero flag
+    0xffd8: 1
+
+    # Negative test case
+    0xffd6: 17 # Negative flag
+    0xffd4: 1
+
+    # Common test case
+    0xffd2: 16 # No flags
+    0xffd0: 1
+
+    # =========== Bic tests ==========
+    # Zero test case
+    0xffce: 18 # Zero flag
+    0xffcc: 1
+
+    # Negative test case
+    0xffca: 17 # Negative flag
+    0xffc8: 1
+
+    # Common test case
+    0xffc6: 16 # No flags
+    0xffc4: 1
+
+    # # Just zero (?) test case
+    # 0xffce: 26 # Carry and Zero flags
+    # 0xffcc: 1
+
+    # # Just negative case
+    # 0xffca: 17 # Negative flag
+    # 0xffc8: 1  # -5
+    
+    # # Negative plus negative case
+    # 0xffc6: 25       # Carry and Negative flags
+    # 0xffc4: 1  # -2
+
+    # # Negative overflow case
+    # 0xffc2: 28 # Carry and oVerflow flags
+    # 0xffc0: 1
