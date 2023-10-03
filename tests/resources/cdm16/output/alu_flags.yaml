@@ -1,66 +1,66 @@
 memory:
     # =========== Add tests ==========
     # Ordinary test case
-    0xfffe: # No flags
-    0xfffc: 31
+    0xfffe: 16 # No flags
+    0xfffc: 1
 
     # Zero test case
-    0xfffa: 10 # Carry and Zero flags
-    0xfff8: 
+    0xfffa: 26 # Carry and Zero flags
+    0xfff8: 1
 
     # Overflow (negative overflow) test case
-    0xfff6: 5 # Overflow and Negative flags
-    0xfff4: 32825
+    0xfff6: 21 # Overflow and Negative flags
+    0xfff4: 1
 
     # Carry (unsigned overflow) test case
-    0xfff2: 8 # Carry flag
-    0xfff0: 59
+    0xfff2: 24 # Carry flag
+    0xfff0: 1
 
     # Just zero test case
-    0xffee: 2 # Zero flag
-    0xffec: 
+    0xffee: 18 # Zero flag
+    0xffec: 1
 
     # Just negative case
-    0xffea: 1       # Negative flag
-    0xffe8: 0xfffb  # -5
+    0xffea: 17 # Negative flag
+    0xffe8: 1  # -5
     
     # Negative plus negative case
-    0xffe6: 9       # Carry and Negative flags
-    0xffe4: 0xfffe  # -2
+    0xffe6: 25 # Carry and Negative flags
+    0xffe4: 1  # -2
 
     # Negative overflow case
-    0xffe2: 12 # Carry and oVerflow flags
-    0xffe0: 32711
+    0xffe2: 28 # Carry and oVerflow flags
+    0xffe0: 1
 
     # =========== Sub tests ==========
     # Ordinary test case
-    0xffde: # No flags
-    0xffdc: 19
+    0xffde: 24 # Carry flag
+    0xffdc: 1
 
     # Zero test case
-    0xffda: 10 # Carry and Zero flags
-    0xffd8: 
+    0xffda: 26 # Carry and Zero flags
+    0xffd8: 1
 
     # Overflow (negative overflow) test case
-    0xffd6: 5 # Overflow and Negative flags
-    0xffd4: 32825
+    0xffd6: 21 # Overflow and Negative flags
+    0xffd4: 1
 
     # Carry (unsigned overflow) test case
-    0xffd2: 8 # Carry flag
-    0xffd0: 59
+    0xffd2: 24 # Carry flag
+    0xffd0: 1
 
     # Just zero (?) test case
-    0xffce: 10 # Carry and Zero flags
-    0xffcc: 
+    0xffce: 26 # Carry and Zero flags
+    0xffcc: 1
 
     # Just negative case
-    0xffca: 1       # Negative flag
-    0xffc8: 0xfffb  # -5
+    0xffca: 17 # Negative flag
+    0xffc8: 1  # -5
     
     # Negative plus negative case
-    0xffc6: 9       # Carry and Negative flags
-    0xffc4: 0xfffe  # -2
+    0xffc6: 25       # Carry and Negative flags
+    0xffc4: 1  # -2
 
     # Negative overflow case
-    0xffc2: 12 # Carry and oVerflow flags
-    0xffc0: 32711
+    0xffc2: 28 # Carry and oVerflow flags
+    0xffc0: 1
