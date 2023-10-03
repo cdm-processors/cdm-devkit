@@ -301,10 +301,6 @@ main>
         push 2
     fi
 
-    # stps r0
-    # and r2, r1
-    # check for zeros
-
     halt
 
 end.

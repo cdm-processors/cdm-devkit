@@ -63,19 +63,3 @@ memory:
     # Common test case
     0xffc6: 16 # No flags
     0xffc4: 1
-
-    # # Just zero (?) test case
-    # 0xffce: 26 # Carry and Zero flags
-    # 0xffcc: 1
-
-    # # Just negative case
-    # 0xffca: 17 # Negative flag
-    # 0xffc8: 1  # -5
-    
-    # # Negative plus negative case
-    # 0xffc6: 25       # Carry and Negative flags
-    # 0xffc4: 1  # -2
-
-    # # Negative overflow case
-    # 0xffc2: 28 # Carry and oVerflow flags
-    # 0xffc0: 1
