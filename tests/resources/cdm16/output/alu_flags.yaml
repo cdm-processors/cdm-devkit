@@ -27,8 +27,10 @@ memory:
     # Negative plus negative case
     0xffe6: 9       # Carry and Negative flags
     0xffe4: 0xfffe  # -2
-    # 0xffe2: 
-    # 0xffe0: 
+
+    # Negative overflow case
+    0xffe2: 12 # Carry and oVerflow flags
+    0xffe0: 32711
     # 0xffde: 
     # 0xffdc: 
     # 0xffda: 

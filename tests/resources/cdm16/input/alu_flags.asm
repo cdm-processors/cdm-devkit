@@ -78,8 +78,8 @@ main>
     push r1
 
     # Negative overflow case
-    ldi r1, -1
-    ldi r2, -1
+    ldi r1, -32760
+    ldi r2, -65
     add r2, r1
     pups
     push r1
