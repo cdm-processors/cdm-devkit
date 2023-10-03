@@ -85,6 +85,61 @@ main>
     push r1
 
     # ========================= Sub tests =======================
+    # Ordinary test case
+    ldi r1, 32
+    ldi r2, 13
+    sub r1, r2
+    pups
+    push r2
+
+    # Zero test case
+    ldi r1, 15
+    ldi r2, 15
+    sub r1, r2
+    pups
+    push r2
+
+    # Overflow (negative overflow) test case
+    ldi r1, 32760
+    ldi r2, -65
+    sub r1, r2
+    pups
+    push r2
+
+    # Carry (unsigned overflow) test case
+    ldi r1, 65530
+    ldi r2, -65
+    sub r1, r2
+    pups
+    push r2
+
+    # Just zero test case
+    ldi r1, 0
+    ldi r2, 0
+    sub r1, r2
+    pups
+    push r2
+
+    # Just negative case
+    ldi r1, 0
+    ldi r2, 5
+    sub r1, r2
+    pups
+    push r2
+
+    # Negative plus negative case
+    ldi r1, -1
+    ldi r2, 1
+    sub r1, r2
+    pups
+    push r2
+
+    # Negative overflow case
+    ldi r1, -32760
+    ldi r2, 65
+    sub r1, r2
+    pups
+    push r2
 
     # stps r0
     # and r2, r1

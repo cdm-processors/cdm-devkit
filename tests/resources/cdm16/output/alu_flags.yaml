@@ -31,20 +31,36 @@ memory:
     # Negative overflow case
     0xffe2: 12 # Carry and oVerflow flags
     0xffe0: 32711
-    # 0xffde: 
-    # 0xffdc: 
-    # 0xffda: 
-    # 0xffd8: 
-    # 0xffd6: 
-    # 0xffd4: 
-    # 0xffd2: 
-    # 0xffd0: 
-    # 0xffce: 
-    # 0xffcc: 
-    # 0xffca: 
-    # 0xffc8: 
-    # 0xffc6: 
-    # 0xffc4: 
-    # 0xffc2: 
-    # 0xffc0: 
-    # 0xffbe: 
+
+    # =========== Sub tests ==========
+    # Ordinary test case
+    0xffde: # No flags
+    0xffdc: 19
+
+    # Zero test case
+    0xffda: 10 # Carry and Zero flags
+    0xffd8: 
+
+    # Overflow (negative overflow) test case
+    0xffd6: 5 # Overflow and Negative flags
+    0xffd4: 32825
+
+    # Carry (unsigned overflow) test case
+    0xffd2: 8 # Carry flag
+    0xffd0: 59
+
+    # Just zero (?) test case
+    0xffce: 10 # Carry and Zero flags
+    0xffcc: 
+
+    # Just negative case
+    0xffca: 1       # Negative flag
+    0xffc8: 0xfffb  # -5
+    
+    # Negative plus negative case
+    0xffc6: 9       # Carry and Negative flags
+    0xffc4: 0xfffe  # -2
+
+    # Negative overflow case
+    0xffc2: 12 # Carry and oVerflow flags
+    0xffc0: 32711
