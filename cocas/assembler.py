@@ -84,7 +84,7 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
-def assemble(pn: ProgramNode, target_instructions, code_segments):
+def assemble(pn: ProgramNode, target_instructions, code_segments) -> ObjectModule:
     templates = [Template(t, code_segments, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 

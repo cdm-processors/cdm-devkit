@@ -3,12 +3,17 @@ grammar ObjectFile;
 object_file:
     NEWLINE*
     targ_record?
+    object_block+
+    EOF
+;
+
+object_block:
+    source_record?
     ( asect_block
       rsect_block*
     | rsect_block+
     )
     xtrn_record*
-    EOF
 ;
 
 asect_block:
@@ -25,13 +30,14 @@ rsect_block:
     alig_record?
     data_record
     loc_record*
-    rel_record
+    rel_record?
     ntry_record*
 ;
 
 targ_record: TARG label NEWLINE*;
+source_record: FILE path_base64 NEWLINE*;
 abs_record: ABS number COLON data NEWLINE*;
-loc_record: LOC path_base64 location* NEWLINE*;
+loc_record: LOC location* NEWLINE*;
 ntry_record: NTRY label number NEWLINE*;
 name_record: NAME section NEWLINE*;
 alig_record: ALIG number NEWLINE*;
