@@ -1,0 +1,132 @@
+memory:
+    # =========== Addc (basic) tests ==========
+    # Ordinary test case
+    0xfffe: 16 # No flags
+    0xfffc: 1
+
+    # Zero test case
+    0xfffa: 26 # Carry and Zero flags
+    0xfff8: 1
+
+    # Overflow (negative overflow) test case
+    0xfff6: 21 # Overflow and Negative flags
+    0xfff4: 1
+
+    # Carry (unsigned overflow) test case
+    0xfff2: 24 # Carry flag
+    0xfff0: 1
+
+    # Just zero test case
+    0xffee: 18 # Zero flag
+    0xffec: 1
+
+    # Just negative case
+    0xffea: 17 # Negative flag
+    0xffe8: 1  # -5
+    
+    # Negative plus negative case
+    0xffe6: 25 # Carry and Negative flags
+    0xffe4: 1  # -2
+
+    # Negative overflow case
+    0xffe2: 28 # Carry and oVerflow flags
+    0xffe0: 1
+
+    # =========== Addc (specific) tests ==========
+    # Ordinary test case
+    0xffde: 16 # No flags
+    0xffdc: 1
+
+    # Zero test case
+    0xffda: 26 # Carry and Zero flags
+    0xffd8: 1
+
+    # Overflow (negative overflow) test case
+    0xffd6: 21 # Overflow and Negative flags
+    0xffd4: 1
+
+    # Carry (unsigned overflow) test case
+    0xffd2: 26 # Carry and Zero flags
+    0xffd0: 1
+
+    # Just zero (?) test case
+    0xffce: 26 # Carry (!) and Zero flags
+    0xffcc: 1
+
+    # Just negative case
+    0xffca: 17 # Negative flag
+    0xffc8: 1  # -5
+    
+    # Negative plus negative case
+    0xffc6: 25 # Carry and Negative flags
+    0xffc4: 1  # -2
+
+    # Negative overflow case
+    0xffc2: 25 # Carry and Negative (!) flags
+    0xffc0: 1
+
+    # =========== Subc (basic) tests ==========
+    # Ordinary test case
+    0xffbe: 24 # Carry flag
+    0xffbc: 1
+
+    # Zero test case
+    0xffba: 26 # Carry and Zero flags
+    0xffb8: 1
+
+    # Overflow (negative overflow) test case
+    0xffb6: 21 # Overflow and Negative flags
+    0xffb4: 1
+
+    # Carry (unsigned overflow) test case
+    0xffb2: 24 # Carry flag
+    0xffb0: 1
+
+    # Just zero (?) test case
+    0xffae: 26 # Carry and Zero flags
+    0xffac: 1
+
+    # Just negative case
+    0xffaa: 17 # Negative flag
+    0xffa8: 1  # -5
+    
+    # Negative plus negative case
+    0xffa6: 25       # Carry and Negative flags
+    0xffa4: 1  # -2
+
+    # Negative overflow case
+    0xffa2: 28 # Carry and oVerflow flags
+    0xffa0: 1
+
+    # =========== Subc (specific) tests ==========
+    # Ordinary test case
+    0xff9e: 24 # Carry flag
+    0xff9c: 1
+
+    # Zero test case
+    0xff9a: 26 # Carry and Zero flags
+    0xff98: 1
+
+    # Overflow (?) (negative overflow) test case
+    0xff96: 16 # No (!) flags
+    0xff94: 1
+
+    # Carry (?) (unsigned overflow) test case
+    0xff92: 17 # Negative (!) flag
+    0xff90: 1
+
+    # Just zero (?) test case
+    0xff8e: 18 # Zero (!) flag
+    0xff8c: 1
+
+    # Just negative case
+    0xff8a: 17 # Negative flag
+    0xff88: 1  # -5
+    
+    # Negative plus negative case
+    0xff86: 25       # Carry and Negative flags
+    0xff84: 1  # -2
+
+    # Negative overflow case
+    0xff82: 28 # Carry and oVerflow flags
+    0xff80: 1
