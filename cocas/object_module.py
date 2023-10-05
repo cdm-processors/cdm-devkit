@@ -48,30 +48,47 @@ def sect_entry_to_str(pair: tuple[str, ExternalEntry]):
 
 
 def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
+    """
+    Export code locations from single section to a LOC record. Expected,
+    that all locations are in the same file, which is mentioned in
+    FILE record
+
+    :param cl: dict of (address of command -> line, col in sources)
+    :return: one string with LOC record, ended by new line
+    """
     if not cl:
         return []
     res = []
-    cur_file = None
     cur_items = []
-    # Much code in case that code locations will somehow be from different files
     for byte, loc in cl.items():
-        if loc.file != cur_file:
-            if cur_file is not None:
-                file = base64.b64encode(bytes(cur_file, 'utf-8'))
-                res.append(f'LOC  fp-{file.decode("utf-8")} {" ".join(cur_items)}\n')
-                cur_items = []
-            cur_file = loc.file
-        cur_items.append(f'{byte:02x}:{loc.line:02x}:{loc.column:02x}')
-    if cur_file is not None:
-        file = base64.b64encode(bytes(cur_file, 'utf-8'))
-        res.append(f'LOC  fp-{file.decode("utf-8")} {" ".join(cur_items)}\n')
+        if loc.line is not None:
+            cur_items.append(f'{byte:02x}:{loc.line:02x}:{loc.column:02x}')
+    if cur_items is not None:
+        res.append(f'LOC  {" ".join(cur_items)}\n')
     return res
 
 
 def export_obj(obj: ObjectModule, target_params: TargetParamsInterface, debug: bool) -> list[str]:
+    """
+    Export an object module in object file format
+
+    :param obj: object to export
+    :param target_params: information about selected target
+    :param debug: if needed to export debug information
+    :return: list of strings of object file, ended by new line
+    """
     result = []
     if target_params.object_file_header():
         result.append(f'TARG {target_params.object_file_header()}\n')
+    sample_loc = None
+    for i in obj.asects + obj.rsects:
+        if i.code_locations:
+            sample_loc = next(i.code_locations.values().__iter__())
+            break
+    if sample_loc:
+        file = base64.b64encode(bytes(sample_loc.file, 'utf-8'))
+        result.append(f'FILE fp-{file.decode("utf-8")}\n')
+
     for asect in obj.asects:
         s = data_to_str(asect.data)
         result.append(f'ABS  {asect.address:02x}: {s}\n')
