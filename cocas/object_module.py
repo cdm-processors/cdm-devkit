@@ -1,6 +1,7 @@
 import base64
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 
 from cocas.abstract_params import TargetParamsInterface
 from cocas.code_block import Section
@@ -33,7 +34,8 @@ class ObjectSectionRecord:
 
 @dataclass
 class ObjectModule:
-    def __init__(self):
+    def __init__(self, path: Path):
+        self.path = path
         self.asects: list[ObjectSectionRecord] = []
         self.rsects: list[ObjectSectionRecord] = []
 
@@ -68,7 +70,7 @@ def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
     return res
 
 
-def export_obj(obj: ObjectModule, target_params: TargetParamsInterface, debug: bool) -> list[str]:
+def export_object(obj: ObjectModule, target_params: TargetParamsInterface, debug: bool) -> list[str]:
     """
     Export an object module in object file format
 
@@ -80,13 +82,8 @@ def export_obj(obj: ObjectModule, target_params: TargetParamsInterface, debug: b
     result = []
     if target_params.object_file_header():
         result.append(f'TARG {target_params.object_file_header()}\n')
-    sample_loc = None
-    for i in obj.asects + obj.rsects:
-        if i.code_locations:
-            sample_loc = next(i.code_locations.values().__iter__())
-            break
-    if sample_loc:
-        file = base64.b64encode(bytes(sample_loc.file, 'utf-8'))
+    if obj.path:
+        file = base64.b64encode(bytes(str(obj.path), 'utf-8'))
         result.append(f'FILE fp-{file.decode("utf-8")}\n')
 
     for asect in obj.asects:

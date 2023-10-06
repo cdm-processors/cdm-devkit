@@ -1,6 +1,7 @@
 import base64
 import binascii
 import bisect
+from pathlib import Path
 from typing import List
 
 from antlr4 import CommonTokenStream, InputStream
@@ -75,12 +76,10 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
                 else:
                     raise CdmException(CdmExceptionTag.OBJ, self.file, xtrn.start.line,
                                        f'Section not found: {sect}')
-        # TODO: rewrite source file storing
+        om = ObjectModule(Path(filename))
         for i in (asects | rsects).values():
             for j in i.code_locations.values():
                 j.file = filename
-            pass
-        om = ObjectModule()
         om.asects = list(asects.values())
         om.rsects = list(rsects.values())
         return om
@@ -137,7 +136,7 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
     def visitLoc_record(self, ctx: ObjectFileParser.Loc_recordContext):
         res = {}
         for byte, line, col in map(self.visitLocation, ctx.location()):
-            res[byte] = CodeLocation('', line, col)
+            res[byte] = CodeLocation(None, line, col)
         return res
 
     def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext):

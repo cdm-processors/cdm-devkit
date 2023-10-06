@@ -16,7 +16,7 @@ from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_err
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
 from cocas.object_file import import_object
-from cocas.object_module import export_obj
+from cocas.object_module import export_object
 
 
 def write_image(filename: str, arr: bytearray):
@@ -114,7 +114,7 @@ def main():
                 input_stream = antlr4.InputStream(data)
                 macro_expanded_input_stream = process_macros(input_stream, library_macros, str(path.absolute()))
                 r = build_ast(macro_expanded_input_stream, str(path.absolute()))
-                obj = assemble(r, target_instructions, code_segments)
+                obj = assemble(r, target_instructions, code_segments, path)
                 objects.append((path, obj))
         except CdmException as e:
             e.log()
@@ -126,7 +126,7 @@ def main():
                 obj_path = args.output
             else:
                 obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
-            lines = export_obj(obj, target_params, args.debug)
+            lines = export_object(obj, target_params, args.debug)
             try:
                 with open(obj_path, 'w') as file:
                     file.writelines(lines)
