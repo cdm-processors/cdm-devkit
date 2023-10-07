@@ -16,7 +16,7 @@ from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_err
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
 from cocas.object_file import import_object
-from cocas.object_module import export_object
+from cocas.object_module import export_objects
 
 
 def write_image(filename: str, arr: bytearray):
@@ -64,6 +64,7 @@ def main():
                         help='target processor, CdM-16 is default')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
+    parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
     parser.add_argument('--debug', type=str, nargs='?', const='out.dbg.json',
                         help='export debug information into file')
@@ -80,9 +81,8 @@ def main():
     if len(args.sources) == 0:
         print('Error: no source files provided')
         return 2
-    if args.compile and args.output and len(args.sources) > 1:
-        log_error("MAIN", 'Cannot specify output location for multiple object files')
-        return 2
+    if args.compile and args.merge:
+        print('Error: cannot use --compile and --merge options at same time')
 
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
@@ -104,13 +104,27 @@ def main():
             data += '\n'
 
         try:
+            filetype: str
             if path.name.endswith('.obj'):
+                filetype = 'obj'
+            elif path.name.endswith('.asm'):
+                filetype = 'asm'
+            elif args.compile:
+                filetype = 'obj'
+            else:
+                filetype = 'asm'
+
+            if filetype == 'obj':
                 if args.compile:
-                    continue
+                    print("Error: object files should not be provided with --compile option")
+                    return 2
                 input_stream = antlr4.InputStream(data)
                 for obj in import_object(input_stream, str(path.absolute()), target_params):
                     objects.append((path, obj))
             else:
+                if args.merge:
+                    print("Error: source files should not be provided with --merge option")
+                    return 2
                 input_stream = antlr4.InputStream(data)
                 macro_expanded_input_stream = process_macros(input_stream, library_macros, str(path.absolute()))
                 r = build_ast(macro_expanded_input_stream, str(path.absolute()))
@@ -120,13 +134,21 @@ def main():
             e.log()
             return 1
 
-    if args.compile:
+    if args.merge or args.compile and args.output:
+        if args.output:
+            obj_path = args.output
+        else:
+            obj_path = pathlib.Path.cwd() / 'merged.obj'
+        lines = export_objects([tup[1] for tup in objects], target_params, args.debug)
+        try:
+            with open(obj_path, 'w') as file:
+                file.writelines(lines)
+        except OSError as e:
+            handle_os_error(e)
+    elif args.compile:
         for path, obj in objects:
-            if args.output:
-                obj_path = args.output
-            else:
-                obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
-            lines = export_object(obj, target_params, args.debug)
+            obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
+            lines = export_objects([obj], target_params, args.debug)
             try:
                 with open(obj_path, 'w') as file:
                     file.writelines(lines)
