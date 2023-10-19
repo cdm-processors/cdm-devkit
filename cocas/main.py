@@ -6,6 +6,7 @@ import os
 import pathlib
 import pkgutil
 from dataclasses import asdict
+from typing import Union
 
 import antlr4
 import colorama
@@ -59,15 +60,20 @@ def main():
     available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
 
     parser = argparse.ArgumentParser('cocas')
-    parser.add_argument('sources', type=str, nargs='*', help='source files')
-    parser.add_argument('-t', '--target', type=str, default='cdm-16',
-                        help='target processor, CdM-16 is default')
+    parser.add_argument('sources', type=pathlib.Path, nargs='*', help='source files')
+    parser.add_argument('-t', '--target', type=str, default='cdm-16', help='target processor, CdM-16 is default')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
-    parser.add_argument('--debug', type=str, nargs='?', const='out.dbg.json',
-                        help='export debug information into file')
+    debug_group = parser.add_argument_group('debug')
+    debug_group.add_argument('--debug', type=str, nargs='?', const='out.dbg.json', help='export debug information')
+    debug_path_group = debug_group.add_mutually_exclusive_group()
+    debug_path_group.add_argument('--relative-path', type=pathlib.Path,
+                                  help='convert source files paths in debug information to relative from given path')
+    debug_path_group.add_argument('--absolute-path', type=pathlib.Path, nargs='?', const=None,
+                                  help='covert source files paths in debug information to absolute, starting from '
+                                       'given or current working directory (default behaviour)')
     args = parser.parse_args()
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
@@ -83,6 +89,7 @@ def main():
         return 2
     if args.compile and args.merge:
         print('Error: cannot use --compile and --merge options at same time')
+        return 2
 
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
@@ -92,10 +99,22 @@ def main():
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
 
-    for filepath in args.sources:
-        path = pathlib.Path(filepath)
+    if args.relative_path:
+        relative_path: Union[pathlib.Path, None] = args.relative_path.resolve()
+    else:
+        relative_path = None
+
+    raw_path: pathlib.Path
+    for raw_path in args.sources:
+        dbg_info_path = raw_path.expanduser().absolute()
+        if relative_path:
+            try:
+                dbg_info_path = dbg_info_path.resolve().relative_to(relative_path)
+            except ValueError as e:
+                print('Error:', e)
+                return 2
         try:
-            with open(filepath, 'rb') as file:
+            with raw_path.open('rb') as file:
                 data = file.read()
         except OSError as e:
             handle_os_error(e)
@@ -104,32 +123,29 @@ def main():
             data += '\n'
 
         try:
-            filetype: str
-            if path.name.endswith('.obj'):
-                filetype = 'obj'
-            elif path.name.endswith('.asm'):
-                filetype = 'asm'
-            elif args.compile:
-                filetype = 'obj'
-            else:
-                filetype = 'asm'
+            filetype = dbg_info_path.suffix
+            if not filetype:
+                if args.merge:
+                    filetype = '.obj'
+                else:
+                    filetype = '.asm'
 
-            if filetype == 'obj':
+            if filetype == '.obj':
                 if args.compile:
                     print("Error: object files should not be provided with --compile option")
                     return 2
                 input_stream = antlr4.InputStream(data)
-                for obj in import_object(input_stream, str(path.absolute()), target_params):
-                    objects.append((path, obj))
+                for obj in import_object(input_stream, str(dbg_info_path.absolute()), target_params):
+                    objects.append((dbg_info_path, obj))
             else:
                 if args.merge:
                     print("Error: source files should not be provided with --merge option")
                     return 2
                 input_stream = antlr4.InputStream(data)
-                macro_expanded_input_stream = process_macros(input_stream, library_macros, str(path.absolute()))
-                r = build_ast(macro_expanded_input_stream, str(path.absolute()))
-                obj = assemble(r, target_instructions, code_segments, path)
-                objects.append((path, obj))
+                macro_expanded_input_stream = process_macros(input_stream, library_macros, str(dbg_info_path))
+                r = build_ast(macro_expanded_input_stream, str(dbg_info_path))
+                obj = assemble(r, target_instructions, code_segments, dbg_info_path)
+                objects.append((dbg_info_path, obj))
         except CdmException as e:
             e.log()
             return 1
@@ -146,8 +162,8 @@ def main():
         except OSError as e:
             handle_os_error(e)
     elif args.compile:
-        for path, obj in objects:
-            obj_path = pathlib.Path.cwd() / ((path.name[:-4] if path.name.endswith('.asm') else path.name) + '.obj')
+        for dbg_info_path, obj in objects:
+            obj_path = pathlib.Path.cwd() / ((dbg_info_path.name[:-4] if dbg_info_path.name.endswith('.asm') else dbg_info_path.name) + '.obj')
             lines = export_objects([obj], target_params, args.debug)
             try:
                 with open(obj_path, 'w') as file:
