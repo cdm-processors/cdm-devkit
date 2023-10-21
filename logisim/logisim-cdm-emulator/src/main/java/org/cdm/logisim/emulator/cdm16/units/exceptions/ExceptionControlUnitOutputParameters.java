@@ -14,4 +14,5 @@ public class ExceptionControlUnitOutputParameters {
         boolean int_ack;
         boolean latch_int;
         boolean reset_exc;
+        boolean latch_double_fault;
 }
