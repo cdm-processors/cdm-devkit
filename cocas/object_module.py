@@ -1,4 +1,5 @@
 import base64
+import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,8 +35,8 @@ class ObjectSectionRecord:
 
 @dataclass
 class ObjectModule:
-    def __init__(self, path: Path):
-        self.path = path
+    def __init__(self, debug_info_path: Path):
+        self.debug_info_path: pathlib.Path = debug_info_path
         self.asects: list[ObjectSectionRecord] = []
         self.rsects: list[ObjectSectionRecord] = []
 
@@ -85,8 +86,8 @@ def export_objects(objs: list[ObjectModule], target_params: TargetParamsInterfac
     for obj in objs:
         if len(objs) > 1:
             result.append('\n')
-        if obj.path:
-            file = base64.b64encode(bytes(str(obj.path), 'utf-8'))
+        if obj.debug_info_path:
+            file = base64.b64encode(bytes(str(obj.debug_info_path), 'utf-8'))
             result.append(f'FILE fp-{file.decode("utf-8")}\n')
 
         for asect in obj.asects:
