@@ -1,0 +1,16 @@
+memory:
+    # 15
+    0xfffe: 0xfff1  # -15
+    0xfffc: 17      # N
+
+    # -10
+    0xfffa: 10      # 10
+    0xfff8: 16      # Flags clear
+
+    # 0
+    0xfff6: 15      # 0 + 15
+    0xfff4: 26      # C Z
+
+    # 0x8000
+    0xfff2: 0x8000  # neg(-32768) = -32768
+    0xfff0: 21      # V N
