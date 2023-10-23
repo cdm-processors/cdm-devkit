@@ -255,7 +255,7 @@ bz baz     # branch if r0 == 0
 | **sub** ***rs0***, ***rs1***, ***rd***  |            **Subtract**. Computes ***rs0* - *rs1*** and puts result in ***rd***.             |     C, V, Z, N      |         1          |         2         |
 |      **sub** ***rd***, ***imm6***       |       **Subtract immediate**. Computes ***rs0* - *imm6*** and puts result in ***rd***.       |     C, V, Z, N      |         1          |         2         |
 | **subc** ***rs0***, ***rs1***, ***rd*** | **Subtract with carry**. Computes ***rs0* - *rs1* + *C* - *1*** and puts result in ***rd***. |     C, V, Z, N      |         1          |         2         |
-|       **neg** ***rs***, ***rd***        |        **Negation**. Computes **-*rs*** (2's complement) and puts result in ***rd***.        |        Z, N         |         1          |         2         |
+|       **neg** ***rs***, ***rd***        |        **Negation**. Computes **-*rs*** (2's complement) and puts result in ***rd***.        |     C, V, Z, N      |         1          |         2         |
 |       **sxt** ***rs***, ***rd***        | **Sign extend**. Fills higher 8 bits with 7-th bit of ***rs*** and puts result in ***rd***.  |        Z, N         |         1          |         2         |
 |       **scl** ***rs***, ***rd***        |        **Sign clear**. Clears higher 8 bits of ***rs*** and puts result in ***rd***.         |        Z, N         |         1          |         2         |
 
