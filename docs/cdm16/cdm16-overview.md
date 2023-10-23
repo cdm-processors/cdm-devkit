@@ -187,17 +187,13 @@ Z, N** flags in **PS** register.
 *Examples:*
 
 ```python
-br
-foo  # unconditional branch
+br foo     # unconditional branch
 
-cmp
-r0, r1
-beq
-bar  # branch if r0 == r1
+cmp r0, r1
+beq bar    # branch if r0 == r1
 
-tst
-r0
-bz  # branch if r0 == 0
+tst r0
+bz baz     # branch if r0 == 0
 ```
 
 |      Instruction       |                                                                            Description                                                                            | Flags <br> affected | Time <br> (cycles) | Size <br> (bytes) |
