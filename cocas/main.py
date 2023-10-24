@@ -103,19 +103,13 @@ def main():
         relative_path: Union[pathlib.Path, None] = args.relative_path.resolve()
     else:
         relative_path = None
+    if args.absolute_path:
+        absolute_path: pathlib.Path = args.absolute_path.resolve()
+    else:
+        absolute_path = pathlib.Path.cwd()
 
     filepath: pathlib.Path
     for filepath in args.sources:
-        if args.debug:
-            debug_info_path = filepath.expanduser().absolute()
-            if relative_path:
-                try:
-                    debug_info_path = debug_info_path.resolve().relative_to(relative_path)
-                except ValueError as e:
-                    print('Error:', e)
-                    return 2
-        else:
-            debug_info_path = None
         try:
             with filepath.open('rb') as file:
                 data = file.read()
@@ -138,12 +132,44 @@ def main():
                     print("Error: object files should not be provided with --compile option")
                     return 2
                 input_stream = antlr4.InputStream(data)
-                for obj in import_object(input_stream, str(debug_info_path), target_params):
+                for obj in import_object(input_stream, str(filepath), target_params):
+                    if args.relative_path:
+                        if obj.debug_info_path.is_absolute():
+                            try:
+                                obj.debug_info_path = obj.debug_info_path.resolve().relative_to(relative_path)
+                            except ValueError as e:
+                                print('Error:', e)
+                                return 2
+                        for i in obj.asects + obj.rsects:
+                            for j in i.code_locations.values():
+                                f = pathlib.Path(j.file)
+                                if f.is_absolute():
+                                    try:
+                                        j.file = str(f.resolve().relative_to(relative_path))
+                                    except ValueError as e:
+                                        print('Error:', e)
+                                        return 2
+                    # elif absolute_path:
+                    #     obj.debug_info_path = absolute_path / obj.debug_info_path.resolve()
+                    #     for i in obj.asects + obj.rsects:
+                    #         for j in i.code_locations.values():
+                    #             f = pathlib.Path(j.file)
+                    #             j.file = absolute_path / f
                     objects.append((filepath, obj))
             else:
                 if args.merge:
                     print("Error: source files should not be provided with --merge option")
                     return 2
+                if args.debug:
+                    debug_info_path = filepath.expanduser().absolute()
+                    if relative_path:
+                        try:
+                            debug_info_path = debug_info_path.resolve().relative_to(relative_path)
+                        except ValueError as e:
+                            print('Error:', e)
+                            return 2
+                else:
+                    debug_info_path = None
                 input_stream = antlr4.InputStream(data)
                 macro_expanded_input_stream = process_macros(input_stream, library_macros, str(filepath))
                 r = build_ast(macro_expanded_input_stream, str(filepath))
@@ -162,9 +188,9 @@ def main():
 
     if args.merge or args.compile and args.output:
         if args.output:
-            obj_path = args.output
+            obj_path = pathlib.Path(args.output)
         else:
-            obj_path = 'merged.obj'
+            obj_path = pathlib.Path('merged.obj')
         lines = export_objects([tup[1] for tup in objects], target_params, args.debug)
         try:
             with obj_path.open('w') as file:
