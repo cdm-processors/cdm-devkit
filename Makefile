@@ -174,7 +174,7 @@ microcode:
 		$(SYNTHM) -i cdm16_decoder.def $(NEW_LINE)
 
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode && \
-		$(SYNTHM) -i cdm16_decoder_exc.def --fill 0x8000000 $(NEW_LINE)
+		$(SYNTHM) -i cdm16_decoder_exc.def --fill 0x8000400 $(NEW_LINE)
 
 # Prepare resources for logisim-cdm-emulator
 emulator_resources: microcode

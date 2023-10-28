@@ -44,14 +44,14 @@ public class ExceptionControlUnit {
         boolean multipleInstructionsAcrossPhases =
                 (internalExceptionHappened || parameters.exc_trig_ext()) && parameters.exc_latch();
 
-        boolean latchDoubleFault =
+        boolean latch_double_fault =
                 unrecoverableInstruction
                 || multipleInstructionsOnSamePhase
                 || multipleInstructionsAcrossPhases;
 
         int exc_internal_vec_reg_output;
 
-        if (latchDoubleFault) {
+        if (latch_double_fault) {
             exc_internal_vec_reg_output = Processor.ExceptionNumbers.DOUBLE_FAULT;
         } else {
             exc_internal_vec_reg_output = excNumber;
@@ -81,7 +81,8 @@ public class ExceptionControlUnit {
                 exc_latch_output,
                 int_ack,
                 latch_int,
-                reset_exc
+                reset_exc,
+                latch_double_fault
         );
     }
 }

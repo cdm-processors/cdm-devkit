@@ -19,7 +19,7 @@ public class Alu {
 
         int rd = 0;
 
-        int cIn = parameters.cIn() ? 1 : 0;
+        int cIn = toInteger(parameters.cIn());
 
         int cOut = 0;
         int vOut = 0;
@@ -44,29 +44,31 @@ public class Alu {
                     case Processor.ALU_3op.ADD:
                         rd = rs0 + rs1;
                         cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
+                        vOut = checkV(normalize(rd), rs0, rs1);
                         break;
                     case Processor.ALU_3op.ADC:
                         rd = rs0 + rs1 + cIn;
                         cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
+                        vOut = checkV(normalize(rd), rs0, rs1 + cIn);
                         break;
                     case Processor.ALU_3op.SUB:
-                        rd = rs0 + (~rs1) + 1;
+                        rd = rs0 + (rs1 ^ 0xFFFF) + 1;
                         cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
+                        vOut = checkV(normalize(rd), rs0, (rs1 ^ 0xFFFF) + 1);
                         break;
                     case Processor.ALU_3op.SBC:
-                        rd = rs0 + (~rs1) + cIn;
+                        rd = rs0 + (rs1 ^ 0xFFFF) + cIn;
                         cOut = checkC(rd);
-                        vOut = checkV(rd, rs0, rs1);
+                        vOut = checkV(normalize(rd), rs0, (rs1 ^ 0xFFFF) + cIn);
                         break;
                 }
                 break;
             case Processor.ALU_InstructionGroups.ALU_2:
                 switch (parameters.alu_func()) {
                     case Processor.ALU_2op.NEG:
-                        rd = -rs0;
+                        rd = (rs0 ^ 0xFFFF) + 1;
+                        cOut = checkC(rd);
+                        vOut = toInteger(rs0 == 0x8000);
                         break;
                     case Processor.ALU_2op.NOT:
                         rd = ~rs0;

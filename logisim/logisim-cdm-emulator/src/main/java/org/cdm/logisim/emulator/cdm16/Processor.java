@@ -135,7 +135,7 @@ public class Processor {
                     internalExceptionVectorRegister.getValue(),
                     externalExceptionVectorRegister.getValue(),
                     state.getPort(Ports.EXC_NUMBER).toIntValue(),
-                    fetch,
+                    ecuSignals.latch_double_fault(),
                     toBoolean(state.getPort(Ports.EXC)),
                     ecuSignals.exc_triggered(),
                     ecuSignals.latch_int(),

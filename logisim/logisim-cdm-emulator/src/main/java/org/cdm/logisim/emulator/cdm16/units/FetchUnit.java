@@ -9,7 +9,7 @@ public class FetchUnit {
             int exc_internal_vec,
             int exc_vec,
             int direct_exc_vec,
-            boolean fetch,
+            boolean latch_double_fault,
             boolean exc_trig_ext,
             boolean exc_triggered,
             boolean latch_int,
@@ -22,8 +22,12 @@ public class FetchUnit {
         } else {
             if (latch_int) {
                 if (exc_triggered) {
-                    if (fetch && exc_trig_ext) {
-                        instruction = direct_exc_vec;
+                    if (exc_trig_ext) {
+                        if (latch_double_fault) {
+                            instruction = Processor.ExceptionNumbers.DOUBLE_FAULT;
+                        } else {
+                            instruction = direct_exc_vec;
+                        }
                     } else {
                         if (exc_internal_vec == Processor.ExceptionNumbers.EXTERNAL_EXC) {
                             instruction = exc_vec;
