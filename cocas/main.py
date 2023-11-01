@@ -70,10 +70,9 @@ def main():
     debug_group.add_argument('--debug', type=str, nargs='?', const='out.dbg.json', help='export debug information')
     debug_path_group = debug_group.add_mutually_exclusive_group()
     debug_path_group.add_argument('--relative-path', type=pathlib.Path,
-                                  help='convert source files paths in debug information to relative from given path')
-    debug_path_group.add_argument('--absolute-path', type=pathlib.Path, nargs='?', const=None,
-                                  help='covert source files paths in debug information to absolute, starting from '
-                                       'given or current working directory (default behaviour)')
+                                  help='convert source files paths to relative in debug info and object files')
+    debug_path_group.add_argument('--absolute-path', type=pathlib.Path,
+                                  help='convert all debug paths to absolute, concating with given path')
     args = parser.parse_args()
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
@@ -104,9 +103,9 @@ def main():
     else:
         relative_path = None
     if args.absolute_path:
-        absolute_path: pathlib.Path = args.absolute_path.resolve()
+        absolute_path: Union[pathlib.Path, None] = args.absolute_path.resolve()
     else:
-        absolute_path = pathlib.Path.cwd()
+        absolute_path = None
 
     filepath: pathlib.Path
     for filepath in args.sources:
@@ -134,6 +133,7 @@ def main():
                 input_stream = antlr4.InputStream(data)
                 for obj in import_object(input_stream, str(filepath), target_params):
                     if args.relative_path:
+                        dip = obj.debug_info_path
                         if obj.debug_info_path.is_absolute():
                             try:
                                 obj.debug_info_path = obj.debug_info_path.resolve().relative_to(relative_path)
@@ -143,20 +143,23 @@ def main():
                         for i in obj.asects + obj.rsects:
                             for j in i.code_locations.values():
                                 f = pathlib.Path(j.file)
-                                if f.is_absolute():
-                                    try:
-                                        j.file = str(f.resolve().relative_to(relative_path))
-                                    except ValueError as e:
-                                        print('Error:', e)
-                                        return 2
-                    # elif absolute_path:
-                    #     obj.debug_info_path = absolute_path / obj.debug_info_path.resolve()
-                    #     for i in obj.asects + obj.rsects:
-                    #         for j in i.code_locations.values():
-                    #             f = pathlib.Path(j.file)
-                    #             j.file = absolute_path / f
+                                if f == dip:
+                                    j.file = obj.debug_info_path
+                                else:
+                                    if f.is_absolute():
+                                        try:
+                                            j.file = str(f.resolve().relative_to(relative_path))
+                                        except ValueError as e:
+                                            print('Error:', e)
+                                            return 2
+                    elif absolute_path:
+                        obj.debug_info_path = absolute_path / obj.debug_info_path
+                        for i in obj.asects + obj.rsects:
+                            for j in i.code_locations.values():
+                                f = pathlib.Path(j.file)
+                                j.file = str(absolute_path / f)
                     objects.append((filepath, obj))
-            else:
+            else:  # filetype == '.asm'
                 if args.merge:
                     print("Error: source files should not be provided with --merge option")
                     return 2
@@ -181,6 +184,12 @@ def main():
                         for j in i.code_locations.values():
                             if j.file == fp:
                                 j.file = dip
+                            else:
+                                try:
+                                    j.file = str(pathlib.Path(j.file).resolve().relative_to(relative_path))
+                                except ValueError as e:
+                                    print('Error:', e)
+                                    return 2
                 objects.append((filepath, obj))
         except CdmException as e:
             e.log()
