@@ -44,8 +44,10 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         return modules
 
     def visitObject_block(self, ctx: ObjectFileParser.Object_blockContext) -> ObjectModule:
-        # TODO: work with empty debug information
-        filename = self.visitSource_record(ctx.source_record())
+        if ctx.source_record():
+            filename = self.visitSource_record(ctx.source_record())
+        else:
+            filename = None
 
         if ctx.asect_block():
             asects, asect_addr = self.visitAsect_block(ctx.asect_block())
@@ -76,10 +78,15 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
                 else:
                     raise CdmException(CdmExceptionTag.OBJ, self.file, xtrn.start.line,
                                        f'Section not found: {sect}')
-        om = ObjectModule(Path(filename))
-        for i in (asects | rsects).values():
-            for j in i.code_locations.values():
-                j.file = filename
+        if filename:
+            om = ObjectModule(Path(filename))
+            for i in (asects | rsects).values():
+                for j in i.code_locations.values():
+                    j.file = filename
+        else:
+            om = ObjectModule(None)
+            for i in (asects | rsects).values():
+                i.code_locations = {}
         om.asects = list(asects.values())
         om.rsects = list(rsects.values())
         return om

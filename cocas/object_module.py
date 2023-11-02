@@ -3,6 +3,7 @@ import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Union
 
 from cocas.abstract_params import TargetParamsInterface
 from cocas.code_block import Section
@@ -35,7 +36,7 @@ class ObjectSectionRecord:
 
 @dataclass
 class ObjectModule:
-    def __init__(self, debug_info_path: Path):
+    def __init__(self, debug_info_path: Union[Path, None]):
         self.debug_info_path: pathlib.Path = debug_info_path
         self.asects: list[ObjectSectionRecord] = []
         self.rsects: list[ObjectSectionRecord] = []
