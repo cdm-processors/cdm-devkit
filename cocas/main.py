@@ -200,7 +200,7 @@ def main():
             obj_path = pathlib.Path(args.output)
         else:
             obj_path = pathlib.Path('merged.obj')
-        lines = export_objects([tup[1] for tup in objects], target_params, args.debug)
+        lines = export_objects([tup[1] for tup in objects], target_params, (args.debug or args.merge))
         try:
             with obj_path.open('w') as file:
                 file.writelines(lines)

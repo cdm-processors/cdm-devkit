@@ -87,7 +87,7 @@ def export_objects(objs: list[ObjectModule], target_params: TargetParamsInterfac
     for obj in objs:
         if len(objs) > 1:
             result.append('\n')
-        if obj.debug_info_path:
+        if debug and obj.debug_info_path:
             file = base64.b64encode(bytes(str(obj.debug_info_path), 'utf-8'))
             result.append(f'FILE fp-{file.decode("utf-8")}\n')
 
