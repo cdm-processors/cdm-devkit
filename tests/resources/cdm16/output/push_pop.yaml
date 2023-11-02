@@ -2,7 +2,7 @@ registers:
     r0: 0xaabb
     r1: 15
     r7: 0x8000
-    sp: 0x0f
+    sp: 0x0e
     ps: 10
 
 memory:

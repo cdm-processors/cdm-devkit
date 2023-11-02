@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
+import org.cdm.logisim.emulator.cdm16.ProcessorComponent;
 
 /**
  * The library of components that the user can access.

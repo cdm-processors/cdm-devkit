@@ -32,7 +32,7 @@ class TargetInstructions(TargetInstructionsInterface):
     def assemble_instruction(line: InstructionNode, temp_storage) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         try:
-            if line.mnemonic in TargetInstructions.assembly_directives:
+            if line.mnemonic in TargetInstructions.assembly_directives():
                 handler = assembler_directives[line.mnemonic]
                 segments = handler(line.arguments)
             elif line.mnemonic in cpu_instructions:
@@ -170,7 +170,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'bnvs': 0xE7,
 
             'bhi': 0xE8,
-            'bnlc': 0xE8,
+            'bnls': 0xE8,
 
             'bls': 0xE9,
             'bnhi': 0xE9,
@@ -209,7 +209,10 @@ class TargetInstructions(TargetInstructionsInterface):
             'setsp': 0xCD,
         },
     }
-    assembly_directives = {'ds', 'dc'}
+
+    @staticmethod
+    def assembly_directives():
+        return {'ds', 'dc'}
 
 
 def binary_handler(opcode: int, arguments: list):
@@ -338,7 +341,7 @@ def initialize():
         for mnemonic, opcode in instructions.items():
             cpu_instructions[mnemonic] = (opcode, command_handlers[category])
 
-    for directive in TargetInstructions.assembly_directives:
+    for directive in TargetInstructions.assembly_directives():
         assembler_directives[directive] = command_handlers[directive]
 
 
