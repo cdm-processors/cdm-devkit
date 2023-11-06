@@ -72,7 +72,9 @@ def main():
     debug_path_group.add_argument('--relative-path', type=pathlib.Path,
                                   help='convert source files paths to relative in debug info and object files')
     debug_path_group.add_argument('--absolute-path', type=pathlib.Path,
-                                  help='convert all debug paths to absolute, concating with given path')
+                                  help='convert all debug paths to absolute, concatenating with given path')
+    debug_group.add_argument('--realpath', action='store_true',
+                             help='canonicalize paths by following symlinks and resolving . and ..')
     args = parser.parse_args()
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
@@ -98,12 +100,17 @@ def main():
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
 
+    realpath = bool(args.realpath)
     if args.relative_path:
-        relative_path: Union[pathlib.Path, None] = args.relative_path.resolve()
+        relative_path: Union[pathlib.Path, None] = args.relative_path.absolute()
+        if realpath:
+            relative_path = relative_path.resolve()
     else:
         relative_path = None
     if args.absolute_path:
-        absolute_path: Union[pathlib.Path, None] = args.absolute_path.resolve()
+        absolute_path: Union[pathlib.Path, None] = args.absolute_path.absolute()
+        if realpath:
+            absolute_path = absolute_path.resolve()
     else:
         absolute_path = None
 
@@ -132,11 +139,21 @@ def main():
                     return 2
                 input_stream = antlr4.InputStream(data)
                 for obj in import_object(input_stream, str(filepath), target_params):
-                    if args.relative_path:
+                    if realpath:
+                        dip = obj.debug_info_path
+                        obj.debug_info_path = obj.debug_info_path.resolve()
+                        for i in obj.asects + obj.rsects:
+                            for j in i.code_locations.values():
+                                f = pathlib.Path(j.file)
+                                if f == dip:
+                                    j.file = str(obj.debug_info_path)
+                                else:
+                                    j.file = str(pathlib.Path(j.file).resolve())
+                    if relative_path:
                         dip = obj.debug_info_path
                         if obj.debug_info_path.is_absolute():
                             try:
-                                obj.debug_info_path = obj.debug_info_path.resolve().relative_to(relative_path)
+                                obj.debug_info_path = obj.debug_info_path.absolute().relative_to(relative_path)
                             except ValueError as e:
                                 print('Error:', e)
                                 return 2
@@ -144,20 +161,22 @@ def main():
                             for j in i.code_locations.values():
                                 f = pathlib.Path(j.file)
                                 if f == dip:
-                                    j.file = obj.debug_info_path
+                                    j.file = str(obj.debug_info_path)
                                 else:
                                     if f.is_absolute():
                                         try:
-                                            j.file = str(f.resolve().relative_to(relative_path))
+                                            j.file = str(f.absolute().relative_to(relative_path))
                                         except ValueError as e:
                                             print('Error:', e)
                                             return 2
                     elif absolute_path:
                         obj.debug_info_path = absolute_path / obj.debug_info_path
+                        if realpath:
+                            obj.debug_info_path = obj.debug_info_path.resolve()
                         for i in obj.asects + obj.rsects:
                             for j in i.code_locations.values():
-                                f = pathlib.Path(j.file)
-                                j.file = str(absolute_path / f)
+                                f = absolute_path / pathlib.Path(j.file)
+                                j.file = str(f)
                     objects.append((filepath, obj))
             else:  # filetype == '.asm'
                 if args.merge:
@@ -165,9 +184,11 @@ def main():
                     return 2
                 if args.debug:
                     debug_info_path = filepath.expanduser().absolute()
+                    if realpath:
+                        debug_info_path = debug_info_path.resolve()
                     if relative_path:
                         try:
-                            debug_info_path = debug_info_path.resolve().relative_to(relative_path)
+                            debug_info_path = debug_info_path.relative_to(relative_path)
                         except ValueError as e:
                             print('Error:', e)
                             return 2
@@ -186,7 +207,10 @@ def main():
                                 j.file = dip
                             else:
                                 try:
-                                    j.file = str(pathlib.Path(j.file).resolve().relative_to(relative_path))
+                                    f = pathlib.Path(j.file).absolute()
+                                    if realpath:
+                                        f = f.resolve()
+                                    j.file = str(f.relative_to(relative_path))
                                 except ValueError as e:
                                     print('Error:', e)
                                     return 2
