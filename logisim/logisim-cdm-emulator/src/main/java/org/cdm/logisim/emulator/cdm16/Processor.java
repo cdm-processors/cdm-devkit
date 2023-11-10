@@ -75,6 +75,8 @@ public class Processor {
     private final Latch exceptionLatch = new Latch();
     private final Latch startupLatch = new Latch();
 
+    private final Latch virtualInstructionLatch = new Latch();
+
     private final BusController busController = new BusController();
 
     private InstructionDecoderOutputParameters decoderSignals;
@@ -143,6 +145,8 @@ public class Processor {
             );
 
             ir.setValue(instruction);
+
+            virtualInstructionLatch.setValue(ecuSignals.latch_int() || startupLatch.getValue());
         }
 
         if (startupLatch.getValue()) {
@@ -278,7 +282,15 @@ public class Processor {
         }
 
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_INC)) {
-            if (!decoderSignals.br_rel_nop()) {
+            boolean pc_int_inhibit;
+
+            if (ecuSignals.exc_triggered()) {
+                pc_int_inhibit = virtualInstructionLatch.getValue();
+            } else {
+                pc_int_inhibit = decoderSignals.br_rel_nop();
+            }
+
+            if (!pc_int_inhibit) {
                 if (ecuSignals.exc_triggered()) {
                     pc.dec(2);
                 } else {
