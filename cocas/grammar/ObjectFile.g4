@@ -1,7 +1,7 @@
 grammar ObjectFile;
 
 object_file:
-    NEWLINE*
+    NEWLINE?
     targ_record?
     object_block+
     EOF
@@ -34,16 +34,16 @@ rsect_block:
     ntry_record*
 ;
 
-targ_record: TARG label NEWLINE*;
-source_record: FILE path_base64 NEWLINE*;
-abs_record: ABS number COLON data NEWLINE*;
-loc_record: LOC location* NEWLINE*;
-ntry_record: NTRY label number NEWLINE*;
-name_record: NAME section NEWLINE*;
-alig_record: ALIG number NEWLINE*;
-data_record: DATA data NEWLINE*;
-rel_record: REL entry_usage* NEWLINE*;
-xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE*;
+targ_record: TARG label NEWLINE;
+source_record: FILE path_base64 NEWLINE;
+abs_record: ABS number COLON data NEWLINE;
+loc_record: LOC location* NEWLINE;
+ntry_record: NTRY label number NEWLINE;
+name_record: NAME section NEWLINE;
+alig_record: ALIG number NEWLINE;
+data_record: DATA data NEWLINE;
+rel_record: REL entry_usage* NEWLINE;
+xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE;
 
 data: byte*;
 entry_usage: minus? number (COLON range)?;
@@ -74,5 +74,5 @@ ABS_SECTION: '$abs';
 
 COLON: ':';
 MINUS: '-';
-NEWLINE: '\r'? '\n' ;
+NEWLINE: ('\r'? '\n')+ ;
 WS : (' ' | '\t') -> skip ;
