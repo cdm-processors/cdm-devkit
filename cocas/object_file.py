@@ -1,5 +1,3 @@
-import base64
-import binascii
 import bisect
 from pathlib import Path
 from typing import List
@@ -133,7 +131,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         return self.visitLabel(ctx.label())
 
     def visitSource_record(self, ctx: ObjectFileParser.Source_recordContext):
-        return self.visitPath_base64(ctx.path_base64())
+        return self.visitFilepath(ctx.filepath())
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
         addr = self.visitNumber(ctx.abs_address())
@@ -159,6 +157,9 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
     def visitData_record(self, ctx: ObjectFileParser.Data_recordContext):
         return self.visitData(ctx.data())
+
+    def visitFilepath(self, ctx: ObjectFileParser.FilepathContext):
+        return ctx.getText()
 
     def visitRel_record(self, ctx: ObjectFileParser.Rel_recordContext):
         return [self.visitEntry_usage(eu) for eu in ctx.entry_usage()]
@@ -211,16 +212,6 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
     def visitSection(self, ctx: ObjectFileParser.SectionContext):
         return ctx.getText()
-
-    def visitPath_base64(self, ctx: ObjectFileParser.Path_base64Context):
-        try:
-            return base64.b64decode(ctx.getText()[3:]).decode('utf-8')
-        except binascii.Error:
-            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               'Not a valid Base64 string')
-        except UnicodeDecodeError:
-            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               'Not a valid Base64 representation of unicode string')
 
     def visitMinus(self, ctx: ObjectFileParser.MinusContext):
         pass

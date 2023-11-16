@@ -89,6 +89,11 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#filepath.
+    def visitFilepath(self, ctx:ObjectFileParser.FilepathContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#entry_usage.
     def visitEntry_usage(self, ctx:ObjectFileParser.Entry_usageContext):
         return self.visitChildren(ctx)
@@ -121,11 +126,6 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ObjectFileParser#section.
     def visitSection(self, ctx:ObjectFileParser.SectionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ObjectFileParser#path_base64.
-    def visitPath_base64(self, ctx:ObjectFileParser.Path_base64Context):
         return self.visitChildren(ctx)
 
 

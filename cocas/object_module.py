@@ -1,4 +1,3 @@
-import base64
 import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
@@ -88,8 +87,7 @@ def export_objects(objs: list[ObjectModule], target_params: TargetParamsInterfac
         if len(objs) > 1:
             result.append('\n')
         if debug and obj.debug_info_path:
-            file = base64.b64encode(bytes(str(obj.debug_info_path), 'utf-8'))
-            result.append(f'FILE fp-{file.decode("utf-8")}\n')
+            result.append(f'FILE {str(obj.debug_info_path)}\n')
 
         for asect in obj.asects:
             s = data_to_str(asect.data)

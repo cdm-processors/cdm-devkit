@@ -37,7 +37,7 @@ rsect_block:
 ;
 
 targ_record: TARG label NEWLINE;
-source_record: FILE path_base64 NEWLINE;
+source_record: FILE SPACES_FILE filepath NEWLINE;
 abs_record: ABS abs_address COLON_ABS data? NEWLINE_BYTES+;
 loc_record: LOC location* NEWLINE;
 ntry_record: NTRY label number NEWLINE;
@@ -48,6 +48,7 @@ rel_record: REL entry_usage* NEWLINE;
 xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE;
 
 data: BYTES;
+filepath: FILEPATH;
 entry_usage: minus? number (COLON range)?;
 range: number COLON number;
 location: number COLON number COLON number;
@@ -56,5 +57,4 @@ abs_address: WORD_ABS;
 number: WORD;
 label: WORD;
 section: WORD | ABS_SECTION;
-path_base64: FP_BASE64;
 minus: MINUS;
