@@ -1,4 +1,4 @@
-# Generated from ./grammar/ObjectFile.g4 by ANTLR 4.13.1
+# Generated from ./grammar/ObjectFileParser.g4 by ANTLR 4.13.1
 from antlr4 import *
 if "." in __name__:
     from .ObjectFileParser import ObjectFileParser
@@ -7,7 +7,7 @@ else:
 
 # This class defines a complete generic visitor for a parse tree produced by ObjectFileParser.
 
-class ObjectFileVisitor(ParseTreeVisitor):
+class ObjectFileParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ObjectFileParser#object_file.
     def visitObject_file(self, ctx:ObjectFileParser.Object_fileContext):
@@ -94,11 +94,6 @@ class ObjectFileVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ObjectFileParser#byte.
-    def visitByte(self, ctx:ObjectFileParser.ByteContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by ObjectFileParser#range.
     def visitRange(self, ctx:ObjectFileParser.RangeContext):
         return self.visitChildren(ctx)
@@ -106,6 +101,11 @@ class ObjectFileVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ObjectFileParser#location.
     def visitLocation(self, ctx:ObjectFileParser.LocationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#abs_address.
+    def visitAbs_address(self, ctx:ObjectFileParser.Abs_addressContext):
         return self.visitChildren(ctx)
 
 

@@ -1,4 +1,6 @@
-grammar ObjectFile;
+parser grammar ObjectFileParser;
+
+options { tokenVocab = ObjectFileLexer; }
 
 object_file:
     NEWLINE?
@@ -36,43 +38,23 @@ rsect_block:
 
 targ_record: TARG label NEWLINE;
 source_record: FILE path_base64 NEWLINE;
-abs_record: ABS number COLON data NEWLINE;
+abs_record: ABS abs_address COLON_ABS data? NEWLINE_BYTES+;
 loc_record: LOC location* NEWLINE;
 ntry_record: NTRY label number NEWLINE;
 name_record: NAME section NEWLINE;
 alig_record: ALIG number NEWLINE;
-data_record: DATA data NEWLINE;
+data_record: DATA data? NEWLINE_BYTES+;
 rel_record: REL entry_usage* NEWLINE;
 xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE;
 
-data: byte*;
+data: BYTES;
 entry_usage: minus? number (COLON range)?;
-byte: number;
 range: number COLON number;
 location: number COLON number COLON number;
 
+abs_address: WORD_ABS;
 number: WORD;
 label: WORD;
 section: WORD | ABS_SECTION;
 path_base64: FP_BASE64;
 minus: MINUS;
-
-TARG: 'TARG';
-FILE: 'FILE';
-ABS : 'ABS';
-LOC: 'LOC';
-NTRY: 'NTRY';
-NAME: 'NAME';
-ALIG: 'ALIG';
-DATA: 'DATA';
-REL : 'REL';
-XTRN: 'XTRN';
-
-WORD: [a-zA-Z_0-9]+;
-FP_BASE64 : 'fp-' [a-zA-Z0-9/+=]+;
-ABS_SECTION: '$abs';
-
-COLON: ':';
-MINUS: '-';
-NEWLINE: ('\r'? '\n')+ ;
-WS : (' ' | '\t') -> skip ;

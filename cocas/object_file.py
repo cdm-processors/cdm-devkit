@@ -11,12 +11,12 @@ from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.external_entry import ExternalEntry
 from cocas.generated.ObjectFileLexer import ObjectFileLexer
 from cocas.generated.ObjectFileParser import ObjectFileParser
-from cocas.generated.ObjectFileVisitor import ObjectFileVisitor
+from cocas.generated.ObjectFileParserVisitor import ObjectFileParserVisitor
 from cocas.location import CodeLocation
 from cocas.object_module import ObjectModule, ObjectSectionRecord
 
 
-class ImportObjectFileVisitor(ObjectFileVisitor):
+class ImportObjectFileVisitor(ObjectFileParserVisitor):
     def __init__(self, filepath, target_params: TargetParamsInterface):
         super().__init__()
         self.file = filepath
@@ -136,7 +136,7 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         return self.visitPath_base64(ctx.path_base64())
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
-        addr = self.visitNumber(ctx.number())
+        addr = self.visitNumber(ctx.abs_address())
         data = self.visitData(ctx.data())
         return addr, ObjectSectionRecord('$abs', addr, data, {}, [], {})
 
@@ -170,7 +170,18 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         return label, entries
 
     def visitData(self, ctx: ObjectFileParser.DataContext):
-        return bytearray(map(self.visitByte, ctx.byte()))
+        try:
+            return bytearray(map(lambda x: int(x, 16), ctx.getText().split()))
+        except ValueError:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               f'Not a 16-bit number: {ctx.getText()}')
+
+    def visitAbs_address(self, ctx: ObjectFileParser.Abs_addressContext):
+        try:
+            return int(ctx.getText(), 16)
+        except ValueError:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               f'Not a 16-bit number: {ctx.getText()}')
 
     def visitNumber(self, ctx: ObjectFileParser.NumberContext):
         try:
@@ -178,13 +189,6 @@ class ImportObjectFileVisitor(ObjectFileVisitor):
         except ValueError:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
                                f'Not a 16-bit number: {ctx.getText()}')
-
-    def visitByte(self, ctx: ObjectFileParser.ByteContext):
-        num = self.visitNumber(ctx.number())
-        if num > 255:
-            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Too big number {ctx.getText()}, expected byte')
-        return num
 
     def visitEntry_usage(self, ctx: ObjectFileParser.Entry_usageContext):
         addr = self.visitNumber(ctx.number())
