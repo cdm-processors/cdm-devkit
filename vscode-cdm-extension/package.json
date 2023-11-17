@@ -10,6 +10,7 @@
         "Programming Languages",
         "Snippets"
     ],
+    "main": "./out/extension.js",
     "icon": "icon.png",
     "publisher": "cdm-processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
@@ -29,6 +30,17 @@
         "cdm8e"
     ],
     "contributes": {
+        "breakpoints": [
+            {
+                "language": "cdm8-assembly"
+            },
+            {
+                "language": "cdm8e-assembly"
+            },
+            {
+                "language": "cdm16-assembly"
+            }
+        ],
         "languages": [
             {
                 "id": "cdm8-assembly",
@@ -110,9 +122,110 @@
                 "language": "cdm16-assembly",
                 "path": "./snippets/cdm-assembly-snippets.json"
             }
+        ],
+        "debuggers": [
+            {
+                "label": "CdM Debugger",
+                "type": "cdm",
+                "languages": [
+                    "cdm8-assembly",
+                    "cdm8e-assembly",
+                    "cdm16-assembly"
+                ],
+                "configurationAttributes": {
+                    "initialize": {
+                        "required": [
+                            "serverAddress",
+                            "target",
+                            "program"
+                        ],
+                        "properties": {
+                            "serverAddress": {
+                                "type": "string",
+                                "description": "Websocket address to a debug server"
+                            },
+                            "target": {
+                                "enum": ["cdm8", "cdm8e", "cdm16", "generic"],
+                                "description": "Processor, which will be used to debug a program"
+                            },
+                            "program": {
+								"type": "string",
+								"description": "Absolute path to an assembler file."
+                            }
+                        }
+                    }
+                },
+                "configurationSnippets": [
+                    {
+                        "label": "CdM: CdM-8 with Logisim",
+                        "body": {
+                            "type": "cdm",
+                            "request": "launch",
+                            "name": "Debug CdM-8 with Logisim",
+                            "serverAddress": "ws://localhost:7001",
+                            "target": "cdm8",
+                            "program": "${file}"
+                        }
+                    },
+                    {
+                        "label": "CdM: CdM-8e with Logisim",
+                        "body": {
+                            "type": "cdm",
+                            "request": "launch",
+                            "name": "Debug CdM-8e with Logisim",
+                            "serverAddress": "ws://localhost:7001",
+                            "target": "cdm8e",
+                            "program": "${file}"
+                        }
+                    },
+                    {
+                        "label": "CdM: CdM-16 with Logisim",
+                        "body": {
+                            "type": "cdm",
+                            "request": "launch",
+                            "name": "Debug CdM-16 with Logisim",
+                            "serverAddress": "ws://localhost:7001",
+                            "target": "cdm16",
+                            "program": "${file}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "taskDefinitions": [
+            {
+                "type": "cdm"
+            }
         ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.3",
+        "@types/node": "18.x",
+        "@types/vscode": "^1.84.0",
+        "@types/ws": "^8.5.9",
+        "@typescript-eslint/eslint-plugin": "^6.9.0",
+        "@typescript-eslint/parser": "^6.9.0",
+        "@vscode/test-electron": "^2.3.6",
+        "eslint": "^8.52.0",
+        "glob": "^10.3.10",
+        "mocha": "^10.2.0",
+        "typescript": "^5.2.2"
     },
     "__metadata": {
         "publisherDisplayName": "CdM Processors"
+    },
+    "activationEvents": ["onDebug"],
+    "dependencies": {
+        "@vscode/debugadapter": "^1.64.0",
+        "@vscode/debugprotocol": "^1.64.0",
+        "ws": "^8.14.2"
     }
 }
