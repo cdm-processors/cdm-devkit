@@ -175,10 +175,10 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             value = int(byte, 16)
         except ValueError:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Not a 16-bit number: {byte}')
+                               f'Not a hex number: {byte}')
         if not 0 <= value <= 255:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'To big 16-bit number: {byte}, expected byte')
+                               f'To big hex number: {byte}, expected byte')
         return value
 
     def visitData(self, ctx: ObjectFileParser.DataContext):
@@ -189,14 +189,14 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             return int(ctx.getText(), 16)
         except ValueError:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Not a 16-bit number: {ctx.getText()}')
+                               f'Not a hex number: {ctx.getText()}')
 
     def visitNumber(self, ctx: ObjectFileParser.NumberContext):
         try:
             return int(ctx.getText(), 16)
         except ValueError:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Not a 16-bit number: {ctx.getText()}')
+                               f'Not a hex number: {ctx.getText()}')
 
     def visitEntry_usage(self, ctx: ObjectFileParser.Entry_usageContext):
         addr = self.visitNumber(ctx.number())
