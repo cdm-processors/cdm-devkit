@@ -170,12 +170,19 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                    for (n, e) in zip(ctx.section(), ctx.entry_usage())]
         return label, entries
 
-    def visitData(self, ctx: ObjectFileParser.DataContext):
+    def parse_byte(self, byte: str, ctx: ObjectFileParser.DataContext):
         try:
-            return bytearray(map(lambda x: int(x, 16), ctx.getText().split()))
+            value = int(byte, 16)
         except ValueError:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
-                               f'Not a 16-bit number: {ctx.getText()}')
+                               f'Not a 16-bit number: {byte}')
+        if not 0 <= value <= 255:
+            raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
+                               f'To big 16-bit number: {byte}, expected byte')
+        return value
+
+    def visitData(self, ctx: ObjectFileParser.DataContext):
+        return bytearray(map(lambda x: self.parse_byte(x, ctx), ctx.getText().split()))
 
     def visitAbs_address(self, ctx: ObjectFileParser.Abs_addressContext):
         try:
