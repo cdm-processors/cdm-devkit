@@ -133,7 +133,7 @@ def main():
                 else:
                     filetype = '.asm'
 
-            if filetype == '.obj':
+            if filetype in ['.obj', '.lib', ]:
                 if args.compile:
                     print("Error: object files should not be provided with --compile option")
                     return 2
