@@ -241,6 +241,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'ldc': 0xF0
         }),
         Handler(imm, {
+            'jsr': 0xD6,
             'osix': 0xDB,
             'addsp': 0xCC,
             'setsp': 0xCD
