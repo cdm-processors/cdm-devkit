@@ -87,7 +87,7 @@ def export_objects(objs: list[ObjectModule], target_params: TargetParamsInterfac
         if len(objs) > 1:
             result.append('\n')
         if debug and obj.debug_info_path:
-            result.append(f'FILE {str(obj.debug_info_path)}\n')
+            result.append(f'FILE {Path(obj.debug_info_path).as_posix()}\n')
 
         for asect in obj.asects:
             s = data_to_str(asect.data)

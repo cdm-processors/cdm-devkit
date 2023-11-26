@@ -146,9 +146,9 @@ def main():
                             for j in i.code_locations.values():
                                 f = pathlib.Path(j.file)
                                 if f == dip:
-                                    j.file = str(obj.debug_info_path)
+                                    j.file = obj.debug_info_path.as_posix()
                                 else:
-                                    j.file = str(pathlib.Path(j.file).resolve())
+                                    j.file = pathlib.Path(j.file).resolve().as_posix()
                     if relative_path:
                         dip = obj.debug_info_path
                         if obj.debug_info_path.is_absolute():
@@ -161,11 +161,11 @@ def main():
                             for j in i.code_locations.values():
                                 f = pathlib.Path(j.file)
                                 if f == dip:
-                                    j.file = str(obj.debug_info_path)
+                                    j.file = obj.debug_info_path.as_posix()
                                 else:
                                     if f.is_absolute():
                                         try:
-                                            j.file = str(f.absolute().relative_to(relative_path))
+                                            j.file = f.absolute().relative_to(relative_path).as_posix()
                                         except ValueError as e:
                                             print('Error:', e)
                                             return 2
@@ -176,7 +176,7 @@ def main():
                         for i in obj.asects + obj.rsects:
                             for j in i.code_locations.values():
                                 f = absolute_path / pathlib.Path(j.file)
-                                j.file = str(f)
+                                j.file = f.as_posix()
                     objects.append((filepath, obj))
             else:  # filetype == '.asm'
                 if args.merge:
@@ -199,8 +199,8 @@ def main():
                 r = build_ast(macro_expanded_input_stream, str(filepath))
                 obj = assemble(r, target_instructions, code_segments, debug_info_path)
                 if debug_info_path:
-                    fp = str(filepath)
-                    dip = str(debug_info_path)
+                    fp = filepath.as_posix()
+                    dip = debug_info_path.as_posix()
                     for i in obj.asects + obj.rsects:
                         for j in i.code_locations.values():
                             if j.file == fp:
@@ -210,7 +210,7 @@ def main():
                                     f = pathlib.Path(j.file).absolute()
                                     if realpath:
                                         f = f.resolve()
-                                    j.file = str(f.relative_to(relative_path))
+                                    j.file = f.relative_to(relative_path).as_posix()
                                 except ValueError as e:
                                     print('Error:', e)
                                     return 2

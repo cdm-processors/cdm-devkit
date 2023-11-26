@@ -77,10 +77,11 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                     raise CdmException(CdmExceptionTag.OBJ, self.file, xtrn.start.line,
                                        f'Section not found: {sect}')
         if filename:
-            om = ObjectModule(Path(filename))
+            f = Path(filename)
+            om = ObjectModule(f)
             for i in (asects | rsects).values():
                 for j in i.code_locations.values():
-                    j.file = filename
+                    j.file = f.as_posix()
         else:
             om = ObjectModule(None)
             for i in (asects | rsects).values():
