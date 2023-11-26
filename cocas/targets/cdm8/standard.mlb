@@ -4,7 +4,7 @@
     sub $1,$1
 *jmp/1
     push    $1
-    rti $1
+    rts $1
 *jsrr/1
     push    $1
     crc
