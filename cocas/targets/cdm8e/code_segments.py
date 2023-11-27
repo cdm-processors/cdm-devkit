@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from cocas.abstract_code_segments import CodeSegmentsInterface
 from cocas.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.code_block import Section
-from cocas.default_code_segments import CodeSegmentsInterface
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import ExternalEntry
 
@@ -235,12 +235,12 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: in
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1)))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(1, 2)))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(1, 2), full_bytes=False))
         obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
     else:
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2)))
+        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2), full_bytes=True))
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", s: Section, val: int,
@@ -249,9 +249,9 @@ def add_rel_record(obj_rec: "ObjectSectionRecord", s: Section, val: int,
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.relative.append(ExternalEntry(offset, range(0, 1)))
+        obj_rec.relative.append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.relative.append(ExternalEntry(offset, range(1, 2)))
+        obj_rec.relative.append(ExternalEntry(offset, range(1, 2), full_bytes=False))
         obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
     else:
-        obj_rec.relative.append(ExternalEntry(offset, range(0, 2)))
+        obj_rec.relative.append(ExternalEntry(offset, range(0, 2), full_bytes=True))

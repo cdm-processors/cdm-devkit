@@ -262,13 +262,7 @@ def build_ast(input_stream: InputStream, filepath: str):
     parser = AsmParser(token_stream)
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))
-
-    cst = parser.program()  # it is already a tree with sections
-    # some magic happens in generated files. antlr makes a tree of program structure like in .g4
-
+    cst = parser.program()
     bav = BuildAstVisitor(filepath)
-
-    # Converts Context tree with ugly file position marks
-    # into tree of nodes from ast_nodes.py
-    result = bav.visit(cst)  # BuildAstVisitor.visitProgram
+    result = bav.visit(cst)
     return result

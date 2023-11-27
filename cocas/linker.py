@@ -1,9 +1,10 @@
 import itertools
-from dataclasses import astuple
+from typing import Any
 
-from cocas.assembler import ObjectModule, ObjectSectionRecord
+from cocas.abstract_params import TargetParamsInterface
 from cocas.error import CdmLinkException
 from cocas.location import CodeLocation
+from cocas.object_module import ExternalEntry, ObjectModule, ObjectSectionRecord
 
 
 def init_bins(asects: list[ObjectSectionRecord]):
@@ -90,9 +91,9 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[ObjectModule]):
-    asects = list(itertools.chain.from_iterable([obj.asects for obj in objects]))
-    rsects = list(itertools.chain.from_iterable([obj.rsects for obj in objects]))
+def link(objects: list[tuple[Any, ObjectModule]], _: TargetParamsInterface):
+    asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
+    rsects = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
 
     exts_by_sect = find_exts_by_sect(asects + rsects)
     sect_by_ent = find_sect_by_ent(asects + rsects)
@@ -120,7 +121,7 @@ def link(objects: list[ObjectModule]):
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         entry_bytes: range
-        for offset, entry_bytes, sign in map(astuple, rsect.relative):
+        for offset, entry_bytes, sign in map(ExternalEntry.as_tuple, rsect.relative):
             pos = image_begin + offset
             lower_limit = 1 << 8 * entry_bytes.start
             val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
@@ -135,7 +136,7 @@ def link(objects: list[ObjectModule]):
 
     for sect in asects + rsects:
         for ext_name in sect.external:
-            for offset, entry_bytes, sign in map(astuple, sect.external[ext_name]):
+            for offset, entry_bytes, sign in map(ExternalEntry.as_tuple, sect.external[ext_name]):
                 pos = sect_addresses[sect.name] + offset
                 lower_limit = 1 << 8 * entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit

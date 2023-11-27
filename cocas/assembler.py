@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Type
 
+from cocas.abstract_code_segments import CodeSegmentsInterface
+from cocas.abstract_instructions import TargetInstructionsInterface
 from cocas.ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from cocas.code_block import Section
-from cocas.default_code_segments import CodeSegmentsInterface
-from cocas.default_instructions import TargetInstructionsInterface
 from cocas.error import CdmExceptionTag
 from cocas.location import CodeLocation
 from cocas.object_module import ObjectModule, ObjectSectionRecord
@@ -84,7 +85,7 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
-def assemble(pn: ProgramNode, target_instructions, code_segments):
+def assemble(pn: ProgramNode, target_instructions, code_segments, debug_info_path: Path) -> ObjectModule:
     templates = [Template(t, code_segments, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
@@ -97,8 +98,8 @@ def assemble(pn: ProgramNode, target_instructions, code_segments):
     for rsect in rsects:
         update_varying_length([rsect], asects_labels, template_fields)
 
-    obj = ObjectModule()
-    obj.asects = [ObjectSectionRecord(asect, asects_labels, template_fields) for asect in asects]
-    obj.rsects = [ObjectSectionRecord(rsect, asects_labels, template_fields) for rsect in rsects]
+    obj = ObjectModule(debug_info_path)
+    obj.asects = [ObjectSectionRecord.from_section(asect, asects_labels, template_fields) for asect in asects]
+    obj.rsects = [ObjectSectionRecord.from_section(rsect, asects_labels, template_fields) for rsect in rsects]
 
     return obj

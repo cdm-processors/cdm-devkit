@@ -299,16 +299,16 @@ def read_mlb(filepath):
 
 # filepath should be absolute
 def process_macros(input_stream: InputStream, library_macros, filepath: str):
-    lexer = MacroLexer(input_stream)  # using generated class
+    lexer = MacroLexer(input_stream)
     lexer.removeErrorListeners()
     # Adds a class that will be called somehow from antlr. And it will raise exceptions with MACRO and filepath
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
     token_stream = CommonTokenStream(lexer)
 
-    parser = MacroParser(token_stream)  # using generated class
+    parser = MacroParser(token_stream)
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
-    cst = parser.program()  # .children contains lines, their .children are tokens
+    cst = parser.program()
     rewriter = TokenStreamRewriter(token_stream)
     emv = ExpandMacrosVisitor(rewriter, library_macros, filepath)
     emv.visit(cst)
