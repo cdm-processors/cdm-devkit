@@ -69,11 +69,22 @@ public class Cdm16CircuitAdapter implements ProcessorAdapter {
         CircuitState processorSubcircuitState =
                 processorSubcircuit.getSubcircuitFactory().getSubstate(circuitState, processorComponent);
 
-        boolean exceptionHappened =
-                getTunnelValue("exc_triggered", processorSubcircuit, processorSubcircuitState) != 0;
+        Integer exceptionTriggeredTunnel =
+                getTunnelValue("exc_triggered", processorSubcircuit, processorSubcircuitState);
 
-        int exceptionNumber =
-                getTunnelValue("fetched_instruction", processorSubcircuit, processorSubcircuitState) & 0b111111;
+        Integer fetchedInstructionTunnel =
+                getTunnelValue("fetched_instruction", processorSubcircuit, processorSubcircuitState);
+
+        boolean exceptionHappened;
+        int exceptionNumber;
+
+        if (exceptionTriggeredTunnel == null || fetchedInstructionTunnel == null) {
+            exceptionHappened = false;
+            exceptionNumber = 0;
+        } else {
+            exceptionHappened = exceptionTriggeredTunnel != 0;
+            exceptionNumber = fetchedInstructionTunnel & 0b111111;
+        }
 
         return new ProcessorState() {
             @Override
