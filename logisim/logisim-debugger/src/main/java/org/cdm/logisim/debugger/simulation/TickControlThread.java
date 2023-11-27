@@ -425,6 +425,7 @@ public class TickControlThread extends Thread {
             sendFailResponse("Failed to load an image");
             e.printStackTrace();
             System.err.println("Failed to load an image");
+            return;
         }
 
         sendResponse(new DebuggerResponse());

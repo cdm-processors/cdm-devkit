@@ -9,10 +9,10 @@ import java.util.List;
 public interface ProcessorAdapter {
     String getDisplayName();
     int getMemorySize();
-    Component locateComponent(Circuit circuit);
-    ProcessorState getState(CircuitState circuitState);
     List<String> getRegisterNames();
     List<Integer> getRegisterSizes();
-
     boolean supportsExceptions();
+
+    Component locateComponent(Circuit circuit);
+    ProcessorState getState(CircuitState circuitState);
 }

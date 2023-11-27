@@ -7,6 +7,7 @@ public interface ProcessorState {
     boolean isHalted();
     int getProgramCounter();
     List<Integer> getRegisters();
+
     default boolean exceptionHappened() {
         throw new UnsupportedOperationException();
     }

@@ -25,7 +25,22 @@ public class Cdm16CircuitAdapter implements ProcessorAdapter {
 
     @Override
     public int getMemorySize() {
-        return 65535;
+        return 65536;
+    }
+
+    @Override
+    public List<String> getRegisterNames() {
+        return Arrays.asList("r0", "r1", "r2", "r3", "r4", "r5", "r6", "fp", "pc", "sp", "ps");
+    }
+
+    @Override
+    public List<Integer> getRegisterSizes() {
+        return Arrays.asList(16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+    }
+
+    @Override
+    public boolean supportsExceptions() {
+        return true;
     }
 
     @Override
@@ -117,21 +132,6 @@ public class Cdm16CircuitAdapter implements ProcessorAdapter {
             @Override
             public int getExceptionNumber() { return exceptionNumber; }
         };
-    }
-
-    @Override
-    public List<String> getRegisterNames() {
-        return Arrays.asList("r0", "r1", "r2", "r3", "r4", "r5", "r6", "fp", "pc", "sp", "ps");
-    }
-
-    @Override
-    public List<Integer> getRegisterSizes() {
-        return Arrays.asList(16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
-    }
-
-    @Override
-    public boolean supportsExceptions() {
-        return true;
     }
 
     private static class PinNumbers {
