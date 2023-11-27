@@ -11,7 +11,8 @@ public interface ProcessorAdapter {
     int getMemorySize();
     Component locateComponent(Circuit circuit);
     ProcessorState getState(CircuitState circuitState);
-    List<String> getRegistersOrder();
+    List<String> getRegisterNames();
+    List<Integer> getRegisterSizes();
 
     boolean supportsExceptions();
 }

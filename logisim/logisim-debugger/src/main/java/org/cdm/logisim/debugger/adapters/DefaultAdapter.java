@@ -29,7 +29,12 @@ public class DefaultAdapter implements ProcessorAdapter {
     }
 
     @Override
-    public List<String> getRegistersOrder() {
+    public List<String> getRegisterNames() {
+        return null;
+    }
+
+    @Override
+    public List<Integer> getRegisterSizes() {
         return null;
     }
 

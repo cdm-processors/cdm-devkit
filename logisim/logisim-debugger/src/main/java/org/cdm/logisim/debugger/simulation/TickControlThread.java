@@ -348,7 +348,8 @@ public class TickControlThread extends Thread {
 
         sendResponse(
                 InitializationResponse.builder()
-                        .registers(processorAdapter.getRegistersOrder())
+                        .registerNames(processorAdapter.getRegisterNames())
+                        .registerSizes(processorAdapter.getRegisterSizes())
                         .ramSize(processorAdapter.getMemorySize())
                         .supportsExceptions(processorAdapter.supportsExceptions())
                         .build()

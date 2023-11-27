@@ -9,6 +9,7 @@ public class InitializationResponse extends DebuggerResponse {
     public final String action = MessageActions.INIT;
 
     boolean supportsExceptions;
-    List<String> registers;
+    List<String> registerNames;
+    List<Integer> registerSizes;
     int ramSize;
 }
