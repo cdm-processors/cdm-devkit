@@ -1,0 +1,74 @@
+# Coco-de-Mer-8 (CdM-8) Processor Secondary Decoder EXTENSION Specification
+####################### MARK 5, 28.12.2019 v1, *** REDUCED CORE ***
+#
+:3,5,   # 3-bit Sequencer, using 5 phases  
+
+#
+#### Secondary Decoder Output Signal Definition
+#
+
+# Register file controls:
+asrtS,	    # Assert register Rs on bus 0
+asrtD,      # Assert register Rd on bus 1
+latch,	    # Latch register Rd from bus 1
+
+# PC controls:
+PC2b0,		# Assert PC on bus 0
+PC2b1,		# Assert PC on bus 1
+latchRX,	# Latch RX from bus 1
+RX2PC,  	# Latch RX content in PC
+latchPC, 	# Latch PC from bus 1
+PCinc,		# PC:=PC+1 on falling clock
+ 
+# SP controls
+SP2b0,      # Assert SP on bus 0
+SP2b1,      # Assert SP on bus 1
+latchSP,	# Latch SP from bus 1
+SPstep,		# SP:=SP+/-1 on falling clock, see next line
+up_down,	# +1 if up_down is high else -1
+SPoffset,	# SP:=SP + bus1 on falling clock
+SPoff2b1,	# Assert SP+bus0 on bus 1
+
+# ALU controls
+ALU2b1,		# Assert ALU output on bus 1
+RR2b1,		# Assert RR on bus 1
+latchPS,	# Latch CVZN in PS register
+
+# Memory
+mem,		# Memory interface active in this cycle
+mem_ld,		# This memory cycle is read (otherwise write)
+data,		# used when mem_ld=1 to indicate read-data, oherwise read-instr
+
+PSR2b1,		# Assert PSR on b1
+latchPSR,	# latch PSR from b1
+vec,		# Assert interrupt vector addr on b0
+odd,		# same as above, except vector addr+1
+
+stop		# stop the clock
+
+#####################
+
+# EXTENSION (NON-CORE) INSTRUCTION SET
+
+# ALL-REG PUSH/POP
+pushall:    SPstep;					            # prepare to push
+		    SP2b0, asrtD, mem, SPstep, data;	# r3
+		    SP2b0, asrtD, mem, SPstep, data;	# r2
+		    SP2b0, asrtD, mem, SPstep, data;	# r1
+		    SP2b0, asrtD, mem, data			    # r0
+
+popall:		SP2b0, mem, data, mem_ld, latch, SPstep, up_down;	# r0
+ 		    SP2b0, mem, data, mem_ld, latch, SPstep, up_down;	# r1
+ 		    SP2b0, mem, data, mem_ld, latch, SPstep, up_down;	# r2
+ 		    SP2b0, mem, data, mem_ld, latch, SPstep, up_down	# r3
+
+# INTERRUPTS
+
+ioi:		SPstep;					            # prepare to push
+		    SP2b0, mem, data, PC2b1, SPstep;	# push PC onto stack (data memory)
+		    SP2b0, mem, data, PSR2b1;		    # push PS onto stack (data memory)
+		    vec, mem, mem_ld, latchPC;		    # assert vector address on b0 and load new PC (ins memory)
+		    vec, odd, mem, mem_ld, latchPSR		# assert vector address +1 on b0 and loand new PS (ins memory)
+	
+# rti is a 2-phase instruction, defined with core instructions
+fetch:	    PC2b0, mem_ld, mem, PCinc	        # instruction fetch, has to be  last entry for priority reasons in any synthesised part 
