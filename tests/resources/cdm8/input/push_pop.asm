@@ -9,11 +9,16 @@ start:
     ldi r3, 4
 
     pushall
+    clr r0
+    clr r1
+    clr r2
+    clr r3
     popall
     pushall
 
     ldi r0, 0xaa
     push r0
+    clr r1
     pop r1
     push r1
 
