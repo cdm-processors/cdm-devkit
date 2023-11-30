@@ -1,0 +1,4 @@
+registers:
+  r1: 0xab
+  r2: 0xcd
+  r3: 0xef
