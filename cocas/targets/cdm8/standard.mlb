@@ -1,15 +1,15 @@
 *tst/1
-    move    $1,$1
+    move    $1, $1
 *clr/1
-    sub $1,$1
+    sub     $1, $1
 *jmp/1
     push    $1
-    rts $1
+    rts
 *jsrr/1
     push    $1
     crc
 *shl/1
-    addc    $1,$1
+    addc    $1, $1
 
 ##################
 # Random numbers #
@@ -29,7 +29,7 @@
 ####################
 *run/1
     asect   0
-    br  $1
+    br      $1
 
 ####################
 # Define constants #
