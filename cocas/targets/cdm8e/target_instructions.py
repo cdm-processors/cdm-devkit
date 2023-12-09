@@ -170,7 +170,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'bnvs': 0xE7,
 
             'bhi': 0xE8,
-            'bnlc': 0xE8,
+            'bnls': 0xE8,
 
             'bls': 0xE9,
             'bnhi': 0xE9,

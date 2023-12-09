@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'io.freefair.lombok' version '8.1.0'
 }
 
 group 'org.cdm.logisim.emulator'
@@ -18,12 +19,11 @@ test {
     useJUnitPlatform()
 }
 
-compileJava {
-    options.compilerArgs.addAll(['--release', 7, '-Xlint:-options'])
-}
-
 jar {
     manifest {
         attributes 'Library-Class': 'org.cdm.logisim.emulator.Components'
     }
 }
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8

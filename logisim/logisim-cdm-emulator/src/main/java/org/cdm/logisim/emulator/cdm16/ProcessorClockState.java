@@ -1,10 +1,10 @@
-package org.cdm.logisim.emulator;
+package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.InstanceData;
 import com.cburch.logisim.instance.StdAttr;
 
-public class ProcessorClockState implements Cloneable, InstanceData {
+public class ProcessorClockState {
     private Value irqLastClock;
     private Value excLastClock;
     private Value clkLastClock;
@@ -14,14 +14,6 @@ public class ProcessorClockState implements Cloneable, InstanceData {
         this.irqLastClock = Value.FALSE;
         this.excLastClock = Value.FALSE;
         this.clkLastClock = Value.FALSE;
-    }
-
-    public ProcessorClockState clone() {
-        try {
-            return (ProcessorClockState) super.clone();
-        } catch (CloneNotSupportedException var2) {
-            return null;
-        }
     }
 
     public boolean updateClock(Value newClock, Object trigger, ClockType type) {

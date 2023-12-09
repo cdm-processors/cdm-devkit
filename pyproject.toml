@@ -14,12 +14,14 @@ authors = [
 
 packages = [
     { include = "cocas" },
-    { include = "synthm" }
+    { include = "synthm" },
+    { include = "cocodump" }
 ]
 
 [tool.poetry.scripts]
 cocas = 'cocas.main:main'
 synthm = 'synthm.main:main'
+cocodump = 'cocodump.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"

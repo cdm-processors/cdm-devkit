@@ -19,7 +19,7 @@ BUILD_FOLDER_EXIST = $(wildcard $(BUILD_FOLDER))
 
 
 # Enabled Java projects
-JAVA_PROJECTS = logisim-banked-memory
+JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator
 
 # Enables processors
 PROCESSORS = cdm8 cdm8e cdm16
@@ -32,6 +32,7 @@ POETRY = poetry
 VSCE = vsce
 CD = cd
 MKDIR = mkdir
+SYNTHM = synthm
 
 ifeq ($(OS), Windows_NT)
 
@@ -135,7 +136,7 @@ $(BUILD_FOLDER_EXIST):
 all: java python vscode
 
 # Build Java-based projects
-java: gradlew
+java: emulator_resources gradlew
 
 	@echo ----------------------
 	@echo Building Java projects
@@ -167,7 +168,20 @@ vscode:
 
 	$(CD) $(CURRENT_DIR)$(SLASH)$(VSCODE_EXTENSION_FOLDER) && $(VSCE) package $(VERSION)
 
-clean:
+# Compile microcode from CdM-16
+microcode:
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16_decoder.def $(NEW_LINE)
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16_decoder_exc.def --fill 0x8000400 $(NEW_LINE)
+
+# Prepare resources for logisim-cdm-emulator
+emulator_resources: microcode
+	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder*.img \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources
+
+clean: clean_microcode clean_emulator_resources
 	$(RM) $(BUILD_FOLDER)
 
 	$(RM) $(PYTHON_DIST_FOLDER)
@@ -179,6 +193,18 @@ clean:
 
 	$(RM_FILE) $(VSCODE_EXTENSION_FOLDER)$(SLASH)vscode-cdm-extension-*.*.*.vsix
 
+clean_microcode:
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder.img
+
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder_exc.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder_exc.img
+
+clean_emulator_resources:
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)*.img
 
 # Tests
 
@@ -186,7 +212,7 @@ clean:
 RUNNER_FOLDER = tests$(SLASH)jar
 
 # Prepare test environment
-prepare_tests: prepare_tests_processors gradlew
+prepare_tests: prepare_tests_processors prepare_tests_emulator gradlew
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory && \
 		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE)
 
@@ -210,9 +236,16 @@ prepare_tests_processors:
 		 	tests$(SLASH)resources$(SLASH)$(PROCESSOR)$(SLASH)circuits $(NEW_LINE) \
 	)
 
+prepare_tests_emulator: emulator_resources gradlew
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator && \
+		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE)
+
+	$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
+		tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits
+
 
 # Clean test environment
-clean_tests: clean_tests_processors
+clean_tests: clean_tests_processors clean_tests_emulator
 	$(RM) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH)build \
 		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-banked-memory$(SLASH).gradle $(NEW_LINE)
 
@@ -231,3 +264,9 @@ clean_tests_processors:
 	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm8$(SLASH)circuits$(SLASH)CdM-8-mark5-full.circ
 	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm8e$(SLASH)circuits$(SLASH)CdM-8e.circ
 	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits$(SLASH)cdm16.circ
+
+clean_tests_emulator: clean_microcode clean_emulator_resources
+	$(RM) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)build \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH).gradle $(NEW_LINE)
+
+	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits$(SLASH)logisim-cdm-emulator*
