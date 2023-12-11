@@ -25,7 +25,7 @@ class CodeSegments(CodeSegmentsInterface):
         expr: RelocatableExpressionNode
 
     @dataclass
-    class VaryingLengthSegment(CodeSegment, CodeSegmentsInterface.VaryingLengthSegment):
+    class VaryingLengthSegment(CodeSegmentsInterface.VaryingLengthSegment, CodeSegment):
         is_expanded: bool = field(init=False, default=False)
         expanded_size: int = field(init=False)
 
