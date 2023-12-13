@@ -6,7 +6,7 @@
 		{
 			"type": "npm",
 			"script": "watch",
-			"path": "./vscode-cdm-extension",
+			"path": ".",
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {
