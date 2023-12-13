@@ -3,22 +3,14 @@
     "displayName": "CdM Processors",
     "description": "Tools for CdM Processors",
     "version": "1.0.0",
-    "engines": {
-        "vscode": "^1.0.0"
-    },
-    "categories": [
-        "Programming Languages",
-        "Snippets"
-    ],
+    "engines": { "vscode": "^1.63.0" },
+    "categories": [ "Debuggers", "Programming Languages", "Snippets" ],
     "main": "./out/extension.js",
     "icon": "icon.png",
     "publisher": "cdm-processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
     "bugs": "https://github.com/cdm-processors/cdm-devkit/issues",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/cdm-processors/cdm-devkit.git"
-    },
+    "repository": { "type": "git", "url": "https://github.com/cdm-processors/cdm-devkit.git" },
     "keywords": [
         "assembly",
         "macro",
@@ -30,6 +22,13 @@
         "cdm8e"
     ],
     "contributes": {
+        "commands": [
+            {
+                "command": "cdm.debug.writeTarget",
+                "title": "CdM: Pick the target processor",
+                "icon": "$(circuit-board)"
+            }
+        ],
         "breakpoints": [
             {
                 "language": "cdm8-assembly"
@@ -133,71 +132,91 @@
                     "cdm16-assembly"
                 ],
                 "configurationAttributes": {
-                    "initialize": {
+                    "launch": {
                         "required": [
-                            "serverAddress",
-                            "target",
-                            "program"
+                            "sources",
+                            "artifacts"
                         ],
                         "properties": {
-                            "serverAddress": {
-                                "type": "string",
-                                "description": "Websocket address to a debug server"
+                            "sources": {
+                                "type": "array",
+                                "items": { "type": "string", "description": "An assembly file." },
+                                "description": "Assembly files, which will be passed to cocas."
                             },
-                            "target": {
-                                "enum": ["cdm8", "cdm8e", "cdm16", "generic"],
-                                "description": "Processor, which will be used to debug a program"
-                            },
-                            "program": {
-								"type": "string",
-								"description": "Absolute path to an assembler file."
+                            "artifacts": {
+                                "type": "object",
+                                "properties": {
+                                    "image": {
+                                        "type": "string",
+                                        "description": "The path to the file where the built image will be saved."
+                                    },
+                                    "debugInfo": {
+                                        "type": "string",
+                                        "description": "The path to the file where the debug information about the built image will be saved."
+                                    }
+                                },
+                                "description": "The build artifacts file paths."
                             }
                         }
                     }
-                },
-                "configurationSnippets": [
-                    {
-                        "label": "CdM: CdM-8 with Logisim",
-                        "body": {
-                            "type": "cdm",
-                            "request": "launch",
-                            "name": "Debug CdM-8 with Logisim",
-                            "serverAddress": "ws://localhost:7001",
-                            "target": "cdm8",
-                            "program": "${file}"
-                        }
-                    },
-                    {
-                        "label": "CdM: CdM-8e with Logisim",
-                        "body": {
-                            "type": "cdm",
-                            "request": "launch",
-                            "name": "Debug CdM-8e with Logisim",
-                            "serverAddress": "ws://localhost:7001",
-                            "target": "cdm8e",
-                            "program": "${file}"
-                        }
-                    },
-                    {
-                        "label": "CdM: CdM-16 with Logisim",
-                        "body": {
-                            "type": "cdm",
-                            "request": "launch",
-                            "name": "Debug CdM-16 with Logisim",
-                            "serverAddress": "ws://localhost:7001",
-                            "target": "cdm16",
-                            "program": "${file}"
-                        }
-                    }
-                ]
+                }
             }
         ],
         "taskDefinitions": [
             {
                 "type": "cdm"
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Coco-de-Mer",
+            "properties": {
+                "cdm.debug.target": {
+                    "enum": ["cdm16", "cdm8e", "cdm8"],
+                    "default": "cdm16",
+                    "description": "The codename of processor from Coco-de-Mer family, which will be used for debugging."
+                },
+                "cdm.debug.architecture": {
+                    "enum": ["harvard", "vonNeumann"],
+                    "default": "harvard",
+                    "description": "Memory configuration, which will be passed to the debug server."
+                },
+                "cdm.debug.address": {
+                    "type": "string",
+                    "default": "ws://localhost:7001",
+                    "description": "Websocket address of debug server."
+                }
+            }
+        },
+        "views": {
+            "debug": [
+                {
+                    "id": "cdm.debug.registers",
+                    "name": "Registers",
+                    "when": "inDebugMode && debugType == 'cdm'"
+                }
+            ],
+            "cdm-build": [
+                {
+                    "id": "cdm.build.settings",
+                    "name": "Server Settings"
+                },
+                {
+                    "id": "cdm.build.assemblies",
+                    "name": "Assemblies"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "cdm-build",
+                    "title": "Coco-de-Mer Developer Utilities",
+                    "icon": "images/view.svg"
+                }
+            ]
+        }
     },
+    "activationEvents": [ "onDebug" ],
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
@@ -209,11 +228,12 @@
     "devDependencies": {
         "@types/mocha": "^10.0.3",
         "@types/node": "18.x",
-        "@types/vscode": "^1.84.0",
+        "@types/vscode": "1.63.0",
         "@types/ws": "^8.5.9",
         "@typescript-eslint/eslint-plugin": "^6.9.0",
         "@typescript-eslint/parser": "^6.9.0",
         "@vscode/test-electron": "^2.3.6",
+        "@vscode/vsce": "^2.22.0",
         "eslint": "^8.52.0",
         "glob": "^10.3.10",
         "mocha": "^10.2.0",
@@ -222,7 +242,6 @@
     "__metadata": {
         "publisherDisplayName": "CdM Processors"
     },
-    "activationEvents": ["onDebug"],
     "dependencies": {
         "@vscode/debugadapter": "^1.64.0",
         "@vscode/debugprotocol": "^1.64.0",
