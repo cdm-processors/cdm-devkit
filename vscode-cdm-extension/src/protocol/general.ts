@@ -1,7 +1,9 @@
-export const targets = ["cdm8", "cdm8e", "cdm16", "generic"] as const;
-export const targetNames = ["CdM-8", "CdM-8e", "CdM-16", "Generic CdM"];
+import { TargetID } from "./targets";
+
+export const architectures = ["vonNeumann", "harvard"] as const;
+export type Arch = typeof architectures[number];
+
 export const languages = ["cdm8-assembly", "cdm8e-assembly", "cdm16-assembly"];
-export type Target = typeof targets[number];
 
 export const reasons = ["breakpoint", "line", "exception", "halt"] as const;
 export type Reason = typeof reasons[number];
@@ -34,15 +36,15 @@ export interface DAPResponse extends DAPMessage {
 
 export interface InitializationMessage extends DAPMessage {
     action: "init";
-    target: Target;
-    memoryConfiguration: "vonNeumann" | "harvard";
+    target: TargetID;
+    memoryConfiguration: Arch;
 }
 
 export interface InitializationResponse extends DAPResponse {
     action: "init";
-    supportsExceptions: Boolean;
-    registers: Array<String>;
-    ramSize: Number;
+    supportsExceptions: boolean;
+    registers: string[];
+    ramSize: number;
 }
 
 export interface LoadMessage extends DAPMessage {
