@@ -22,7 +22,7 @@ BUILD_FOLDER_EXIST = $(wildcard $(BUILD_FOLDER))
 JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator
 
 # Enables processors
-PROCESSORS = cdm8e cdm16
+PROCESSORS = cdm8 cdm8e cdm16
 
 # Distribution archive files
 ARCHIVE_FILES = *.circ jar examples
@@ -261,6 +261,7 @@ clean_tests: clean_tests_processors clean_tests_emulator
 	)
 
 clean_tests_processors:
+	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm8$(SLASH)circuits$(SLASH)CdM-8-mark5-full.circ
 	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm8e$(SLASH)circuits$(SLASH)CdM-8e.circ
 	$(RM_FILE) tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits$(SLASH)cdm16.circ
 

@@ -1,0 +1,95 @@
+*tst/1
+    move    $1, $1
+*clr/1
+    sub     $1, $1
+*jmp/1
+    push    $1
+    rts
+*jsrr/1
+    push    $1
+    crc
+*shl/1
+    addc    $1, $1
+
+##################
+# Random numbers #
+##################
+*rannum/0
+    dc      0xdf
+
+*rannum/1
+    rannum
+    push    r1
+    ldi     r1, $1
+    and     r1, r0
+    pop     r1
+
+####################
+# Launch a program #
+####################
+*run/1
+    asect   0
+    br      $1
+
+####################
+# Define constants #
+####################
+*define/2
+    asect   $2
+$1:
+
+#################################################
+# Get/Put register value to/from memory address #
+#################################################
+*ldv/2 # Gets a value from memory addr ($1) to rn ($2)
+    ldi     $2, $1
+    ld      $2, $2
+
+*stv/2 # Puts reg ($1) contents to memory addr ($2)
+    unique  $1, temp
+    push    ?temp
+    ldi     ?temp, $2
+    st      ?temp, $1
+    pop     ?temp
+
+#####################################################################
+# Simulate old V3 ldsp and stsp instructions (only VN Architecture) #
+#####################################################################
+*ldsp/1
+    ldsa    $1, 0x00
+
+*stsp/1
+    unique  $1, addr
+    push    ?addr
+    ldi     ?addr, stspaddr'
+    st      ?addr, $1
+    pop     ?addr
+    dc      0xcd
+stspaddr':
+    dc 0x00
+
+####################
+# Interrupt enable #
+####################
+*ei/0
+    push    r1
+    ldi     r1, iefin'
+    push    r1
+    ldi     r1, 0b10000000
+    push    r1
+    rti
+iefin':
+    pop     r1
+
+#####################
+# Interrupt disable #
+#####################
+*di/0
+    push    r1
+    ldi     r1, idfin'
+    push    r1
+    ldi     r1, 0b00000000
+    push    r1
+    rti
+idfin':
+    pop     r1

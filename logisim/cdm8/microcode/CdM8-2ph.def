@@ -1,0 +1,111 @@
+# Coco-de-Mer-8 (CdM-8) Processor Secondary Decoder Specification
+####################### MARK 5, 28.12.2019 v1, *** REDUCED CORE ***
+#
+:3,2,   # 3-bit Sequencer for Interrupts and OS, only using 2 phases (1-bit) for reduced core 
+
+#
+#### Secondary Decoder Output Signal Definition
+#
+
+# Register file controls:
+asrtS,	    # Assert register Rs on bus 0
+asrtD,      # Assert register Rd on bus 1
+latch,	    # Latch register Rd from bus 1
+
+# PC controls:
+PC2b0,		# Assert PC on bus 0
+PC2b1,		# Assert PC on bus 1
+latchRX,	# Latch RX from bus 1
+RX2PC,  	# Latch RX content in PC
+latchPC, 	# Latch PC from bus 1
+PCinc,		# PC:=PC+1 on falling clock
+ 
+# SP controls
+SP2b0,      # Assert SP on bus 0
+SP2b1,      # Assert SP on bus 1
+latchSP,	# Latch SP from bus 1
+SPstep,		# SP:=SP+/-1 on falling clock, see next line
+up_down,	# +1 if up_down is high else -1
+SPoffset,	# SP:=SP + bus1 on falling clock
+SPoff2b1,	# Assert SP+bus0 on bus 1
+
+# ALU controls
+ALU2b1,		# Assert ALU output on bus 1
+RR2b1,		# Assert RR on bus 1
+latchPS,	# Latch CVZN in PS register
+
+# Memory
+mem,		# Memory interface active in this cycle
+mem_ld,		# This memory cycle is read (otherwise write)
+data,		# used when mem_ld=1 to indicate read-data, oherwise read-instr
+
+# UNUSED here, used in extension
+PSR2b1,		# Assert PSR on b1
+latchPSR,	# latch PSR from b1
+vec,		# Assert interrupt vector addr on b0
+odd,		# same as above, except vector addr+1
+# END UNUSED
+
+stop		# stop the clock
+
+#####################
+
+# INSTRUCTION SET
+
+
+### ALU ###############################
+alu_2:  asrtS, asrtD, latchPS;			# 2-op ALU instruction
+        RR2b1,latch
+
+cmp:	asrtS,asrtD, latchPS			# cmp instruction is 2-op with one phase	
+
+alu_1:	asrtS, latch, latchPS, ALU2b1	# 1-op ALU instruction
+
+### Memory ###############################
+m_ld:	asrtS, latch, mem_ld, mem, data	# ld rn,rm
+
+m_st:	asrtS, asrtD, mem, data		    # st rn,rm
+
+ldc:	asrtS, latch, mem_ld, mem	    # same as ld, but data=0, loading from instruction (code) memory
+
+### Load immediate ###############################
+
+ldi:	PC2b0, mem, mem_ld, latch, PCinc	# ldi rn,<immediate>
+
+### Stack instructions ###############################
+
+setsp:	PC2b0, mem, mem_ld, latchSP, PCinc	# setsp <immediate>
+
+addsp: 	PC2b0, mem, mem_ld, latchSP, SPoffset, PCinc	    # addsp <immediate>
+
+pu:	    SPstep;
+	    SP2b0, asrtD, mem, data					            # push rn
+	
+po:	    SP2b0, mem, mem_ld, latch, SPstep, up_down, data	# pop rn
+
+ldsa:	PC2b0, mem, mem_ld, latch, PCinc;			        # ldsa rn, <immediate>
+	    asrtS, SPoff2b1, latch
+
+### Control ###############################
+
+br_nop:	PCinc
+
+br_taken: PC2b0, mem, mem_ld, latchPC
+
+jsr: 	SPstep, PC2b0, mem, mem_ld, latchRX, PCinc;
+	    PC2b1, SP2b0, mem, data, RX2PC, latchPC
+
+rts:	SP2b0, up_down, SPstep, mem, mem_ld, data, latchPC
+
+
+crc:	SP2b0, mem, mem_ld, data, latchRX;
+	    SP2b0, mem, PC2b1, data, RX2PC, latchPC
+
+rti: 	SP2b0, mem, data, mem_ld, latchPSR, SPstep, up_down; 	# pop PSR off the stack
+	    SP2b0, mem, data, mem_ld, latchPC,  SPstep, up_down 	# pop PC off the stack
+
+wait:	
+halt:	stop
+
+##################################################
+fetch:	PC2b0, mem_ld, mem, PCinc   # instruction fetch, has to be last entry for priority reasons

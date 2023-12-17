@@ -32,7 +32,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                 else:
                     raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
                                        f'Expected no header for {target_name} target, got {header}')
-        elif exp_header is not None:
+        elif exp_header:
             raise CdmException(CdmExceptionTag.OBJ, self.file, ctx.start.line,
                                f'Expected non-empty target header for {target_name}, got empty')
 
