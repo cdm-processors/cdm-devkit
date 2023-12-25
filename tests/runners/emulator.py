@@ -8,25 +8,22 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-from .runner import RUNNER_TIMEOUT, ReturnCode
 from ..factory import Case
+from .runner import RUNNER_TIMEOUT, ReturnCode
 from .runner_state import RunnerFailure, RunnerState
 
 
-def execute_logisim_runner(program_img: Path, circuit_folder: Path, test_circuit: str) -> RunnerState | RunnerFailure:
+def execute_emulator_runner(program_img: Path) -> RunnerState | RunnerFailure:
     output_image = NamedTemporaryFile(delete=False)
     output_image.close()
 
     process = subprocess.run(
         [
-            "java", "-jar", Path(__file__).parent.parent / "jar" / "logisim-runner-all.jar",
+            "java", "-jar", Path(__file__).parent.parent / "resources" / "cdm16" / "circuits" / "standalone-all.jar",
             program_img.absolute(),
-            test_circuit,
             output_image.name,
-            "config.properties",
             str(RUNNER_TIMEOUT)
         ],
-        cwd=circuit_folder.absolute(),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
 

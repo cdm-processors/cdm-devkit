@@ -238,9 +238,12 @@ prepare_tests_processors:
 
 prepare_tests_emulator: emulator_resources gradlew
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator && \
-		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE)
+		$(GRADLEW) :standalone:shadowJar :jar  -Pversion="$(VERSION)" $(NEW_LINE)
 
 	$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
+		tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits
+
+	$(CP) $(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)standalone$(SLASH)build$(SLASH)libs$(SLASH)*.jar \
 		tests$(SLASH)resources$(SLASH)cdm16$(SLASH)circuits
 
 

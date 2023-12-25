@@ -1,2 +1,2 @@
 rootProject.name = 'logisim-cdm-emulator'
-
+include("standalone")
