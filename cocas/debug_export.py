@@ -29,7 +29,8 @@ def code_location_json(files, cl: CodeLocation):
 
 def debug_export(code_locations: dict[int, CodeLocation]) -> str:
     files = sorted(set(map(lambda x: x.file, code_locations.values())))
-    dump = json.dumps({"files": files, "codeLocations": code_locations}, default=default_json(files), indent=4)
+    dump = json.dumps({"files": files, "codeLocations": code_locations},
+                      default=default_json(files), indent=4, ensure_ascii=False)
     pattern = re.compile(r"{\n\s+\"__no_breaks_begin\": \[],\n\s+([\S\s]+?),\n\s+\"__no_breaks_end\": \[]\s+}")
     dump = re.sub(pattern, lambda m: "{" + re.sub(r"\n\s+", " ", m.group(1)) + "}", dump)
     return dump
