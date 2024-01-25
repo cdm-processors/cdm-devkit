@@ -4,7 +4,7 @@ from cocas.abstract_params import TargetParamsInterface
 class TargetParams(TargetParamsInterface):
     @staticmethod
     def name():
-        return 'CdM-16'
+        return 'CdM-16e'
 
     @staticmethod
     def max_entry_size() -> int:
@@ -16,4 +16,4 @@ class TargetParams(TargetParamsInterface):
 
     @staticmethod
     def object_file_header() -> str:
-        return 'CDM16'
+        return 'CDM16E'
