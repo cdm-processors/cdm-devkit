@@ -4,14 +4,13 @@ from typing import List
 
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.abstract_params import TargetParamsInterface
 from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
-from cocas.external_entry import ExternalEntry
-from cocas.generated.ObjectFileLexer import ObjectFileLexer
-from cocas.generated.ObjectFileParser import ObjectFileParser
-from cocas.generated.ObjectFileParserVisitor import ObjectFileParserVisitor
-from cocas.location import CodeLocation
-from cocas.object_module import ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.targets import TargetParamsInterface
+
+from .generated.ObjectFileLexer import ObjectFileLexer
+from .generated.ObjectFileParser import ObjectFileParser
+from .generated.ObjectFileParserVisitor import ObjectFileParserVisitor
 
 
 class ImportObjectFileVisitor(ObjectFileParserVisitor):

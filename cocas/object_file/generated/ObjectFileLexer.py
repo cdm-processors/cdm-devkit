@@ -1,4 +1,4 @@
-# Generated from ./grammar/ObjectFileLexer.g4 by ANTLR 4.13.1
+# Generated from object_file/grammar/ObjectFileLexer.g4 by ANTLR 4.13.1
 from antlr4 import *
 from io import StringIO
 import sys

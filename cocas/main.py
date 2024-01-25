@@ -10,11 +10,11 @@ import antlr4
 import colorama
 
 from cocas.assembler import assemble
-from cocas.ast_builder import build_ast
+from cocas.assembler.ast_builder import build_ast
+from cocas.assembler.macro_processor import process_macros, read_mlb
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
-from cocas.macro_processor import process_macros, read_mlb
 from cocas.object_file import import_object
 from cocas.object_module import export_objects
 

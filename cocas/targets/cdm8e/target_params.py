@@ -1,4 +1,4 @@
-from cocas.abstract_params import TargetParamsInterface
+from cocas.targets import TargetParamsInterface
 
 
 class TargetParams(TargetParamsInterface):

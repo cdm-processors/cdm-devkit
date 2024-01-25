@@ -1,11 +1,15 @@
-from cocas.abstract_code_segments import CodeSegmentsInterface
-from cocas.ast_nodes import InstructionNode
-from cocas.location import CodeLocation
+from typing import TYPE_CHECKING
+
+from cocas.object_module import CodeLocation
+from cocas.targets import CodeSegmentsInterface
+
+if TYPE_CHECKING:
+    from cocas.assembler.ast_nodes import InstructionNode
 
 
 class TargetInstructionsInterface:
     @staticmethod
-    def assemble_instruction(line: InstructionNode, temp_storage) \
+    def assemble_instruction(line: "InstructionNode", temp_storage) \
             -> list[CodeSegmentsInterface.CodeSegment]:
         pass
 

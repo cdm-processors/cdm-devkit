@@ -1,10 +1,9 @@
 import itertools
 from typing import Any
 
-from cocas.abstract_params import TargetParamsInterface
 from cocas.error import CdmLinkException
-from cocas.location import CodeLocation
-from cocas.object_module import ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.targets import TargetParamsInterface
 
 
 def init_bins(asects: list[ObjectSectionRecord]):

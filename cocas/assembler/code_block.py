@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Type
 
-from cocas.abstract_code_segments import CodeSegmentsInterface
-from cocas.abstract_instructions import TargetInstructionsInterface
-from cocas.ast_nodes import (
+from cocas.error import CdmException, CdmExceptionTag, CdmTempException
+from cocas.object_module import CodeLocation
+from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
+
+from .ast_nodes import (
     AbsoluteSectionNode,
     BreakStatementNode,
     ConditionalStatementNode,
@@ -16,8 +18,6 @@ from cocas.ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
-from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-from cocas.location import CodeLocation
 
 
 @dataclass

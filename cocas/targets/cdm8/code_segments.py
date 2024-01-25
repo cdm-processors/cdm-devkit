@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 
-from cocas.abstract_code_segments import CodeSegmentsInterface
-from cocas.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from cocas.code_block import Section
+from cocas.assembler.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
+from cocas.assembler.code_block import Section
 from cocas.error import CdmException, CdmExceptionTag
-from cocas.location import CodeLocation
 from cocas.object_module import ExternalEntry, ObjectSectionRecord
+from cocas.object_module.location import CodeLocation
+from cocas.targets import CodeSegmentsInterface
 
 
 def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):

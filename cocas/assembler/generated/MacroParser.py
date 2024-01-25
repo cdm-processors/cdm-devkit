@@ -1,4 +1,4 @@
-# Generated from ./grammar/Macro.g4 by ANTLR 4.13.1
+# Generated from assembler/grammar/Macro.g4 by ANTLR 4.13.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO

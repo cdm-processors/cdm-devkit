@@ -4,7 +4,7 @@ from typing import Union
 from antlr4.error.ErrorListener import ErrorListener
 from colorama import Fore, Style
 
-from cocas.generated import AsmParser
+from cocas.assembler.generated import AsmParser
 
 
 class CdmExceptionTag(Enum):
@@ -56,7 +56,7 @@ class AntlrErrorListener(ErrorListener):
         self.tag = tag
 
     def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
-        if isinstance(recognizer, AsmParser.AsmParser):
+        if isinstance(recognizer, AsmParser):
             line = line - recognizer.current_offset
             self.file = recognizer.current_file
         raise CdmException(self.tag, self.file, line, msg)

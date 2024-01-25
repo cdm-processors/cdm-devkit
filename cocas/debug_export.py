@@ -2,7 +2,7 @@ import bisect
 import json
 import re
 
-from cocas.location import CodeLocation
+from cocas.object_module import CodeLocation
 
 
 def default_json_(o, files):

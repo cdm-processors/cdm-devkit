@@ -1,4 +1,4 @@
-# Generated from ./grammar/ObjectFileParser.g4 by ANTLR 4.13.1
+# Generated from object_file/grammar/ObjectFileParser.g4 by ANTLR 4.13.1
 from antlr4 import *
 if "." in __name__:
     from .ObjectFileParser import ObjectFileParser

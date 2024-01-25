@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from cocas.location import CodeLocation
+from cocas.object_module import CodeLocation
 
 
 @dataclass

@@ -6,10 +6,9 @@ from antlr4 import CommonTokenStream, FileStream, InputStream
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 
 from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag, CdmTempException
-from cocas.generated.MacroLexer import MacroLexer
-from cocas.generated.MacroParser import MacroParser
-from cocas.generated.MacroVisitor import MacroVisitor
-from cocas.location import CodeLocation
+from cocas.object_module import CodeLocation
+
+from .generated import MacroLexer, MacroParser, MacroVisitor
 
 
 def unique(params: list[str]):

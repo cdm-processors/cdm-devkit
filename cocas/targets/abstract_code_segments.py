@@ -3,12 +3,11 @@ from math import lcm
 from typing import TYPE_CHECKING
 
 from cocas.error import CdmException, CdmExceptionTag
-from cocas.location import CodeLocation
+from cocas.object_module import CodeLocation
 
 if TYPE_CHECKING:
-    from assembler import ObjectSectionRecord
-
-    from cocas.code_block import Section
+    from cocas.assembler.code_block import Section
+    from cocas.object_module import ObjectSectionRecord
 
 
 class CodeSegmentsInterface:

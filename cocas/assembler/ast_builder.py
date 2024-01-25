@@ -2,7 +2,10 @@ from base64 import b64decode
 
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.ast_nodes import (
+from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
+from cocas.object_module import CodeLocation
+
+from .ast_nodes import (
     AbsoluteSectionNode,
     BreakStatementNode,
     ConditionalStatementNode,
@@ -21,11 +24,7 @@ from cocas.ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
-from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
-from cocas.generated.AsmLexer import AsmLexer
-from cocas.generated.AsmParser import AsmParser
-from cocas.generated.AsmParserVisitor import AsmParserVisitor
-from cocas.location import CodeLocation
+from .generated import AsmLexer, AsmParser, AsmParserVisitor
 
 
 # noinspection PyPep8Naming

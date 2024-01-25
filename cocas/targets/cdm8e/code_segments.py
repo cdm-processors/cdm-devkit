@@ -1,18 +1,18 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.abstract_code_segments import CodeSegmentsInterface
-from cocas.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from cocas.code_block import Section
+from cocas.assembler.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
+from cocas.assembler.code_block import Section
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import ExternalEntry
+from cocas.targets import CodeSegmentsInterface
 
 from . import target_instructions
 
 TAG = CdmExceptionTag.ASM
 
 if TYPE_CHECKING:
-    from cocas.assembler import ObjectSectionRecord
+    from cocas.object_module import ObjectSectionRecord
 
 
 class CodeSegments(CodeSegmentsInterface):

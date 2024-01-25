@@ -2,12 +2,15 @@ import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
-from cocas.abstract_params import TargetParamsInterface
-from cocas.code_block import Section
-from cocas.external_entry import ExternalEntry
-from cocas.location import CodeLocation
+from cocas.targets import TargetParamsInterface
+
+from .external_entry import ExternalEntry
+from .location import CodeLocation
+
+if TYPE_CHECKING:
+    from cocas.assembler.code_block import Section
 
 
 class ObjectSectionRecord:
@@ -25,7 +28,7 @@ class ObjectSectionRecord:
         self.lower_parts: dict[int, int] = dict()
 
     @classmethod
-    def from_section(cls, section: Section, labels: dict[str, int], templates: dict[str, dict[str, int]]):
+    def from_section(cls, section: "Section", labels: dict[str, int], templates: dict[str, dict[str, int]]):
         entries = dict(p for p in section.labels.items() if p[0] in section.ents)
         out = cls(section.name, section.address, bytearray(), entries, [], section.code_locations)
         for seg in section.segments:
