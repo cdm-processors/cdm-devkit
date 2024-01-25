@@ -55,5 +55,7 @@ build/
 # IDEA Folder
 .idea/
 
-# Include Logisim library
-!libs/logisim-generic-2.7.1.jar
+
+# Exclude processor circuits, copied by make
+**/circuits/*.circ
+!**/circuits/test_circuit.circ
