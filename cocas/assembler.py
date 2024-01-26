@@ -38,7 +38,8 @@ class Template:
 
             elif isinstance(line, InstructionNode):
                 if line.mnemonic not in target_instructions.assembly_directives():
-                    raise Exception('Only "dc" and "ds" allowed in templates')
+                    raise Exception('Only these directives allowed in templates: ' +
+                                    ', '.join(target_instructions.assembly_directives()))
                 for seg in target_instructions.assemble_instruction(line, temp_storage):
                     size += seg.size
 
