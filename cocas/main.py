@@ -1,11 +1,9 @@
 import argparse
 import codecs
 import importlib
-import json
 import os
 import pathlib
 import pkgutil
-from dataclasses import asdict
 from typing import Union
 
 import antlr4
@@ -13,6 +11,7 @@ import colorama
 
 from cocas.assembler import assemble
 from cocas.ast_builder import build_ast
+from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
 from cocas.macro_processor import process_macros, read_mlb
@@ -67,7 +66,7 @@ def main():
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
     debug_group = parser.add_argument_group('debug')
-    debug_group.add_argument('--debug', type=str, nargs='?', const='out.dbg.json', help='export debug information')
+    debug_group.add_argument('--debug', type=str, nargs='?', const=True, help='export debug information')
     debug_path_group = debug_group.add_mutually_exclusive_group()
     debug_path_group.add_argument('--relative-path', type=pathlib.Path,
                                   help='convert source files paths to relative in debug info and object files')
@@ -254,11 +253,18 @@ def main():
             handle_os_error(e)
 
         if args.debug:
-            code_locations = {key: asdict(loc) for key, loc in code_locations.items()}
-            json_locations = json.dumps(code_locations, indent=4, sort_keys=True)
+            if args.debug is True:
+                if args.output:
+                    filename = pathlib.Path(args.output).with_suffix('.dbg.json')
+                else:
+                    filename = 'out.dbg.json'
+            else:
+                filename = args.debug
+            code_locations = {key: value for (key, value) in sorted(code_locations.items())}
+            debug_info = debug_export(code_locations)
             try:
-                with open(args.debug, 'w') as f:
-                    f.write(json_locations)
+                with open(filename, 'w') as f:
+                    f.write(debug_info)
             except OSError as e:
                 handle_os_error(e)
 
