@@ -77,16 +77,14 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                                        f'Section not found: {sect}')
         if filename:
             f = Path(filename)
-            om = ObjectModule(f)
             for i in (asects | rsects).values():
                 for j in i.code_locations.values():
                     j.file = f.as_posix()
+            om = ObjectModule(list(asects.values()), list(rsects.values()), f)
         else:
-            om = ObjectModule(None)
             for i in (asects | rsects).values():
                 i.code_locations = {}
-        om.asects = list(asects.values())
-        om.rsects = list(rsects.values())
+            om = ObjectModule(list(asects.values()), list(rsects.values()), None)
         return om
 
     def visitAsect_block(self, ctx: ObjectFileParser.Asect_blockContext):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Type
 
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-from cocas.object_module import CodeLocation
+from cocas.object_module import CodeLocation, ObjectSectionRecord
 from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 from .ast_nodes import (
@@ -177,3 +177,10 @@ class Section(CodeBlock):
         else:
             raise Exception('Section is neither Absolute nor Relative, can it happen? It was elif instead of else here')
         super().__init__(address, sn.lines, target_instructions, code_segments)
+
+    def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
+        entries = dict(p for p in self.labels.items() if p[0] in self.ents)
+        out = ObjectSectionRecord(self.name, self.address, bytearray(), entries, [], self.code_locations)
+        for seg in self.segments:
+            seg.fill(out, self, labels, templates)
+        return out

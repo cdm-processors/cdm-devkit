@@ -15,8 +15,7 @@ from cocas.assembler.macro_processor import process_macros, read_mlb
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
-from cocas.object_file import import_object
-from cocas.object_module import export_objects
+from cocas.object_file import export_object, import_object
 
 
 def write_image(filename: str, arr: bytearray):
@@ -223,7 +222,7 @@ def main():
             obj_path = pathlib.Path(args.output)
         else:
             obj_path = pathlib.Path('merged.obj')
-        lines = export_objects([tup[1] for tup in objects], target_params, (args.debug or args.merge))
+        lines = export_object([tup[1] for tup in objects], target_params, (args.debug or args.merge))
         try:
             with obj_path.open('w') as file:
                 file.writelines(lines)
@@ -232,7 +231,7 @@ def main():
     elif args.compile:
         for path, obj in objects:
             obj_path = path.with_suffix('.obj').name
-            lines = export_objects([obj], target_params, args.debug)
+            lines = export_object([obj], target_params, args.debug)
             try:
                 with open(obj_path, 'w') as file:
                     file.writelines(lines)

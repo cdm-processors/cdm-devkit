@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Type
 
 from cocas.error import CdmExceptionTag
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectModule
 from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
@@ -98,8 +98,7 @@ def assemble(pn: ProgramNode, target_instructions, code_segments, debug_info_pat
     for rsect in rsects:
         update_varying_length([rsect], asects_labels, template_fields)
 
-    obj = ObjectModule(debug_info_path)
-    obj.asects = [ObjectSectionRecord.from_section(asect, asects_labels, template_fields) for asect in asects]
-    obj.rsects = [ObjectSectionRecord.from_section(rsect, asects_labels, template_fields) for rsect in rsects]
-
+    obj = ObjectModule([asect.to_object_section_record(asects_labels, template_fields) for asect in asects],
+                       [rsect.to_object_section_record(asects_labels, template_fields) for rsect in rsects],
+                       debug_info_path)
     return obj
