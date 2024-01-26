@@ -1,11 +1,14 @@
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from cocas.assembler.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from cocas.assembler.code_block import Section
 from cocas.error import CdmException, CdmExceptionTag
-from cocas.object_module import ExternalEntry, ObjectSectionRecord
-from cocas.object_module.location import CodeLocation
+from cocas.object_module import CodeLocation, ExternalEntry
 from cocas.targets import CodeSegmentsInterface
+
+if TYPE_CHECKING:
+    from cocas.assembler.code_block import Section
+    from cocas.object_module import ObjectSectionRecord
 
 
 def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):
@@ -29,7 +32,7 @@ class CodeSegments(CodeSegmentsInterface):
             self.data = data
             self.size = len(data)
 
-        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             super().fill(object_record, section, labels, templates)
             object_record.data += self.data
@@ -42,7 +45,7 @@ class CodeSegments(CodeSegmentsInterface):
             self.expr = expr
             self.size = 1
 
-        def fill(self, object_record: ObjectSectionRecord, section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             parsed = CodeSegments.parse_expression(self.expr, section, labels, templates, self)
             CodeSegments.forbid_multilabel_expressions(parsed, self)
@@ -63,7 +66,7 @@ class CodeSegments(CodeSegmentsInterface):
         external: dict[str, int] = field(default_factory=dict)
 
     @staticmethod
-    def parse_expression(expr: RelocatableExpressionNode, section: Section, labels: dict[str, int],
+    def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels: dict[str, int],
                          templates: dict[str, dict[str, int]], segment: CodeSegment) -> ParsedExpression:
         if expr.byte_specifier is not None:
             _error(segment, 'No byte specifiers allowed in CdM-8')
@@ -90,7 +93,7 @@ class CodeSegments(CodeSegmentsInterface):
         return result
 
     @staticmethod
-    def calculate_expression(parsed: ParsedExpression, section: Section, labels: dict[str, int]) -> int:
+    def calculate_expression(parsed: ParsedExpression, section: "Section", labels: dict[str, int]) -> int:
         value = parsed.value
         for label, n in parsed.asect.items():
             if label in section.labels:
@@ -121,7 +124,7 @@ class CodeSegments(CodeSegmentsInterface):
                             'from another subtracted rsect label')
 
     @staticmethod
-    def add_relatives_externals(parsed: ParsedExpression, offset: int, object_record: ObjectSectionRecord):
+    def add_relatives_externals(parsed: ParsedExpression, offset: int, object_record: "ObjectSectionRecord"):
         for label in parsed.external:
             if parsed.external[label] != 0:
                 entry = object_record.external.setdefault(label, [])

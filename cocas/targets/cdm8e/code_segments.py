@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from cocas.assembler.ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from cocas.assembler.code_block import Section
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import ExternalEntry
 from cocas.targets import CodeSegmentsInterface
@@ -12,6 +11,7 @@ from . import target_instructions
 TAG = CdmExceptionTag.ASM
 
 if TYPE_CHECKING:
+    from cocas.assembler.code_block import Section
     from cocas.object_module import ObjectSectionRecord
 
 
@@ -37,7 +37,7 @@ class CodeSegments(CodeSegmentsInterface):
             self.data = data
             self.size = len(data)
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             object_record.data += self.data
 
@@ -45,7 +45,7 @@ class CodeSegments(CodeSegmentsInterface):
     class ShortExpressionSegment(RelocatableExpressionSegment):
         size = 1
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
@@ -66,7 +66,7 @@ class CodeSegments(CodeSegmentsInterface):
         positive: bool = False
         size = 1
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
             if val_sect is not None or ext is not None:
@@ -79,7 +79,7 @@ class CodeSegments(CodeSegmentsInterface):
     class LongExpressionSegment(RelocatableExpressionSegment):
         size = 2
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
@@ -96,7 +96,7 @@ class CodeSegments(CodeSegmentsInterface):
     class OffsetExpressionSegment(RelocatableExpressionSegment):
         size = 1
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
@@ -156,7 +156,7 @@ class CodeSegments(CodeSegmentsInterface):
             except Exception as e:
                 raise CdmException(TAG, self.location.file, self.location.line, str(e))
 
-        def fill(self, object_record: "ObjectSectionRecord", section: Section, labels: dict[str, int],
+        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             mnemonic = f'b{self.branch_mnemonic}'
             if mnemonic not in target_instructions.TargetInstructions.simple_instructions['branch']:
@@ -177,7 +177,7 @@ def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):
     raise CdmException(TAG, segment.location.file, segment.location.line, message)
 
 
-def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: Section,
+def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: "Section",
                       labels: dict[str, int], templates: dict[str, dict[str, int]]):
     val_long = seg.expr.const_term
     used_exts = dict()
@@ -229,7 +229,7 @@ def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: Section
     _error(seg, 'Result is not a label or a number')
 
 
-def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: int,
+def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: int,
                    seg: CodeSegments.RelocatableExpressionSegment):
     val %= 65536
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
@@ -243,7 +243,7 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: Section, val: in
         obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2), full_bytes=True))
 
 
-def add_rel_record(obj_rec: "ObjectSectionRecord", s: Section, val: int,
+def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,
                    seg: CodeSegments.RelocatableExpressionSegment):
     val %= 65536
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
