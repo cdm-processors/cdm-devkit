@@ -402,4 +402,4 @@ class TargetInstructions(TargetInstructionsInterface):
 
     @staticmethod
     def assembly_directives():
-        return {'ds', 'dc', 'db', 'dw'}
+        return {'ds', 'dc', 'db', 'dw', 'align'}
