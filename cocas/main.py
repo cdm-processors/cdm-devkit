@@ -66,7 +66,7 @@ def main():
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
     parser.add_argument('-o', '--output', type=str, help='specify output file name')
     debug_group = parser.add_argument_group('debug')
-    debug_group.add_argument('--debug', type=str, nargs='?', const='out.dbg.json', help='export debug information')
+    debug_group.add_argument('--debug', type=str, nargs='?', const=True, help='export debug information')
     debug_path_group = debug_group.add_mutually_exclusive_group()
     debug_path_group.add_argument('--relative-path', type=pathlib.Path,
                                   help='convert source files paths to relative in debug info and object files')
@@ -253,10 +253,17 @@ def main():
             handle_os_error(e)
 
         if args.debug:
+            if args.debug is True:
+                if args.output:
+                    filename = pathlib.Path(args.output).with_suffix('.dbg.json')
+                else:
+                    filename = 'out.dbg.json'
+            else:
+                filename = args.debug
             code_locations = {key: value for (key, value) in sorted(code_locations.items())}
             debug_info = debug_export(code_locations)
             try:
-                with open(args.debug, 'w') as f:
+                with open(filename, 'w') as f:
                     f.write(debug_info)
             except OSError as e:
                 handle_os_error(e)
