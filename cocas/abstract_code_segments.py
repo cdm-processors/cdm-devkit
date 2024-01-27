@@ -58,16 +58,12 @@ class CodeSegmentsInterface:
             if section.name != '$abs':
                 object_record.alignment = lcm(object_record.alignment, self.alignment)
 
-        def update_length_without_surroundings(self, pos):
+        def update_varying_length(self, pos, section: "Section", labels: dict[str, int], _):
             new_size = (-pos) % self.alignment
             if new_size == self.alignment:
                 new_size = 0
+            diff = new_size - self.size
             self.size = new_size
-
-        def update_varying_length(self, pos, section: "Section", labels: dict[str, int], _):
-            old_size = self.size
-            self.update_length_without_surroundings(pos)
-            diff = self.size - old_size
             self.__class__.update_surroundings(diff, pos, section, labels)
             return diff
 

@@ -41,8 +41,6 @@ class Template:
                     raise Exception('Only these directives allowed in templates: ' +
                                     ', '.join(target_instructions.assembly_directives()))
                 for seg in target_instructions.assemble_instruction(line, temp_storage):
-                    if isinstance(seg, CodeSegmentsInterface.AlignmentPaddingSegment):
-                        seg.update_length_without_surroundings(size)
                     size += seg.size
 
         self.labels['_'] = size
