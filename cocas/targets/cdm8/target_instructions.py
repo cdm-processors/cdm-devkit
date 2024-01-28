@@ -251,3 +251,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'ldi': 0xD0
         })
     ]
+
+    @staticmethod
+    def assembly_directives():
+        return {'ds', 'dc'}

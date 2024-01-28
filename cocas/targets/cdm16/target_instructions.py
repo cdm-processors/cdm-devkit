@@ -401,5 +401,5 @@ class TargetInstructions(TargetInstructionsInterface):
     ]
 
     @staticmethod
-    def assembly_directives() -> set[str]:
-        return super().assembly_directives()
+    def assembly_directives():
+        return {'ds', 'dc', 'db', 'dw'}
