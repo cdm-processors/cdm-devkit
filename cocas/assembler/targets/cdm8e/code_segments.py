@@ -6,7 +6,7 @@ from cocas.object_module import ExternalEntry
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from .. import CodeSegmentsInterface
-from . import target_instructions
+from .simple_instructions import simple_instructions
 
 TAG = CdmExceptionTag.ASM
 
@@ -160,16 +160,16 @@ class CodeSegments(CodeSegmentsInterface):
         def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
                  templates: dict[str, dict[str, int]]):
             mnemonic = f'b{self.branch_mnemonic}'
-            if mnemonic not in target_instructions.TargetInstructions.simple_instructions['branch']:
+            if mnemonic not in simple_instructions['branch']:
                 _error(self, f'Invalid branch mnemonic: {mnemonic}')
             if self.is_expanded:
-                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][
+                branch_opcode = simple_instructions['branch'][
                     f'bn{self.branch_mnemonic}']
-                jmp_opcode = target_instructions.TargetInstructions.simple_instructions['long']['jmp']
+                jmp_opcode = simple_instructions['long']['jmp']
                 object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
                 CodeSegments.LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
             else:
-                branch_opcode = target_instructions.TargetInstructions.simple_instructions['branch'][mnemonic]
+                branch_opcode = simple_instructions['branch'][mnemonic]
                 object_record.data += bytearray([branch_opcode])
                 CodeSegments.OffsetExpressionSegment(self.expr).fill(object_record, section, labels, templates)
 
