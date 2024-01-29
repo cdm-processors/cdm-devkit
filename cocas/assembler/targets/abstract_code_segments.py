@@ -6,8 +6,9 @@ from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation
 
 if TYPE_CHECKING:
-    from cocas.assembler.code_block import Section
     from cocas.object_module import ObjectSectionRecord
+
+    from ..code_block import Section
 
 
 class CodeSegmentsInterface:

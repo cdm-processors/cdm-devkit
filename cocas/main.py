@@ -54,7 +54,7 @@ def handle_os_error(e: OSError):
 
 def main():
     colorama.init()
-    targets_dir = os.path.join(os.path.dirname(__file__), "targets")
+    targets_dir = os.path.join(os.path.dirname(__file__), "assembler/targets")
     available_targets = set(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
     available_targets &= list_object_targets()
 
@@ -91,11 +91,12 @@ def main():
         print('Error: cannot use --compile and --merge options at same time')
         return 2
 
-    target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
+    target_instructions = importlib.import_module(f'cocas.assembler.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
-    code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
+    code_segments = importlib.import_module(f'cocas.assembler.targets.{target}.code_segments', 'cocas').CodeSegments
 
-    library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
+    library_macros = read_mlb(
+        str(pathlib.Path(__file__).parent.joinpath(f'assembler/targets/{target}/standard.mlb').absolute()))
     objects = []
 
     realpath = bool(args.realpath)

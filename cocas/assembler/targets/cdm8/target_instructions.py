@@ -4,10 +4,10 @@ from typing import Callable, get_args, get_origin
 
 from bitstruct import pack
 
-from cocas.assembler.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from .. import CodeSegmentsInterface, TargetInstructionsInterface
 from .code_segments import CodeSegments
 
 

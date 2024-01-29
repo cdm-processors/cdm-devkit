@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
 from cocas.object_module import CodeLocation
-from cocas.targets import CodeSegmentsInterface
+
+from .abstract_code_segments import CodeSegmentsInterface
 
 if TYPE_CHECKING:
     from cocas.assembler.ast_nodes import InstructionNode

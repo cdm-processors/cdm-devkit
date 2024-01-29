@@ -3,7 +3,6 @@ from typing import Any, Callable, Type
 
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
 from cocas.object_module import CodeLocation, ObjectSectionRecord
-from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 from .ast_nodes import (
     AbsoluteSectionNode,
@@ -18,6 +17,7 @@ from .ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
+from .targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 
 @dataclass

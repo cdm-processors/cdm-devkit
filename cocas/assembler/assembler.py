@@ -4,10 +4,10 @@ from typing import Type
 
 from cocas.error import CdmExceptionTag
 from cocas.object_module import CodeLocation, ObjectModule
-from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
+from .targets import CodeSegmentsInterface, TargetInstructionsInterface
 
 TAG = CdmExceptionTag.ASM
 

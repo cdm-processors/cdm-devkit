@@ -3,10 +3,10 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Callable, Union, get_args, get_origin
 
-from cocas.assembler.ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-from cocas.targets import CodeSegmentsInterface, TargetInstructionsInterface
 
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from .. import CodeSegmentsInterface, TargetInstructionsInterface
 from .code_segments import CodeSegments, pack
 
 

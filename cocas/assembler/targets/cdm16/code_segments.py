@@ -3,14 +3,16 @@ from typing import TYPE_CHECKING, Optional
 
 import bitstruct
 
-from cocas.assembler.ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
 from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation, ExternalEntry
-from cocas.targets import CodeSegmentsInterface
+
+from ...ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
+from .. import CodeSegmentsInterface
 
 if TYPE_CHECKING:
-    from cocas.assembler.code_block import Section
     from cocas.object_module import ObjectSectionRecord
+
+    from ...code_block import Section
 
 
 def pack(fmt, *args):
