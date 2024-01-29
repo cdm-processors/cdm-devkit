@@ -6,22 +6,22 @@ from antlr4 import CommonTokenStream, InputStream
 
 from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
-from cocas.targets import TargetParamsInterface
 
 from .generated.ObjectFileLexer import ObjectFileLexer
 from .generated.ObjectFileParser import ObjectFileParser
 from .generated.ObjectFileParserVisitor import ObjectFileParserVisitor
+from .targets import TargetParams, import_target
 
 
 class ImportObjectFileVisitor(ObjectFileParserVisitor):
-    def __init__(self, filepath, target_params: TargetParamsInterface):
+    def __init__(self, filepath, target: str):
         super().__init__()
         self.file = filepath
-        self.target_params = target_params
+        self.target_params: TargetParams = import_target(target)
 
     def visitObject_file(self, ctx: ObjectFileParser.Object_fileContext) -> list[ObjectModule]:
-        exp_header = self.target_params.object_file_header()
-        target_name = self.target_params.name()
+        exp_header = self.target_params.header
+        target_name = self.target_params.name
         if ctx.targ_record():
             header = self.visitTarg_record(ctx.targ_record())
             if header != exp_header:
@@ -111,7 +111,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         if ctx.alig_record():
             align = self.visitAlig_record(ctx.alig_record())
         else:
-            align = self.target_params.default_alignment()
+            align = self.target_params.default_alignment
         data = self.visitData_record(ctx.data_record())
         if ctx.rel_record():
             rel = self.visitRel_record(ctx.rel_record())
@@ -202,7 +202,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         if ctx.range_():
             return ExternalEntry(addr, self.visitRange(ctx.range_()), sign, False)
         else:
-            entry_size = self.target_params.max_entry_size()
+            entry_size = self.target_params.max_entry_size
             return ExternalEntry(addr, range(0, entry_size), sign, True)
 
     def visitRange(self, ctx: ObjectFileParser.RangeContext):
@@ -223,7 +223,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
 
 def import_object(input_stream: InputStream, filepath: str,
-                  target_params: TargetParamsInterface) -> List[ObjectModule]:
+                  target: str) -> List[ObjectModule]:
     lexer = ObjectFileLexer(input_stream)
     lexer.removeErrorListeners()
     lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
@@ -233,6 +233,6 @@ def import_object(input_stream: InputStream, filepath: str,
     parser.removeErrorListeners()
     parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
     ctx = parser.object_file()
-    visitor = ImportObjectFileVisitor(filepath, target_params)
+    visitor = ImportObjectFileVisitor(filepath, target)
     result = visitor.visit(ctx)
     return result

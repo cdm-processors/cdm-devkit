@@ -15,7 +15,8 @@ from cocas.assembler.macro_processor import process_macros, read_mlb
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
-from cocas.object_file import export_object, import_object
+from cocas.object_file import export_object, import_object, list_object_targets
+from cocas.targets import TargetParamsInterface
 
 
 def write_image(filename: str, arr: bytearray):
@@ -55,7 +56,8 @@ def handle_os_error(e: OSError):
 def main():
     colorama.init()
     targets_dir = os.path.join(os.path.dirname(__file__), "targets")
-    available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
+    available_targets = set(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
+    available_targets &= list_object_targets()
 
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('sources', type=pathlib.Path, nargs='*', help='source files')
@@ -93,7 +95,8 @@ def main():
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
     code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
-    target_params = importlib.import_module(f'cocas.targets.{target}.target_params', 'cocas').TargetParams
+    target_params: TargetParamsInterface = importlib.import_module(f'cocas.targets.{target}.target_params',
+                                                                   'cocas').TargetParams
 
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
@@ -136,7 +139,7 @@ def main():
                     print("Error: object files should not be provided with --compile option")
                     return 2
                 input_stream = antlr4.InputStream(data)
-                for obj in import_object(input_stream, str(filepath), target_params):
+                for obj in import_object(input_stream, str(filepath), target):
                     if realpath:
                         dip = obj.debug_info_path
                         obj.debug_info_path = obj.debug_info_path.resolve()
@@ -222,7 +225,7 @@ def main():
             obj_path = pathlib.Path(args.output)
         else:
             obj_path = pathlib.Path('merged.obj')
-        lines = export_object([tup[1] for tup in objects], target_params, (args.debug or args.merge))
+        lines = export_object([tup[1] for tup in objects], target, (args.debug or args.merge))
         try:
             with obj_path.open('w') as file:
                 file.writelines(lines)
@@ -231,7 +234,7 @@ def main():
     elif args.compile:
         for path, obj in objects:
             obj_path = path.with_suffix('.obj').name
-            lines = export_object([obj], target_params, args.debug)
+            lines = export_object([obj], target, args.debug)
             try:
                 with open(obj_path, 'w') as file:
                     file.writelines(lines)

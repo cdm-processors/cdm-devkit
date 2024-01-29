@@ -2,7 +2,8 @@ from collections import defaultdict
 from pathlib import Path
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule
-from cocas.targets import TargetParamsInterface
+
+from .targets import TargetParams, import_target
 
 
 def data_to_str(array: bytearray):
@@ -35,18 +36,19 @@ def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
     return res
 
 
-def export_object(objs: list[ObjectModule], target_params: TargetParamsInterface, debug: bool) -> list[str]:
+def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[str]:
     """
     Export multiple object modules in object file format
 
     :param objs: objects to export
-    :param target_params: information about selected target
+    :param target: name of selected processor target, must be valid
     :param debug: if needed to export debug information
     :return: list of strings of object file, ended by new line
     """
+    target_params: TargetParams = import_target(target)
     result = []
-    if target_params.object_file_header():
-        result.append(f'TARG {target_params.object_file_header()}\n')
+    if target_params.header:
+        result.append(f'TARG {target_params.header}\n')
     for obj in objs:
         if len(objs) > 1:
             result.append('\n')
@@ -63,7 +65,7 @@ def export_object(objs: list[ObjectModule], target_params: TargetParamsInterface
                 result.append(f'NTRY {label} {address:02x}\n')
         for rsect in obj.rsects:
             result.append(f'NAME {rsect.name}\n')
-            if rsect.alignment != target_params.default_alignment():
+            if rsect.alignment != target_params.default_alignment:
                 result.append(f'ALIG {rsect.alignment:02x}\n')
             s = data_to_str(rsect.data)
             result.append(f'DATA {s}\n')
