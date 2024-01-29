@@ -16,7 +16,6 @@ from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
 from cocas.object_file import export_object, import_object, list_object_targets
-from cocas.targets import TargetParamsInterface
 
 
 def write_image(filename: str, arr: bytearray):
@@ -95,8 +94,6 @@ def main():
     target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
                                                   'cocas').TargetInstructions
     code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
-    target_params: TargetParamsInterface = importlib.import_module(f'cocas.targets.{target}.target_params',
-                                                                   'cocas').TargetParams
 
     library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
     objects = []
@@ -242,7 +239,7 @@ def main():
                 handle_os_error(e)
     else:
         try:
-            data, code_locations = link(objects, target_params)
+            data, code_locations = link(objects)
         except CdmLinkException as e:
             log_error(CdmExceptionTag.LINK.value, e.message)
             return 1

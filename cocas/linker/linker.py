@@ -3,7 +3,6 @@ from typing import Any
 
 from cocas.error import CdmLinkException
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
-from cocas.targets import TargetParamsInterface
 
 
 def init_bins(asects: list[ObjectSectionRecord]):
@@ -90,7 +89,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[tuple[Any, ObjectModule]], _: TargetParamsInterface):
+def link(objects: list[tuple[Any, ObjectModule]]):
     asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
     rsects = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
 
