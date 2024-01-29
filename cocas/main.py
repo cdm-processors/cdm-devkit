@@ -1,17 +1,15 @@
 import argparse
 import codecs
-import importlib
-import os
 import pathlib
-import pkgutil
 from typing import Union
 
 import antlr4
 import colorama
 
-from cocas.assembler import assemble
+from cocas.assembler import generate_object_module, list_assembler_targets
 from cocas.assembler.ast_builder import build_ast
 from cocas.assembler.macro_processor import process_macros, read_mlb
+from cocas.assembler.targets import import_target, mlb_path
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
@@ -54,9 +52,7 @@ def handle_os_error(e: OSError):
 
 def main():
     colorama.init()
-    targets_dir = os.path.join(os.path.dirname(__file__), "assembler/targets")
-    available_targets = set(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
-    available_targets &= list_object_targets()
+    available_targets = list_assembler_targets() & list_object_targets()
 
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('sources', type=pathlib.Path, nargs='*', help='source files')
@@ -91,12 +87,9 @@ def main():
         print('Error: cannot use --compile and --merge options at same time')
         return 2
 
-    target_instructions = importlib.import_module(f'cocas.assembler.targets.{target}.target_instructions',
-                                                  'cocas').TargetInstructions
-    code_segments = importlib.import_module(f'cocas.assembler.targets.{target}.code_segments', 'cocas').CodeSegments
+    target_instructions, code_segments = import_target(target)
 
-    library_macros = read_mlb(
-        str(pathlib.Path(__file__).parent.joinpath(f'assembler/targets/{target}/standard.mlb').absolute()))
+    library_macros = read_mlb(str(mlb_path(target)))
     objects = []
 
     realpath = bool(args.realpath)
@@ -196,7 +189,7 @@ def main():
                 input_stream = antlr4.InputStream(data)
                 macro_expanded_input_stream = process_macros(input_stream, library_macros, str(filepath))
                 r = build_ast(macro_expanded_input_stream, str(filepath))
-                obj = assemble(r, target_instructions, code_segments, debug_info_path)
+                obj = generate_object_module(r, target_instructions, code_segments, debug_info_path)
                 if debug_info_path:
                     fp = filepath.as_posix()
                     dip = debug_info_path.as_posix()
