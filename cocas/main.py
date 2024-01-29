@@ -1,18 +1,14 @@
 import argparse
-import codecs
 import pathlib
 from typing import Union
 
-import antlr4
 import colorama
 
-from cocas.assembler import assemble_module, list_assembler_targets
-from cocas.assembler.macro_processor import read_mlb
-from cocas.assembler.targets import import_target, mlb_path
+from cocas.assembler import assemble_files, list_assembler_targets
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
 from cocas.linker import link
-from cocas.object_file import export_object, import_object, list_object_targets
+from cocas.object_file import export_object, import_object_files, list_object_targets
 
 
 def write_image(filename: str, arr: bytearray):
@@ -86,9 +82,6 @@ def main():
         print('Error: cannot use --compile and --merge options at same time')
         return 2
 
-    target_instructions, code_segments = import_target(target)
-
-    library_macros = read_mlb(str(mlb_path(target)))
     objects = []
 
     realpath = bool(args.realpath)
@@ -108,15 +101,6 @@ def main():
     filepath: pathlib.Path
     for filepath in args.sources:
         try:
-            with filepath.open('rb') as file:
-                data = file.read()
-        except OSError as e:
-            handle_os_error(e)
-        data = codecs.decode(data, 'utf8', 'strict')
-        if not data.endswith('\n'):
-            data += '\n'
-
-        try:
             filetype = filepath.suffix
             if not filetype:
                 if args.merge:
@@ -128,83 +112,15 @@ def main():
                 if args.compile:
                     print("Error: object files should not be provided with --compile option")
                     return 2
-                input_stream = antlr4.InputStream(data)
-                for obj in import_object(input_stream, str(filepath), target):
-                    if realpath:
-                        dip = obj.debug_info_path
-                        obj.debug_info_path = obj.debug_info_path.resolve()
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = pathlib.Path(j.file)
-                                if f == dip:
-                                    j.file = obj.debug_info_path.as_posix()
-                                else:
-                                    j.file = pathlib.Path(j.file).resolve().as_posix()
-                    if relative_path:
-                        dip = obj.debug_info_path
-                        if obj.debug_info_path.is_absolute():
-                            try:
-                                obj.debug_info_path = obj.debug_info_path.absolute().relative_to(relative_path)
-                            except ValueError as e:
-                                print('Error:', e)
-                                return 2
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = pathlib.Path(j.file)
-                                if f == dip:
-                                    j.file = obj.debug_info_path.as_posix()
-                                else:
-                                    if f.is_absolute():
-                                        try:
-                                            j.file = f.absolute().relative_to(relative_path).as_posix()
-                                        except ValueError as e:
-                                            print('Error:', e)
-                                            return 2
-                    elif absolute_path:
-                        obj.debug_info_path = absolute_path / obj.debug_info_path
-                        if realpath:
-                            obj.debug_info_path = obj.debug_info_path.resolve()
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = absolute_path / pathlib.Path(j.file)
-                                j.file = f.as_posix()
-                    objects.append((filepath, obj))
+                objects += import_object_files(target, [filepath], bool(args.debug),
+                                               relative_path, absolute_path, realpath)
             else:  # filetype == '.asm'
                 if args.merge:
                     print("Error: source files should not be provided with --merge option")
                     return 2
-                if args.debug:
-                    debug_info_path = filepath.expanduser().absolute()
-                    if realpath:
-                        debug_info_path = debug_info_path.resolve()
-                    if relative_path:
-                        try:
-                            debug_info_path = debug_info_path.relative_to(relative_path)
-                        except ValueError as e:
-                            print('Error:', e)
-                            return 2
-                else:
-                    debug_info_path = None
-                input_stream = antlr4.InputStream(data)
-                obj = assemble_module(input_stream, target_instructions, code_segments, library_macros,
-                                      filepath, debug_info_path)
-                if debug_info_path:
-                    fp = filepath.as_posix()
-                    dip = debug_info_path.as_posix()
-                    for i in obj.asects + obj.rsects:
-                        for j in i.code_locations.values():
-                            if j.file == fp:
-                                j.file = dip
-                            else:
-                                try:
-                                    f = pathlib.Path(j.file).absolute()
-                                    if realpath:
-                                        f = f.resolve()
-                                    j.file = f.relative_to(relative_path).as_posix()
-                                except ValueError as e:
-                                    print('Error:', e)
-                                    return 2
-                objects.append((filepath, obj))
+                objects += assemble_files(target, [filepath], bool(args.debug),
+                                          relative_path, absolute_path, realpath)
+
         except CdmException as e:
             e.log()
             return 1

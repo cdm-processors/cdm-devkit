@@ -1,7 +1,9 @@
 import bisect
+import codecs
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
+import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
 from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
@@ -236,3 +238,62 @@ def import_object(input_stream: InputStream, filepath: str,
     visitor = ImportObjectFileVisitor(filepath, target)
     result = visitor.visit(ctx)
     return result
+
+
+def import_object_files(target: str,
+                        files: list[Path],
+                        debug: bool,
+                        relative_path: Optional[Path],
+                        absolute_path: Optional[Path],
+                        realpath: bool) -> list[tuple[Path, ObjectModule]]:
+    """
+    :param target: name of processor target
+    :param files: list of object files' paths to process
+    :param debug: if debug information should be exported
+    :param relative_path: if debug paths should be converted to relative to some path
+    :param absolute_path: if relative paths should be converted to absolute
+    :param realpath: if paths should be converted to canonical
+    """
+    _ = debug
+    objects = []
+    for filepath in files:
+        with filepath.open('rb') as file:
+            data = file.read()
+        data = codecs.decode(data, 'utf8', 'strict')
+        if not data.endswith('\n'):
+            data += '\n'
+
+        input_stream = antlr4.InputStream(data)
+        for obj in import_object(input_stream, str(filepath), target):
+            if realpath:
+                dip = obj.debug_info_path
+                obj.debug_info_path = obj.debug_info_path.resolve()
+                for i in obj.asects + obj.rsects:
+                    for j in i.code_locations.values():
+                        f = Path(j.file)
+                        if f == dip:
+                            j.file = obj.debug_info_path.as_posix()
+                        else:
+                            j.file = Path(j.file).resolve().as_posix()
+            if relative_path:
+                dip = obj.debug_info_path
+                if obj.debug_info_path.is_absolute():
+                    obj.debug_info_path = obj.debug_info_path.absolute().relative_to(relative_path)
+                for i in obj.asects + obj.rsects:
+                    for j in i.code_locations.values():
+                        f = Path(j.file)
+                        if f == dip:
+                            j.file = obj.debug_info_path.as_posix()
+                        else:
+                            if f.is_absolute():
+                                j.file = f.absolute().relative_to(relative_path).as_posix()
+            elif absolute_path:
+                obj.debug_info_path = absolute_path / obj.debug_info_path
+                if realpath:
+                    obj.debug_info_path = obj.debug_info_path.resolve()
+                for i in obj.asects + obj.rsects:
+                    for j in i.code_locations.values():
+                        f = absolute_path / Path(j.file)
+                        j.file = f.as_posix()
+            objects.append((filepath, obj))
+    return objects
