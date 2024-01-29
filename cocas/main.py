@@ -5,36 +5,11 @@ from typing import Union
 import colorama
 
 from cocas.assembler import assemble_files, list_assembler_targets
-from cocas.debug_export import debug_export
-from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
+from cocas.debug_export import write_debug_export
+from cocas.error import CdmException, log_error
+from cocas.image import write_image
 from cocas.linker import link
-from cocas.object_file import export_object, import_object_files, list_object_targets
-
-
-def write_image(filename: str, arr: bytearray):
-    """
-    Write the contents or array into file in logisim-compatible format
-
-    :param filename: Path to output file
-    :param arr: Bytearray to be written
-    """
-    f = open(filename, mode='wb')
-    f.write(bytes("v2.0 raw\n", 'UTF-8'))
-    zeroes = 0
-    for i, byte in enumerate(arr):
-        if byte == 0:
-            zeroes += 1
-        else:
-            if zeroes != 0:
-                if zeroes > 4:
-                    f.write(bytes(f'{zeroes}*00\n', 'UTF-8'))
-                    f.write(bytes(f'# {i:#2x}\n', 'UTF-8'))
-                else:
-                    for _ in range(zeroes):
-                        f.write(bytes('00\n', 'UTF-8'))
-                zeroes = 0
-            f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
-    f.close()
+from cocas.object_file import list_object_targets, read_object_files, write_object_file
 
 
 def handle_os_error(e: OSError):
@@ -112,8 +87,8 @@ def main():
                 if args.compile:
                     print("Error: object files should not be provided with --compile option")
                     return 2
-                objects += import_object_files(target, [filepath], bool(args.debug),
-                                               relative_path, absolute_path, realpath)
+                objects += read_object_files(target, [filepath], bool(args.debug),
+                                             relative_path, absolute_path, realpath)
             else:  # filetype == '.asm'
                 if args.merge:
                     print("Error: source files should not be provided with --merge option")
@@ -125,40 +100,19 @@ def main():
             e.log()
             return 1
 
-    if args.merge or args.compile and args.output:
-        if args.output:
-            obj_path = pathlib.Path(args.output)
-        else:
-            obj_path = pathlib.Path('merged.obj')
-        lines = export_object([tup[1] for tup in objects], target, (args.debug or args.merge))
-        try:
-            with obj_path.open('w') as file:
-                file.writelines(lines)
-        except OSError as e:
-            handle_os_error(e)
+    if args.merge:
+        write_object_file('merged.obj', [tup[1] for tup in objects], target, (args.debug or args.merge))
+    elif args.compile and args.output:
+        write_object_file(args.output, [tup[1] for tup in objects], target, (args.debug or args.merge))
     elif args.compile:
         for path, obj in objects:
-            obj_path = path.with_suffix('.obj').name
-            lines = export_object([obj], target, args.debug)
-            try:
-                with open(obj_path, 'w') as file:
-                    file.writelines(lines)
-            except OSError as e:
-                handle_os_error(e)
+            write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
     else:
-        try:
-            data, code_locations = link(objects)
-        except CdmLinkException as e:
-            log_error(CdmExceptionTag.LINK.value, e.message)
-            return 1
-        try:
-            if args.output:
-                write_image(args.output, data)
-            else:
-                write_image("out.img", data)
-        except OSError as e:
-            handle_os_error(e)
-
+        data, code_locations = link(objects)
+        if args.output:
+            write_image(args.output, data)
+        else:
+            write_image("out.img", data)
         if args.debug:
             if args.debug is True:
                 if args.output:
@@ -167,13 +121,7 @@ def main():
                     filename = 'out.dbg.json'
             else:
                 filename = args.debug
-            code_locations = {key: value for (key, value) in sorted(code_locations.items())}
-            debug_info = debug_export(code_locations)
-            try:
-                with open(filename, 'w') as f:
-                    f.write(debug_info)
-            except OSError as e:
-                handle_os_error(e)
+            write_debug_export(filename, code_locations)
 
 
 if __name__ == '__main__':

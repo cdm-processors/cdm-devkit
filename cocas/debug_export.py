@@ -1,6 +1,8 @@
 import bisect
 import json
 import re
+from pathlib import Path
+from typing import Union
 
 from cocas.object_module import CodeLocation
 
@@ -34,3 +36,9 @@ def debug_export(code_locations: dict[int, CodeLocation]) -> str:
     pattern = re.compile(r"{\n\s+\"__no_breaks_begin\": \[],\n\s+([\S\s]+?),\n\s+\"__no_breaks_end\": \[]\s+}")
     dump = re.sub(pattern, lambda m: "{" + re.sub(r"\n\s+", " ", m.group(1)) + "}", dump)
     return dump
+
+
+def write_debug_export(filepath: Union[Path, str], sorted_cl: dict[int, CodeLocation]):
+    sorted_cl = {key: value for (key, value) in sorted(sorted_cl.items())}
+    with open(filepath, 'w') as f:
+        f.write(debug_export(sorted_cl))

@@ -240,12 +240,12 @@ def import_object(input_stream: InputStream, filepath: str,
     return result
 
 
-def import_object_files(target: str,
-                        files: list[Path],
-                        debug: bool,
-                        relative_path: Optional[Path],
-                        absolute_path: Optional[Path],
-                        realpath: bool) -> list[tuple[Path, ObjectModule]]:
+def read_object_files(target: str,
+                      files: list[Path],
+                      debug: bool,
+                      relative_path: Optional[Path],
+                      absolute_path: Optional[Path],
+                      realpath: bool) -> list[tuple[Path, ObjectModule]]:
     """
     :param target: name of processor target
     :param files: list of object files' paths to process
