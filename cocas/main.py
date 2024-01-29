@@ -6,9 +6,8 @@ from typing import Union
 import antlr4
 import colorama
 
-from cocas.assembler import generate_object_module, list_assembler_targets
-from cocas.assembler.ast_builder import build_ast
-from cocas.assembler.macro_processor import process_macros, read_mlb
+from cocas.assembler import assemble_module, list_assembler_targets
+from cocas.assembler.macro_processor import read_mlb
 from cocas.assembler.targets import import_target, mlb_path
 from cocas.debug_export import debug_export
 from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
@@ -187,9 +186,8 @@ def main():
                 else:
                     debug_info_path = None
                 input_stream = antlr4.InputStream(data)
-                macro_expanded_input_stream = process_macros(input_stream, library_macros, str(filepath))
-                r = build_ast(macro_expanded_input_stream, str(filepath))
-                obj = generate_object_module(r, target_instructions, code_segments, debug_info_path)
+                obj = assemble_module(input_stream, target_instructions, code_segments, library_macros,
+                                      filepath, debug_info_path)
                 if debug_info_path:
                     fp = filepath.as_posix()
                     dip = debug_info_path.as_posix()
