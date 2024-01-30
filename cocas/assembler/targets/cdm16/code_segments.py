@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
@@ -24,11 +25,11 @@ def _error(segment: ICodeSegment, message: str):
     raise CdmException(CdmExceptionTag.ASM, segment.location.file, segment.location.line, message)
 
 
-class CodeSegment(ICodeSegment):
+class CodeSegment(ICodeSegment, ABC):
     pass
 
 
-class VaryingLengthSegment(IVaryingLengthSegment, CodeSegment):
+class VaryingLengthSegment(IVaryingLengthSegment, CodeSegment, ABC):
     pass
 
 
@@ -36,23 +37,50 @@ class AlignmentPaddingSegment(IAlignmentPaddingSegment, CodeSegment):
     pass
 
 
-class AlignedSegment(IAlignedSegment, CodeSegment):
-    pass
+class AlignedSegment(IAlignedSegment, CodeSegment, ABC):
+    def __init__(self, alignment: int):
+        self._alignment = alignment
+
+    @property
+    def alignment(self) -> int:
+        return self._alignment
 
 
-class InstructionSegment(AlignedSegment):
+class InstructionSegment(AlignedSegment, ABC):
     def __init__(self, location: CodeLocation):
         super().__init__(2)
-        self.location = location
+        self._location = location
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
+
+class FixedLengthInstructionSegment(InstructionSegment, ABC):
+    @property
+    def size(self) -> int:
+        return self._size
+
+    def __init__(self, size: int, location: CodeLocation):
+        super().__init__(location)
+        self._size = size
 
 
 class BytesSegment(CodeSegment):
     data: bytes
 
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
     def __init__(self, data: bytes, location: CodeLocation):
-        self.location = location
         self.data = data
-        self.size = len(data)
+        self._size = len(data)
+        self._location = location
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -60,19 +88,27 @@ class BytesSegment(CodeSegment):
         object_record.data += self.data
 
 
-class InstructionBytesSegment(InstructionSegment, BytesSegment):
+class InstructionBytesSegment(BytesSegment, FixedLengthInstructionSegment):
     def __init__(self, data: bytes, location: CodeLocation):
-        InstructionSegment.__init__(self, location)
         BytesSegment.__init__(self, data, location)
+        FixedLengthInstructionSegment.__init__(self, len(data), location)
 
 
 class ExpressionSegment(CodeSegment):
     expr: RelocatableExpressionNode
 
-    def __init__(self, location: CodeLocation, expr: RelocatableExpressionNode):
-        self.location = location
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
+    def __init__(self, expr: RelocatableExpressionNode, location: CodeLocation):
         self.expr = expr
-        self.size = 2
+        self._size = 2
+        self._location = location
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -89,11 +125,19 @@ class ExpressionSegment(CodeSegment):
 class LdiSegment(InstructionSegment, VaryingLengthSegment):
     expr: RelocatableExpressionNode
 
-    def __init__(self, location: CodeLocation, register: RegisterNode, expr: RelocatableExpressionNode):
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @size.setter
+    def size(self, value):
+        self._size = value
+
+    def __init__(self, register: RegisterNode, expr: RelocatableExpressionNode, location: CodeLocation):
         InstructionSegment.__init__(self, location)
         self.reg: int = register.number
         self.expr = expr
-        self.size = 2
+        self._size = 2
         self.size_locked = False
         self.checked = False
         self.parsed: Optional[ParsedExpression] = None
@@ -103,7 +147,7 @@ class LdiSegment(InstructionSegment, VaryingLengthSegment):
         super().fill(object_record, section, labels, templates)
         if self.size == 4:
             object_record.data.extend(pack("u3p6u4u3", 0b001, 2, self.reg))
-            ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
+            ExpressionSegment(self.expr, self.location).fill(object_record, section, labels, templates)
         else:
             value = calculate_expression(self.parsed, section, labels)
             object_record.data.extend(pack("u3u3s7u3", 0b011, 5, value, self.reg))
@@ -127,6 +171,14 @@ class LdiSegment(InstructionSegment, VaryingLengthSegment):
 
 
 class Branch(InstructionSegment, VaryingLengthSegment):
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @size.setter
+    def size(self, value):
+        self._size = value
+
     expr: RelocatableExpressionNode
 
     def __init__(self, location: CodeLocation, branch_code: int, expr: RelocatableExpressionNode,
@@ -135,7 +187,7 @@ class Branch(InstructionSegment, VaryingLengthSegment):
         self.type = operation
         self.branch_code = branch_code
         self.expr = expr
-        self.size = 2
+        self._size = 2
         self.size_locked = False
         self.checked = False
         self.parsed: Optional[ParsedExpression] = None
@@ -151,7 +203,7 @@ class Branch(InstructionSegment, VaryingLengthSegment):
                 object_record.data.extend(pack("u5p7u4", 0x00001, self.branch_code))
             elif self.type == 'jsr':
                 object_record.data.extend(pack("u5p7u4", 0x00000, 8))
-            ExpressionSegment(self.location, self.expr).fill(object_record, section, labels, templates)
+            ExpressionSegment(self.expr, self.location).fill(object_record, section, labels, templates)
         else:
             dist = value - (section.address + len(object_record.data) + 2)
             if self.type == 'branch':
@@ -185,18 +237,17 @@ class Branch(InstructionSegment, VaryingLengthSegment):
             return 2
 
 
-class Imm6(InstructionSegment):
+class Imm6(FixedLengthInstructionSegment):
     expr: RelocatableExpressionNode
 
     def __init__(self, location: CodeLocation, negative: bool, op_number: int, register: RegisterNode,
                  expr: RelocatableExpressionNode, word=False):
-        super().__init__(location)
+        super().__init__(2, location)
         self.word = word
         self.op_number = op_number
         self.sign = -1 if negative else 1
         self.reg: int = register.number
         self.expr = expr
-        self.size = 2
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -216,15 +267,14 @@ class Imm6(InstructionSegment):
         object_record.data.extend(pack("u3u3s7u3", 0b011, self.op_number, value, self.reg))
 
 
-class Imm9(InstructionSegment):
+class Imm9(FixedLengthInstructionSegment):
     expr: RelocatableExpressionNode
 
     def __init__(self, location: CodeLocation, negative: bool, op_number: int, expr: RelocatableExpressionNode):
-        super().__init__(location)
+        super().__init__(2, location)
         self.op_number = op_number
         self.sign = -1 if negative else 1
         self.expr = expr
-        self.size = 2
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):

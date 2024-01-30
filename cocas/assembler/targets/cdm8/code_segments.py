@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,7 @@ def _error(segment: ICodeSegment, message: str):
 
 
 # noinspection DuplicatedCode
-class CodeSegment(ICodeSegment):
+class CodeSegment(ICodeSegment, ABC):
     pass
 
 
@@ -28,10 +29,18 @@ class AlignmentPaddingSegment(IAlignmentPaddingSegment, CodeSegment):
 class BytesSegment(CodeSegment):
     data: bytes
 
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
     def __init__(self, data: bytes, location: CodeLocation):
-        self.location = location
         self.data = data
-        self.size = len(data)
+        self._size = len(data)
+        self._location = location
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -41,11 +50,15 @@ class BytesSegment(CodeSegment):
 
 class ExpressionSegment(CodeSegment):
     expr: RelocatableExpressionNode
+    size = 1
 
-    def __init__(self, location: CodeLocation, expr: RelocatableExpressionNode):
-        self.location = location
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
+    def __init__(self, expr: RelocatableExpressionNode, location: CodeLocation):
         self.expr = expr
-        self.size = 1
+        self._location = location
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):

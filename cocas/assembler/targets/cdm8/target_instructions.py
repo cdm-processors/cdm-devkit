@@ -85,7 +85,7 @@ class TargetInstructions(TargetInstructionsInterface):
         size = 0
         for arg in line.arguments:
             if isinstance(arg, RelocatableExpressionNode):
-                segments.append(ExpressionSegment(line.location, arg))
+                segments.append(ExpressionSegment(arg, line.location))
             elif isinstance(arg, str):
                 encoded = arg.encode('utf-8')
                 segments.append(BytesSegment(encoded, line.location))
@@ -160,7 +160,7 @@ class TargetInstructions(TargetInstructionsInterface):
                                f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
         return [BytesSegment(pack('u4u4', 0xE, branch_code), line.location),
-                ExpressionSegment(line.location, line.arguments[0])]
+                ExpressionSegment(line.arguments[0], line.location)]
 
     @staticmethod
     def zero(line: InstructionNode, _, opcode: int):
@@ -183,14 +183,14 @@ class TargetInstructions(TargetInstructionsInterface):
     def imm(line: InstructionNode, _, opcode: int):
         assert_args(line.arguments, RelocatableExpressionNode)
         return [BytesSegment(bytearray([opcode]), line.location),
-                ExpressionSegment(line.location, line.arguments[0])]
+                ExpressionSegment(line.arguments[0], line.location)]
 
     @staticmethod
     def unary_imm(line: InstructionNode, _, opcode: int):
         assert_args(line.arguments, RegisterNode, RelocatableExpressionNode)
         data = pack('u6u2', opcode // 4, line.arguments[0].number)
         return [BytesSegment(bytearray(data), line.location),
-                ExpressionSegment(line.location, line.arguments[1])]
+                ExpressionSegment(line.arguments[1], line.location)]
 
     @dataclass
     class Handler:

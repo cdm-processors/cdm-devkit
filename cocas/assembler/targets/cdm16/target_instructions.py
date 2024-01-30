@@ -104,7 +104,7 @@ class TargetInstructions(TargetInstructionsInterface):
                     else:
                         raise CdmTempException(f'Number is not a byte: {arg.const_term}')
                 else:
-                    segments.append(ExpressionSegment(line.location, arg))
+                    segments.append(ExpressionSegment(arg, line.location))
             elif isinstance(arg, str):
                 if command == 'dw':
                     raise CdmTempException('Currently "dw" doesn\'t support strings')
@@ -156,7 +156,7 @@ class TargetInstructions(TargetInstructionsInterface):
     @staticmethod
     def ldi(line: InstructionNode, _, __) -> list[ICodeSegment]:
         assert_count_args(line.arguments, RegisterNode, RelocatableExpressionNode)
-        return [LdiSegment(line.location, *line.arguments)]
+        return [LdiSegment(line.arguments[0], line.arguments[1], line.location)]
 
     @dataclass
     class BranchCode:

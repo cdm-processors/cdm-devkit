@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
 from math import lcm
 from typing import TYPE_CHECKING
 
@@ -11,22 +11,25 @@ if TYPE_CHECKING:
     from ..code_block import Section
 
 
-@dataclass
-class ICodeSegment:
-    size: int = field(init=False)
-    position: int = field(init=False)
+class ICodeSegment(ABC):
+    @property
+    @abstractmethod
+    def size(self) -> int:
+        pass
 
-    def __post_init__(self):
-        # ugly hack to store code location in segments
-        # now this whole project is one big and ugly hack
-        self.location: CodeLocation = CodeLocation()
+    @property
+    @abstractmethod
+    def location(self) -> CodeLocation:
+        pass
 
+    @abstractmethod
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
         pass
 
 
-class IVaryingLengthSegment(ICodeSegment):
+class IVaryingLengthSegment(ICodeSegment, ABC):
+    @abstractmethod
     def update_varying_length(self, pos, section: "Section", labels: dict[str, int],
                               templates: dict[str, dict[str, int]]) -> int:
         pass
@@ -47,10 +50,19 @@ class IVaryingLengthSegment(ICodeSegment):
 
 
 class IAlignmentPaddingSegment(IVaryingLengthSegment):
+
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
     def __init__(self, alignment: int, location: CodeLocation):
-        self.location = location
         self.alignment = alignment
-        self.size = alignment
+        self._size = alignment
+        self._location = location
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -58,22 +70,23 @@ class IAlignmentPaddingSegment(IVaryingLengthSegment):
         if section.name != '$abs':
             object_record.alignment = lcm(object_record.alignment, self.alignment)
 
-    def update_varying_length(self, pos, section: "Section", labels: dict[str, int], _):
+    def update_varying_length(self, pos, section: "Section", labels: dict[str, int], _) -> int:
         new_size = (-pos) % self.alignment
         if new_size == self.alignment:
             new_size = 0
         diff = new_size - self.size
-        self.size = new_size
+        self._size = new_size
         self.__class__.update_surroundings(diff, pos, section, labels)
         return diff
 
 
-class IAlignedSegment(ICodeSegment):
-    alignment: int
+class IAlignedSegment(ICodeSegment, ABC):
+    @property
+    @abstractmethod
+    def alignment(self) -> int:
+        pass
 
-    def __init__(self, alignment: int):
-        self.alignment = alignment
-
+    @abstractmethod
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
         if (section.address + len(object_record.data)) % self.alignment != 0:

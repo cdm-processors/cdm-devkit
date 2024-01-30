@@ -1,8 +1,9 @@
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from cocas.error import CdmException, CdmExceptionTag
-from cocas.object_module import ExternalEntry
+from cocas.object_module import CodeLocation, ExternalEntry
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from .. import ICodeSegment, IVaryingLengthSegment
@@ -16,29 +17,39 @@ if TYPE_CHECKING:
     from ...code_block import Section
 
 
-@dataclass
-class CodeSegment(ICodeSegment):
-    pass
+class CodeSegment(ICodeSegment, ABC):
+    _location = CodeLocation()
+
+    @property
+    def location(self) -> CodeLocation:
+        return self._location
+
+    @location.setter
+    def location(self, value):
+        self._location = value
 
 
 @dataclass
-class RelocatableExpressionSegment(CodeSegment):
+class RelocatableExpressionSegment(CodeSegment, ABC):
     expr: RelocatableExpressionNode
 
 
 @dataclass
-class VaryingLengthSegment(IVaryingLengthSegment, CodeSegment):
+class VaryingLengthSegment(IVaryingLengthSegment, CodeSegment, ABC):
     is_expanded: bool = field(init=False, default=False)
     expanded_size: int = field(init=False)
 
 
-@dataclass
 class BytesSegment(CodeSegment):
     data: bytearray
 
     def __init__(self, data: bytearray):
         self.data = data
-        self.size = len(data)
+        self._size = len(data)
+
+    @property
+    def size(self) -> int:
+        return self._size
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -126,9 +137,15 @@ class OffsetExpressionSegment(RelocatableExpressionSegment):
 class GotoSegment(VaryingLengthSegment):
     branch_mnemonic: str
     expr: RelocatableExpressionNode
-    size = 2
     base_size = 2
     expanded_size = 5
+
+    @property
+    def size(self) -> int:
+        if self.is_expanded:
+            return self.expanded_size
+        else:
+            return self.base_size
 
     def update_varying_length(self, pos: int, section: "Section", labels: dict[str, int],
                               templates: dict[str, dict[str, int]]):
@@ -145,7 +162,6 @@ class GotoSegment(VaryingLengthSegment):
 
                 shift_length = self.expanded_size - self.base_size
                 self.is_expanded = True
-                self.size = self.expanded_size
                 old_locations = section.code_locations
                 section.code_locations = dict()
                 for PC, location in old_locations.items():
