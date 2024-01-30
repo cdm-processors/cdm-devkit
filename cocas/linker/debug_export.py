@@ -30,15 +30,28 @@ def code_location_json(files, cl: CodeLocation):
 
 
 def debug_export(code_locations: dict[int, CodeLocation]) -> str:
+    """
+    Convert debug information objects to json format
+
+    :param code_locations: mapping from address in binary image to location in source code
+    :return: string with json representation of debug information, code locations are sorted
+    """
     files = sorted(set(map(lambda x: x.file, code_locations.values())))
-    dump = json.dumps({"files": files, "codeLocations": code_locations},
+    sorted_cl = {key: value for (key, value) in sorted(code_locations.items())}
+    dump = json.dumps({"files": files, "codeLocations": sorted_cl},
                       default=default_json(files), indent=4, ensure_ascii=False)
     pattern = re.compile(r"{\n\s+\"__no_breaks_begin\": \[],\n\s+([\S\s]+?),\n\s+\"__no_breaks_end\": \[]\s+}")
     dump = re.sub(pattern, lambda m: "{" + re.sub(r"\n\s+", " ", m.group(1)) + "}", dump)
     return dump
 
 
-def write_debug_export(filepath: Union[Path, str], sorted_cl: dict[int, CodeLocation]):
-    sorted_cl = {key: value for (key, value) in sorted(sorted_cl.items())}
+def write_debug_export(filepath: Union[Path, str], code_locations: dict[int, CodeLocation]):
+    """
+    Convert debug information objects to json format and write to file
+
+    :param filepath: path to file to write
+    :param code_locations: mapping from address in binary image to location in source code
+    :return: json file with debug information, code locations are sorted
+    """
     with open(filepath, 'w') as f:
-        f.write(debug_export(sorted_cl))
+        f.write(debug_export(code_locations))

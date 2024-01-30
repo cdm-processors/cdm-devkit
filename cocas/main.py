@@ -5,10 +5,8 @@ from typing import Union
 import colorama
 
 from cocas.assembler import assemble_files, list_assembler_targets
-from cocas.debug_export import write_debug_export
 from cocas.error import CdmException, log_error
-from cocas.image import write_image
-from cocas.linker import link
+from cocas.linker import link, write_debug_export, write_image
 from cocas.object_file import list_object_targets, read_object_files, write_object_file
 
 
