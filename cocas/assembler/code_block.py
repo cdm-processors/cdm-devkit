@@ -17,20 +17,17 @@ from .ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
-from .targets import CodeSegmentsInterface, TargetInstructionsInterface
+from .targets import ICodeSegment, TargetInstructionsInterface
 
 
 @dataclass
 class CodeBlock:
-    def __init__(self, address: int, lines: list,
-                 target_instructions: Type[TargetInstructionsInterface],
-                 code_segments: Type[CodeSegmentsInterface]):
+    def __init__(self, address: int, lines: list, target_instructions: Type[TargetInstructionsInterface]):
         self.target_instructions = target_instructions
-        self.code_segments = code_segments
         self.address = address
         self.size: int = 0
         self.loop_stack: list = []
-        self.segments: list[code_segments.CodeSegment] = []
+        self.segments: list[ICodeSegment] = []
         self.labels: dict[str, int] = dict()
         self.ents: set[str] = set()
         self.exts: set[str] = set()
@@ -165,9 +162,7 @@ class CodeBlock:
 
 @dataclass
 class Section(CodeBlock):
-    def __init__(self, sn: SectionNode,
-                 target_instructions: Type[TargetInstructionsInterface],
-                 code_segments: Type[CodeSegmentsInterface]):
+    def __init__(self, sn: SectionNode, target_instructions: Type[TargetInstructionsInterface]):
         if isinstance(sn, AbsoluteSectionNode):
             self.name = '$abs'
             address = sn.address
@@ -176,7 +171,7 @@ class Section(CodeBlock):
             address = 0
         else:
             raise Exception('Section is neither Absolute nor Relative, can it happen? It was elif instead of else here')
-        super().__init__(address, sn.lines, target_instructions, code_segments)
+        super().__init__(address, sn.lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
         entries = dict(p for p in self.labels.items() if p[0] in self.ents)

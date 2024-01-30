@@ -10,12 +10,11 @@ from cocas.object_module import ObjectModule
 from .ast_builder import build_ast
 from .macro_processor import ExpandMacrosVisitor, process_macros, read_mlb
 from .object_generator import generate_object_module
-from .targets import CodeSegmentsInterface, TargetInstructionsInterface, import_target, mlb_path
+from .targets import TargetInstructionsInterface, import_target, mlb_path
 
 
 def assemble_module(input_stream: antlr4.InputStream,
                     target_instructions: TargetInstructionsInterface,
-                    code_segments: CodeSegmentsInterface,
                     macros_library: ExpandMacrosVisitor,
                     filepath: Path,
                     debug_info_path: Optional[Path] = None) -> ObjectModule:
@@ -24,14 +23,13 @@ def assemble_module(input_stream: antlr4.InputStream,
 
     :param input_stream: contents of file
     :param target_instructions: information how to convert mnemonics to code segments
-    :param code_segments: information how to compile segments into machine code
     :param macros_library: standard macros of assembler
     :param filepath: path of the file to use in error handling
     :param debug_info_path: transformed path of the file to use in debug information
     """
     macro_expanded_input_stream = process_macros(input_stream, macros_library, str(filepath))
     r = build_ast(macro_expanded_input_stream, str(filepath))
-    return generate_object_module(r, target_instructions, code_segments, debug_info_path)
+    return generate_object_module(r, target_instructions, debug_info_path)
 
 
 def get_debug_info_path(filepath: Path,
@@ -66,7 +64,7 @@ def assemble_files(target: str,
     :param realpath: if paths should be converted to canonical
     """
     _ = absolute_path
-    target_instructions, code_segments = import_target(target)
+    target_instructions = import_target(target)
     macros_library = read_mlb(str(mlb_path(target)))
     objects = []
 
@@ -79,8 +77,7 @@ def assemble_files(target: str,
 
         debug_info_path = get_debug_info_path(filepath, debug, relative_path, realpath)
         input_stream = antlr4.InputStream(data)
-        obj = assemble_module(input_stream, target_instructions, code_segments, macros_library,
-                              filepath, debug_info_path)
+        obj = assemble_module(input_stream, target_instructions, macros_library, filepath, debug_info_path)
         if debug_info_path:
             fp = filepath.as_posix()
             dip = debug_info_path.as_posix()

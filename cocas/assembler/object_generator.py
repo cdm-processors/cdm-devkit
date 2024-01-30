@@ -2,21 +2,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Type
 
+from cocas.assembler.targets import IVaryingLengthSegment
 from cocas.error import CdmExceptionTag
 from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
-from .targets import CodeSegmentsInterface, TargetInstructionsInterface
+from .targets import TargetInstructionsInterface
 
 TAG = CdmExceptionTag.ASM
 
 
 @dataclass
 class Template:
-    def __init__(self, sn: TemplateSectionNode, code_segments: Type[CodeSegmentsInterface],
-                 target_instructions: Type[TargetInstructionsInterface]):
-        self.code_segments = code_segments
+    def __init__(self, sn: TemplateSectionNode, target_instructions: Type[TargetInstructionsInterface]):
         self.name: str = sn.name
         self.labels: dict[str, int] = dict()
 
@@ -54,7 +53,7 @@ def gather_local_labels(sects: list[Section]):
 
 @dataclass
 class VaryingLengthEntry:
-    seg: CodeSegmentsInterface.VaryingLengthSegment
+    seg: IVaryingLengthSegment
     sect: Section
     pos: int
     location: CodeLocation
@@ -68,7 +67,7 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
     for sect in sections:
         pos = sect.address
         for seg in sect.segments:
-            if isinstance(seg, CodeSegmentsInterface.VaryingLengthSegment):
+            if isinstance(seg, IVaryingLengthSegment):
                 a = VaryingLengthEntry(seg, sect, pos, seg.location)
                 var_len_entries.append(a)
             pos += seg.size
@@ -85,12 +84,12 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
-def generate_object_module(pn: ProgramNode, target_instructions, code_segments, debug_info_path: Path) -> ObjectModule:
-    templates = [Template(t, code_segments, target_instructions) for t in pn.template_sections]
+def generate_object_module(pn: ProgramNode, target_instructions, debug_info_path: Path) -> ObjectModule:
+    templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
-    asects = [Section(asect, target_instructions, code_segments) for asect in pn.absolute_sections]
-    rsects = [Section(rsect, target_instructions, code_segments) for rsect in pn.relocatable_sections]
+    asects = [Section(asect, target_instructions) for asect in pn.absolute_sections]
+    rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]
     asects.sort(key=lambda s: s.address)
 
     update_varying_length(asects, {}, template_fields)

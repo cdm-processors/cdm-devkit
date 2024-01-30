@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from cocas.object_module import CodeLocation
 
-from .abstract_code_segments import CodeSegmentsInterface
+from .abstract_code_segments import ICodeSegment
 
 if TYPE_CHECKING:
     from cocas.assembler.ast_nodes import InstructionNode
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class TargetInstructionsInterface:
     @staticmethod
     def assemble_instruction(line: "InstructionNode", temp_storage) \
-            -> list[CodeSegmentsInterface.CodeSegment]:
+            -> list[ICodeSegment]:
         pass
 
     @staticmethod
@@ -20,7 +20,7 @@ class TargetInstructionsInterface:
 
     @staticmethod
     def make_branch_instruction(location: CodeLocation, branch_mnemonic: str, label_name: str, inverse: bool) \
-            -> list[CodeSegmentsInterface.CodeSegment]:
+            -> list[ICodeSegment]:
         pass
 
     @staticmethod

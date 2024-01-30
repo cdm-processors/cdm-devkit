@@ -5,7 +5,7 @@ from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import ExternalEntry
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from .. import CodeSegmentsInterface
+from .. import ICodeSegment, IVaryingLengthSegment
 from .simple_instructions import simple_instructions
 
 TAG = CdmExceptionTag.ASM
@@ -16,169 +16,176 @@ if TYPE_CHECKING:
     from ...code_block import Section
 
 
-class CodeSegments(CodeSegmentsInterface):
-    @dataclass
-    class CodeSegment(CodeSegmentsInterface.CodeSegment):
-        pass
+@dataclass
+class CodeSegment(ICodeSegment):
+    pass
 
-    @dataclass
-    class RelocatableExpressionSegment(CodeSegment):
-        expr: RelocatableExpressionNode
 
-    @dataclass
-    class VaryingLengthSegment(CodeSegmentsInterface.VaryingLengthSegment, CodeSegment):
-        is_expanded: bool = field(init=False, default=False)
-        expanded_size: int = field(init=False)
+@dataclass
+class RelocatableExpressionSegment(CodeSegment):
+    expr: RelocatableExpressionNode
 
-    @dataclass
-    class BytesSegment(CodeSegment):
-        data: bytearray
 
-        def __init__(self, data: bytearray):
-            self.data = data
-            self.size = len(data)
+@dataclass
+class VaryingLengthSegment(IVaryingLengthSegment, CodeSegment):
+    is_expanded: bool = field(init=False, default=False)
+    expanded_size: int = field(init=False)
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            object_record.data += self.data
 
-    @dataclass
-    class ShortExpressionSegment(RelocatableExpressionSegment):
-        size = 1
+@dataclass
+class BytesSegment(CodeSegment):
+    data: bytearray
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
+    def __init__(self, data: bytearray):
+        self.data = data
+        self.size = len(data)
 
-            is_rel = (val_sect == section.name != '$abs')
-            if self.expr.byte_specifier is None and (is_rel or ext is not None):
-                _error(self, 'Expected a 1-byte expression')
-            if not -2 ** 7 <= val < 2 ** 8:
-                _error(self, 'Number out of range')
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        object_record.data += self.data
 
-            if is_rel:
-                add_rel_record(object_record, section, val_long, self)
-            if ext is not None:
-                add_ext_record(object_record, ext, section, val_long, self)
-            object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
-    @dataclass
-    class ConstExpressionSegment(RelocatableExpressionSegment):
-        positive: bool = False
-        size = 1
+@dataclass
+class ShortExpressionSegment(RelocatableExpressionSegment):
+    size = 1
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
-            if val_sect is not None or ext is not None:
-                _error(self, 'Number expected but label found')
-            if not -2 ** 7 <= val < 2 ** 8 or (self.positive and val < 0):
-                _error(self, 'Number out of range')
-            object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
-    @dataclass
-    class LongExpressionSegment(RelocatableExpressionSegment):
-        size = 2
+        is_rel = (val_sect == section.name != '$abs')
+        if self.expr.byte_specifier is None and (is_rel or ext is not None):
+            _error(self, 'Expected a 1-byte expression')
+        if not -2 ** 7 <= val < 2 ** 8:
+            _error(self, 'Number out of range')
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
+        if is_rel:
+            add_rel_record(object_record, section, val_long, self)
+        if ext is not None:
+            add_ext_record(object_record, ext, section, val_long, self)
+        object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
-            if not -2 ** 15 <= val < 2 ** 16:
-                _error(self, 'Number out of range')
 
-            if val_sect:
-                add_rel_record(object_record, section, val_long, self)
-            if ext is not None:
-                add_ext_record(object_record, ext, section, val_long, self)
-            object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
+@dataclass
+class ConstExpressionSegment(RelocatableExpressionSegment):
+    positive: bool = False
+    size = 1
 
-    @dataclass
-    class OffsetExpressionSegment(RelocatableExpressionSegment):
-        size = 1
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
+        if val_sect is not None or ext is not None:
+            _error(self, 'Number expected but label found')
+        if not -2 ** 7 <= val < 2 ** 8 or (self.positive and val < 0):
+            _error(self, 'Number out of range')
+        object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
-            is_rel = (val_sect == section.name != '$abs')
-            if ext is not None:
-                _error(self, 'Invalid destination address (external label used)')
-            if section.name != '$abs' and not is_rel:
-                _error(self, 'Invalid destination address (absolute address from rsect)')
-            if self.expr.byte_specifier is not None and is_rel:
-                _error(self, 'Invalid destination address (byte of relative address)')
+@dataclass
+class LongExpressionSegment(RelocatableExpressionSegment):
+    size = 2
 
-            val -= section.address + len(object_record.data)
-            if not -2 ** 7 <= val < 2 ** 7:
-                _error(self, 'Destination address is too far')
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        val, val_long, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
-            object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
+        if not -2 ** 15 <= val < 2 ** 16:
+            _error(self, 'Number out of range')
 
-    @dataclass
-    class GotoSegment(VaryingLengthSegment):
-        branch_mnemonic: str
-        expr: RelocatableExpressionNode
-        size = 2
-        base_size = 2
-        expanded_size = 5
+        if val_sect:
+            add_rel_record(object_record, section, val_long, self)
+        if ext is not None:
+            add_ext_record(object_record, ext, section, val_long, self)
+        object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
-        def update_varying_length(self, pos: int, section: "Section", labels: dict[str, int],
-                                  templates: dict[str, dict[str, int]]):
-            try:
-                if self.is_expanded:
-                    return
 
-                addr, _, res_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
-                is_rel = (res_sect == section.name != '$abs')
-                if (not -2 ** 7 <= addr - (pos + 1) < 2 ** 7
-                        or (section.name != '$abs' and not is_rel)
-                        or (self.expr.byte_specifier is not None and is_rel)
-                        or (ext is not None)):
+@dataclass
+class OffsetExpressionSegment(RelocatableExpressionSegment):
+    size = 1
 
-                    shift_length = self.expanded_size - self.base_size
-                    self.is_expanded = True
-                    self.size = self.expanded_size
-                    old_locations = section.code_locations
-                    section.code_locations = dict()
-                    for PC, location in old_locations.items():
-                        if PC > pos:
-                            PC += shift_length
-                        section.code_locations[PC] = location
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        val, _, val_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
 
-                    for label_name in section.labels:
-                        if section.labels[label_name] > pos:
-                            section.labels[label_name] += shift_length
-                            if label_name in labels:
-                                labels[label_name] += shift_length
-                    return shift_length
-            except CdmException as e:
-                raise e
-            except Exception as e:
-                raise CdmException(TAG, self.location.file, self.location.line, str(e))
+        is_rel = (val_sect == section.name != '$abs')
+        if ext is not None:
+            _error(self, 'Invalid destination address (external label used)')
+        if section.name != '$abs' and not is_rel:
+            _error(self, 'Invalid destination address (absolute address from rsect)')
+        if self.expr.byte_specifier is not None and is_rel:
+            _error(self, 'Invalid destination address (byte of relative address)')
 
-        def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
-                 templates: dict[str, dict[str, int]]):
-            mnemonic = f'b{self.branch_mnemonic}'
-            if mnemonic not in simple_instructions['branch']:
-                _error(self, f'Invalid branch mnemonic: {mnemonic}')
+        val -= section.address + len(object_record.data)
+        if not -2 ** 7 <= val < 2 ** 7:
+            _error(self, 'Destination address is too far')
+
+        object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
+
+
+@dataclass
+class GotoSegment(VaryingLengthSegment):
+    branch_mnemonic: str
+    expr: RelocatableExpressionNode
+    size = 2
+    base_size = 2
+    expanded_size = 5
+
+    def update_varying_length(self, pos: int, section: "Section", labels: dict[str, int],
+                              templates: dict[str, dict[str, int]]):
+        try:
             if self.is_expanded:
-                branch_opcode = simple_instructions['branch'][
-                    f'bn{self.branch_mnemonic}']
-                jmp_opcode = simple_instructions['long']['jmp']
-                object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
-                CodeSegments.LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
-            else:
-                branch_opcode = simple_instructions['branch'][mnemonic]
-                object_record.data += bytearray([branch_opcode])
-                CodeSegments.OffsetExpressionSegment(self.expr).fill(object_record, section, labels, templates)
+                return
+
+            addr, _, res_sect, ext = eval_rel_expr_seg(self, section, labels, templates)
+            is_rel = (res_sect == section.name != '$abs')
+            if (not -2 ** 7 <= addr - (pos + 1) < 2 ** 7
+                    or (section.name != '$abs' and not is_rel)
+                    or (self.expr.byte_specifier is not None and is_rel)
+                    or (ext is not None)):
+
+                shift_length = self.expanded_size - self.base_size
+                self.is_expanded = True
+                self.size = self.expanded_size
+                old_locations = section.code_locations
+                section.code_locations = dict()
+                for PC, location in old_locations.items():
+                    if PC > pos:
+                        PC += shift_length
+                    section.code_locations[PC] = location
+
+                for label_name in section.labels:
+                    if section.labels[label_name] > pos:
+                        section.labels[label_name] += shift_length
+                        if label_name in labels:
+                            labels[label_name] += shift_length
+                return shift_length
+        except CdmException as e:
+            raise e
+        except Exception as e:
+            raise CdmException(TAG, self.location.file, self.location.line, str(e))
+
+    def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
+             templates: dict[str, dict[str, int]]):
+        mnemonic = f'b{self.branch_mnemonic}'
+        if mnemonic not in simple_instructions['branch']:
+            _error(self, f'Invalid branch mnemonic: {mnemonic}')
+        if self.is_expanded:
+            branch_opcode = simple_instructions['branch'][
+                f'bn{self.branch_mnemonic}']
+            jmp_opcode = simple_instructions['long']['jmp']
+            object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
+            LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
+        else:
+            branch_opcode = simple_instructions['branch'][mnemonic]
+            object_record.data += bytearray([branch_opcode])
+            OffsetExpressionSegment(self.expr).fill(object_record, section, labels, templates)
 
 
-def _error(segment: CodeSegmentsInterface.CodeSegment, message: str):
+def _error(segment: ICodeSegment, message: str):
     raise CdmException(TAG, segment.location.file, segment.location.line, message)
 
 
-def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: "Section",
+def eval_rel_expr_seg(seg: RelocatableExpressionSegment, s: "Section",
                       labels: dict[str, int], templates: dict[str, dict[str, int]]):
     val_long = seg.expr.const_term
     used_exts = dict()
@@ -231,7 +238,7 @@ def eval_rel_expr_seg(seg: CodeSegments.RelocatableExpressionSegment, s: "Sectio
 
 
 def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: int,
-                   seg: CodeSegments.RelocatableExpressionSegment):
+                   seg: RelocatableExpressionSegment):
     val %= 65536
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
@@ -245,7 +252,7 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: 
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,
-                   seg: CodeSegments.RelocatableExpressionSegment):
+                   seg: RelocatableExpressionSegment):
     val %= 65536
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
