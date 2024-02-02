@@ -16,8 +16,7 @@ from .targets import TargetInstructionsInterface, import_target, mlb_path
 def assemble_module(input_stream: antlr4.InputStream,
                     target_instructions: TargetInstructionsInterface,
                     macros_library: ExpandMacrosVisitor,
-                    filepath: Path,
-                    debug_info_path: Optional[Path] = None) -> ObjectModule:
+                    filepath: Path) -> ObjectModule:
     """
     Convert lines of an assembler file to object code
 
@@ -25,11 +24,10 @@ def assemble_module(input_stream: antlr4.InputStream,
     :param target_instructions: information how to convert mnemonics to code segments
     :param macros_library: standard macros of assembler
     :param filepath: path of the file to use in error handling
-    :param debug_info_path: transformed path of the file to use in debug information
     """
-    macro_expanded_input_stream = process_macros(input_stream, macros_library, str(filepath))
-    r = build_ast(macro_expanded_input_stream, str(filepath))
-    return generate_object_module(r, target_instructions, debug_info_path)
+    macro_expanded_input_stream = process_macros(input_stream, macros_library, filepath)
+    r = build_ast(macro_expanded_input_stream, filepath)
+    return generate_object_module(r, target_instructions)
 
 
 def get_debug_info_path(filepath: Path,
@@ -65,7 +63,7 @@ def assemble_files(target: str,
     """
     _ = absolute_path
     target_instructions = import_target(target)
-    macros_library = read_mlb(str(mlb_path(target)))
+    macros_library = read_mlb(mlb_path(target))
     objects = []
 
     for filepath in files:
@@ -74,21 +72,19 @@ def assemble_files(target: str,
         data = codecs.decode(data, 'utf8', 'strict')
         if not data.endswith('\n'):
             data += '\n'
+        input_stream = antlr4.InputStream(data)
+        obj = assemble_module(input_stream, target_instructions, macros_library, filepath)
 
         debug_info_path = get_debug_info_path(filepath, debug, relative_path, realpath)
-        input_stream = antlr4.InputStream(data)
-        obj = assemble_module(input_stream, target_instructions, macros_library, filepath, debug_info_path)
         if debug_info_path:
-            fp = filepath.as_posix()
+            obj.source_file_path = filepath
+            fp = filepath.absolute().as_posix()
             dip = debug_info_path.as_posix()
             for i in chain(obj.asects, obj.rsects):
                 for j in i.code_locations.values():
                     if j.file == fp:
                         j.file = dip
                     else:
-                        f = Path(j.file).absolute()
-                        if realpath:
-                            f = f.resolve()
-                        j.file = f.relative_to(relative_path).as_posix()
+                        j.file = get_debug_info_path(Path(j.file), debug, relative_path, realpath)
         objects.append((filepath, obj))
     return objects

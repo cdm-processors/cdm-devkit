@@ -1,4 +1,5 @@
 from base64 import b64decode
+from pathlib import Path
 
 from antlr4 import CommonTokenStream, InputStream
 
@@ -252,16 +253,17 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
 
 
-def build_ast(input_stream: InputStream, filepath: str):
+def build_ast(input_stream: InputStream, filepath: Path):
+    str_path = filepath.absolute().as_posix()
     lexer = AsmLexer(input_stream)
     lexer.removeErrorListeners()
-    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))
+    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, str_path))
     token_stream = CommonTokenStream(lexer)
     token_stream.fill()
     parser = AsmParser(token_stream)
     parser.removeErrorListeners()
-    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, filepath))
+    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.ASM, str_path))
     cst = parser.program()
-    bav = BuildAstVisitor(filepath)
+    bav = BuildAstVisitor(str_path)
     result = bav.visit(cst)
     return result

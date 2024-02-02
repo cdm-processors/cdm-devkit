@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Type
 
 from cocas.assembler.targets import IVaryingLengthSegment
@@ -84,7 +83,7 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
-def generate_object_module(pn: ProgramNode, target_instructions, debug_info_path: Path) -> ObjectModule:
+def generate_object_module(pn: ProgramNode, target_instructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
@@ -98,6 +97,5 @@ def generate_object_module(pn: ProgramNode, target_instructions, debug_info_path
         update_varying_length([rsect], asects_labels, template_fields)
 
     obj = ObjectModule([asect.to_object_section_record(asects_labels, template_fields) for asect in asects],
-                       [rsect.to_object_section_record(asects_labels, template_fields) for rsect in rsects],
-                       debug_info_path)
+                       [rsect.to_object_section_record(asects_labels, template_fields) for rsect in rsects])
     return obj

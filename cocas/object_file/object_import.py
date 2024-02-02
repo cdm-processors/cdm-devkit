@@ -1,7 +1,7 @@
 import bisect
 import codecs
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
@@ -224,24 +224,25 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         pass
 
 
-def import_object(input_stream: InputStream, filepath: str,
+def import_object(input_stream: InputStream, filepath: Path,
                   target: str) -> List[ObjectModule]:
+    str_path = filepath.absolute().as_posix()
     lexer = ObjectFileLexer(input_stream)
     lexer.removeErrorListeners()
-    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
+    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, str_path))
     token_stream = CommonTokenStream(lexer)
     token_stream.fill()
     parser = ObjectFileParser(token_stream)
     parser.removeErrorListeners()
-    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, filepath))
+    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.OBJ, str_path))
     ctx = parser.object_file()
-    visitor = ImportObjectFileVisitor(filepath, target)
+    visitor = ImportObjectFileVisitor(str_path, target)
     result = visitor.visit(ctx)
     return result
 
 
 def read_object_files(target: str,
-                      files: list[Path],
+                      files: list[Union[str, Path]],
                       debug: bool,
                       relative_path: Optional[Path],
                       absolute_path: Optional[Path],
@@ -257,40 +258,40 @@ def read_object_files(target: str,
     _ = debug
     objects = []
     for filepath in files:
-        with filepath.open('rb') as file:
+        with open(filepath, 'rb') as file:
             data = file.read()
         data = codecs.decode(data, 'utf8', 'strict')
         if not data.endswith('\n'):
             data += '\n'
 
         input_stream = antlr4.InputStream(data)
-        for obj in import_object(input_stream, str(filepath), target):
+        for obj in import_object(input_stream, Path(filepath), target):
             if realpath:
-                dip = obj.debug_info_path
-                obj.debug_info_path = obj.debug_info_path.resolve()
+                dip = obj.source_file_path
+                obj.source_file_path = obj.source_file_path.resolve()
                 for i in obj.asects + obj.rsects:
                     for j in i.code_locations.values():
                         f = Path(j.file)
                         if f == dip:
-                            j.file = obj.debug_info_path.as_posix()
+                            j.file = obj.source_file_path.as_posix()
                         else:
                             j.file = Path(j.file).resolve().as_posix()
             if relative_path:
-                dip = obj.debug_info_path
-                if obj.debug_info_path.is_absolute():
-                    obj.debug_info_path = obj.debug_info_path.absolute().relative_to(relative_path)
+                dip = obj.source_file_path
+                if obj.source_file_path.is_absolute():
+                    obj.source_file_path = obj.source_file_path.absolute().relative_to(relative_path)
                 for i in obj.asects + obj.rsects:
                     for j in i.code_locations.values():
                         f = Path(j.file)
                         if f == dip:
-                            j.file = obj.debug_info_path.as_posix()
+                            j.file = obj.source_file_path.as_posix()
                         else:
                             if f.is_absolute():
                                 j.file = f.absolute().relative_to(relative_path).as_posix()
             elif absolute_path:
-                obj.debug_info_path = absolute_path / obj.debug_info_path
+                obj.source_file_path = absolute_path / obj.source_file_path
                 if realpath:
-                    obj.debug_info_path = obj.debug_info_path.resolve()
+                    obj.source_file_path = obj.source_file_path.resolve()
                 for i in obj.asects + obj.rsects:
                     for j in i.code_locations.values():
                         f = absolute_path / Path(j.file)

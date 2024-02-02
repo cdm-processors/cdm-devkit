@@ -1,6 +1,7 @@
 import re
 from base64 import b64encode
 from dataclasses import dataclass
+from pathlib import Path
 
 from antlr4 import CommonTokenStream, FileStream, InputStream
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
@@ -286,30 +287,29 @@ class ExpandMacrosVisitor(MacroVisitor):
             return MacroNonce()
 
 
-# filepath should be absolute
-def read_mlb(filepath):
-    input_stream = FileStream(filepath)
+def read_mlb(filepath: Path):
+    str_path = filepath.absolute().as_posix()
+    input_stream = FileStream(str_path)
     lexer = MacroLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = MacroParser(token_stream)
     cst = parser.mlb()
-    return ExpandMacrosVisitor(None, dict(), filepath).visit(cst)
+    return ExpandMacrosVisitor(None, dict(), str_path).visit(cst)
 
 
-# filepath should be absolute
-def process_macros(input_stream: InputStream, library_macros, filepath: str):
+def process_macros(input_stream: InputStream, library_macros, filepath: Path):
+    str_path = filepath.absolute().as_posix()
     lexer = MacroLexer(input_stream)
     lexer.removeErrorListeners()
-    # Adds a class that will be called somehow from antlr. And it will raise exceptions with MACRO and filepath
-    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
+    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, str_path))
     token_stream = CommonTokenStream(lexer)
 
     parser = MacroParser(token_stream)
     parser.removeErrorListeners()
-    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, filepath))
+    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, str_path))
     cst = parser.program()
     rewriter = TokenStreamRewriter(token_stream)
-    emv = ExpandMacrosVisitor(rewriter, library_macros, filepath)
+    emv = ExpandMacrosVisitor(rewriter, library_macros, str_path)
     emv.visit(cst)
-    new_test = rewriter.getDefaultText()
-    return InputStream(new_test)
+    new_text = rewriter.getDefaultText()
+    return InputStream(new_text)

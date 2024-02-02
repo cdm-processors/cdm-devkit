@@ -25,4 +25,4 @@ class ObjectSectionRecord:
 class ObjectModule:
     asects: list[ObjectSectionRecord]
     rsects: list[ObjectSectionRecord]
-    debug_info_path: Union[Path, None]
+    source_file_path: Union[Path, None] = field(default=None)
