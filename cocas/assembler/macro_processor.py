@@ -2,6 +2,7 @@ import re
 from base64 import b64encode
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from antlr4 import CommonTokenStream, FileStream, InputStream
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
@@ -102,7 +103,9 @@ def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, va
 
 # noinspection PyPep8Naming
 class ExpandMacrosVisitor(MacroVisitor):
-    def __init__(self, rewriter: TokenStreamRewriter, mlb_macros, filepath: str):
+    def __init__(self, rewriter: Optional[TokenStreamRewriter], mlb_macros, filepath: str):
+        # rewriter should be None if then will be called .visit(MlbContext)
+        # rewriter should be valid if then will be called .visit(ProgramContext)
         self.nonce = 0
         self.macros = {name: mlb_macros[name].copy() for name in mlb_macros}
         self.rewriter = rewriter
@@ -294,7 +297,8 @@ def read_mlb(filepath: Path):
     token_stream = CommonTokenStream(lexer)
     parser = MacroParser(token_stream)
     cst = parser.mlb()
-    return ExpandMacrosVisitor(None, dict(), str_path).visit(cst)
+    emv = ExpandMacrosVisitor(None, dict(), str_path)
+    return emv.visit(cst)
 
 
 def process_macros(input_stream: InputStream, library_macros, filepath: Path):

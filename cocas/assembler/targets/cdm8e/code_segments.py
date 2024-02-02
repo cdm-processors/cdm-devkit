@@ -31,7 +31,7 @@ class CodeSegment(ICodeSegment, ABC):
 
 @dataclass
 class RelocatableExpressionSegment(CodeSegment, ABC):
-    expr: RelocatableExpressionNode
+    expr: RelocatableExpressionNode = field(init=True)
 
 
 @dataclass
@@ -133,10 +133,13 @@ class OffsetExpressionSegment(RelocatableExpressionSegment):
         object_record.data.extend(val.to_bytes(self.size, 'little', signed=(val < 0)))
 
 
-@dataclass
-class GotoSegment(VaryingLengthSegment):
-    branch_mnemonic: str
-    expr: RelocatableExpressionNode
+class GotoSegment(RelocatableExpressionSegment, VaryingLengthSegment):
+    def __init__(self, branch_mnemonic: str, expr: RelocatableExpressionNode):
+        # noinspection PyArgumentList
+        RelocatableExpressionSegment.__init__(self, expr)
+        VaryingLengthSegment.__init__(self)
+        self.branch_mnemonic = branch_mnemonic
+
     base_size = 2
     expanded_size = 5
 

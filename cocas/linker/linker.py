@@ -2,7 +2,7 @@ import itertools
 from typing import Any
 
 from cocas.error import CdmLinkException
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord
 
 
 def init_bins(asects: list[ObjectSectionRecord]):
@@ -119,7 +119,7 @@ def link(objects: list[tuple[Any, ObjectModule]]):
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         entry_bytes: range
-        for offset, entry_bytes, sign in map(ExternalEntry.as_tuple, rsect.relative):
+        for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), rsect.relative):
             pos = image_begin + offset
             lower_limit = 1 << 8 * entry_bytes.start
             val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
@@ -134,7 +134,7 @@ def link(objects: list[tuple[Any, ObjectModule]]):
 
     for sect in asects + rsects:
         for ext_name in sect.external:
-            for offset, entry_bytes, sign in map(ExternalEntry.as_tuple, sect.external[ext_name]):
+            for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), sect.external[ext_name]):
                 pos = sect_addresses[sect.name] + offset
                 lower_limit = 1 << 8 * entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
