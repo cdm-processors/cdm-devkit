@@ -3,13 +3,30 @@ name = "cdm-devkit"
 version = "0.1.3"
 description = "Developer tools for CdM processors"
 authors = [
-    "Ilya Merzlyakov <ilyamerzlakov@gmail.com>",
+    "CdM Processors <t.me/cdm_updates>",
     "Nikolay Repin <n.repin@g.nsu.ru>",
     "Timofey Khrapovitskiy <vuki03@mail.ru>",
+    "Ilya Merzlyakov <ilyamerzlakov@gmail.com>",
     "Mikhail Krasnikov <m.krasnikov1@g.nsu.ru>",
     "Nikita Tatarinov <n.tatarinov@g.nsu.ru>",
     "Nikita Korotkov <n.korotkov@g.nsu.ru>",
-    "Dmitriy Vashurin <kapkekes@yandex.ru>"
+    "Dmitriy Vashurin <kapkekes@yandex.ru>",
+    "Andrey Melnikov <a.melnikov4@g.nsu.ru>"
+]
+
+maintainers = [
+    "Nikolay Repin <n.repin@g.nsu.ru>"
+]
+
+readme = "README.md"
+homepage = "https://github.com/cdm-processors/cdm-devkit"
+
+classifiers = [
+    "Topic :: Software Development :: Assemblers",
+    "Topic :: Software Development :: Disassemblers",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: System :: Emulators",
+    "Topic :: System :: Hardware",
 ]
 
 packages = [
