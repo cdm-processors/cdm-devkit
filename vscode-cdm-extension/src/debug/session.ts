@@ -1,105 +1,105 @@
+import * as fs from "fs/promises";
+import * as pathlib from "path";
+import * as os from "os";
+
 import * as vscode from "vscode";
-import { ContinuedEvent, DebugSession, ExitedEvent, InitializedEvent, StoppedEvent } from "@vscode/debugadapter";
+import { DebugSession, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
-import { CdmRegistersProvider } from "../views/registers";
-import { CdmRuntime } from "./runtime";
+import { CdmDebugRuntime } from "./runtime";
+import { ArchitectureID } from "../protocol/architectures";
+import { TargetID } from "../protocol/targets";
+import { createPingPong } from "../utils";
+
+type BuildArtifacts = {
+    image: string;
+    debug: string;
+};
 
 interface CdmLaunchArguments extends DebugProtocol.LaunchRequestArguments {
-    sources: string[],
-    artifacts: {
-        image: string,
-        debug: string,
-    }
+    address: string;
+    architecture: ArchitectureID;
+    target: TargetID;
+    sources?: string[];
+    artifacts: BuildArtifacts;
 }
+
+type LineLocation = {
+    f: number;
+    l: number;
+    c: number;
+};
+
+type DebugInformation = {
+    files: string[];
+    codeLocations: Map<number, LineLocation>;
+};
 
 export class CdmDebugSession extends DebugSession {
     private static THREAD_ID = 1;
-    private runtime: CdmRuntime;
-    private config: vscode.WorkspaceConfiguration;
 
-    constructor(
-        private registersProvider: CdmRegistersProvider
-    ) {
-        super();
+    private config = vscode.workspace.getConfiguration("cdm.build");
+    private runtime!: CdmDebugRuntime;
+    private debugInformation!: DebugInformation;
 
-        this.config = vscode.workspace.getConfiguration("cdm.debug");
-        this.runtime = new CdmRuntime(this.config.get("address")!);
+    protected initializeRequest(
+        response: DebugProtocol.InitializeResponse,
+        args: DebugProtocol.InitializeRequestArguments,
+    ): void {
+        response.body = {
+            supportsConfigurationDoneRequest: true,
+            supportsConditionalBreakpoints: undefined,
+            supportsHitConditionalBreakpoints: undefined,
+            exceptionBreakpointFilters: undefined,
+            supportsRestartRequest: true,
+        };
 
-        this.runtime.on("stopped", (reason) => {
-            switch (reason) {
-                case "breakpoint":
-                case "exception": {
-                    this.sendEvent(new StoppedEvent(reason, CdmDebugSession.THREAD_ID));
-                    break;
-                }
-                case "line": {
-                    this.sendEvent(new StoppedEvent("step", CdmDebugSession.THREAD_ID));
-                }
-                case "halt": {
-                    this.sendEvent(new ExitedEvent(0));
-                }
-            }
-
-            this.sendEvent(new StoppedEvent(reason, CdmDebugSession.THREAD_ID));
-        });
-    }
-
-    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-        console.log("Initializing the debug adapter;");
-
-        this.runtime.once("initialized", (supportsExceptions, registers, ramSize) => {
-            response.body = {
-                supportsRestartRequest: false,
-            };
-
-            this.sendResponse(response);
-            this.sendEvent(new InitializedEvent());
-        });
-
-        this.runtime.initialize(this.config.get("target")!, this.config.get("architecture")!);
-    }
-
-    protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request | undefined): void {
-        console.log("Sending information about threads to VS Code");
-        response.body = {"threads": [{ "id": CdmDebugSession.THREAD_ID, "name": "main" }]};
         this.sendResponse(response);
     }
 
-    protected launchRequest(response: DebugProtocol.LaunchResponse, args: CdmLaunchArguments, request?: DebugProtocol.Request | undefined): void {
+    private compileSources(target: TargetID, sources: string[], image: string, debug: string): vscode.Task {
+        let command = `cocas ${sources.join(" ")} --output ${image} --debug ${debug} -t ${target}`;
+        let shell = new vscode.ShellExecution(command);
+        return new vscode.Task({ "type": "cdm" }, 2, "compile", "CdM", shell);
+    }
+
+    protected async launchRequest(
+        response: DebugProtocol.LaunchResponse,
+        args: CdmLaunchArguments,
+        request?: DebugProtocol.Request,
+    ): Promise<void> {
+        this.runtime = new CdmDebugRuntime(args.address);
+        this.runtime.initialize(args.target, args.architecture);
+
+        if (!args.sources && !vscode.window.activeTextEditor) {
+            vscode.window.showErrorMessage("Open a .asm-file to launch debugging.");
+            return this.sendEvent(new TerminatedEvent());
+        } else if (!args.sources && !vscode.window.activeTextEditor!!.document.fileName.endsWith(".asm")) {
+            vscode.window.showErrorMessage("The opened file should have a .asm extension.");
+            return this.sendEvent(new TerminatedEvent());
+        } else if (!args.sources) {
+            args.sources = [vscode.window.activeTextEditor!!.document.fileName];
+        }
+
         let { image, debug } = args.artifacts;
-        vscode.tasks.executeTask(new vscode.Task(
-            { "type": "cdm" }, 2, "compile", "CdM",
-            new vscode.ShellExecution(`cocas ${args.sources.join(" ")} -o ${image} --debug ${debug} -t ${this.config.get("target")!}`)
-        ));
+        let path = await fs.mkdtemp(pathlib.join(os.tmpdir(), "cdm-"));
 
-        this.runtime.once("loaded", () => console.log(`Debug server loaded sources from ${image};`));
-        this.runtime.reset();
-        this.runtime.loadFromPath(image);
-        this.runtime.run("breakpoint", "exception", "line", "halt");
-        this.sendResponse(response);
-    }
+        image ? await fs.mkdir(pathlib.dirname(image), { recursive: true }) : null;
+        debug ? await fs.mkdir(pathlib.dirname(debug), { recursive: true }) : null;
 
-    protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request | undefined): void {
-        this.runtime.reset();
-        this.sendResponse(response);
-    }
+        image ??= pathlib.join(path, "out.img");
+        debug ??= pathlib.join(path, "out.dbg");
 
-    protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request | undefined): void {
-        console.log("Sending request to pause the execution");
-        this.runtime.pause();
-        this.sendResponse(response);
-    }
+        let _ = await vscode.tasks.executeTask(this.compileSources(args.target, args.sources, image, debug));
+        while (!this.debugInformation) {
+            this.debugInformation = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
+            let _ = await new Promise(f => setTimeout(f, 100));
+        }
 
-    protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request | undefined): void {
-        console.log("Sending request to continue the execution");
-        this.runtime.run("breakpoint", "exception", "line", "halt");
-        this.sendResponse(response);
-    }
+        let imageLoaded = createPingPong<void>();
+        this.runtime.once("loaded", () => imageLoaded.ping()).loadFromPath(image);
 
-    protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): void {
-        this.runtime.pause();
-        this.runtime.shutdown();
-        this.sendResponse(response);
+        await imageLoaded.pong();
+        await fs.rm(path, { recursive: true, force: true });
     }
 }

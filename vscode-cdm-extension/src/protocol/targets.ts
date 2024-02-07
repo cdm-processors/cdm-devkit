@@ -1,4 +1,4 @@
-export const DEFINED = [
+const DEFINED = [
     { name: "CdM-8",    id: "cdm8"  },
     { name: "CdM-8e",   id: "cdm8e" },
     { name: "CdM-16",   id: "cdm16" },

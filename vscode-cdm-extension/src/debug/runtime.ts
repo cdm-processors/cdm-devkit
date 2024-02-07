@@ -2,12 +2,13 @@ import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
 
-import { Arch, StopCondition, InitializationResponse, Reason, GetRegistersResponse, GetMemoryResponse, DebugEvent, reasons } from "../protocol/general";
+import { ArchitectureID } from "../protocol/architectures";
 import { TargetID } from "../protocol/targets";
+import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
 
-export class CdmRuntime extends EventEmitter {
+export class CdmDebugRuntime extends EventEmitter {
     private readonly ws: WebSocket;
-    private bufferUntilOpened: any[];
+    private buffered: string[];
 
     constructor(
         address: string
@@ -16,63 +17,60 @@ export class CdmRuntime extends EventEmitter {
 
         this.ws = new WebSocket(address);
         this.ws.on("message", (data) => {
-            let message = JSON.parse(data.toString());
-            switch (message?.status) {
-                case "OK": break;
+            let decoded = data.toString();
+            let unmarshalled = JSON.parse(decoded);
+
+            switch (unmarshalled?.status) {
+                case "OK": {
+                    console.log(`Received a success message from the debug server: ${decoded}`);
+                    break;
+                }
                 case "FAIL": {
-                    console.log(`Something went terribly wrong: ${data.toString()}`);
+                    console.error(`Received an error message from the debug server: ${decoded}`);
                     return;
                 }
                 default: {
-                    console.log(`Received an invalid message: ${message}`);
+                    console.error(`Received a malformed message from the debug server: ${decoded}`);
                     return;
                 }
             }
 
-            switch (message?.action) {
+            switch (unmarshalled?.action) {
                 case "init": {
-                    let casted: InitializationResponse = message;
+                    let casted: InitializationResponse = unmarshalled;
                     let { supportsExceptions, registers, ramSize } = casted;
                     this.emit("initialized", supportsExceptions, registers, ramSize);
-                    console.log(`Debug server initialized, capabilities are: ${supportsExceptions ? "supports" : "does not support"} exceptions; ${registers.join(", ")} registers; RAM size - ${ramSize} bytes`);
                     break;
                 }
                 case "load": {
                     this.emit("loaded");
-                    console.log("Debug server loaded provided sources");
                     break;
                 }
                 case "setBreakpoints": {
                     this.emit("setBreakpoints");
-                    console.log("Debug server got breakpoints");
                     break;
                 }
                 case "setLineLocations": {
                     this.emit("setLines");
-                    console.log("Debug server got line locations");
                     break;
                 }
                 case "run": {
                     this.emit("run");
-                    console.log("Debug server executes debuggee");
                     break;
                 }
                 case "getRegisters": {
-                    let casted: GetRegistersResponse = message;
+                    let casted: RequestRegistersResponse = unmarshalled;
                     this.emit("receivedRegisters", casted.registers);
-                    console.log(`Debug server sent new register values: ${casted.registers.join(", ")}`);
                     break;
                 }
                 case "getMemory": {
-                    let casted: GetMemoryResponse = message;
+                    let casted: RequestMemoryResponse = unmarshalled;
                     this.emit("receivedMemory", casted.bytes);
-                    console.log("Debug server sent memory page");
                     break;
                 }
                 case "debugEvent": {
-                    let casted: DebugEvent = message;
+                    let casted: ExecutionStop = unmarshalled;
                     this.emit("stopped", casted.reason);
-                    console.log(`Debug server stopped execution of debuggee because of ${casted.reason}`);
                     break;
                 }
                 default: {
@@ -81,10 +79,11 @@ export class CdmRuntime extends EventEmitter {
             }
         });
 
-        this.bufferUntilOpened = [];
+        this.buffered = [];
         this.ws.once("open", () => {
-            this.bufferUntilOpened.forEach((message) => {
-                this.send(message);
+            console.log(`Websocket has connected to the debug server, sending buffered messages to the debug server, message quantity - ${this.buffered.length}`);
+            this.buffered.forEach((message) => {
+                this.ws.send(message);
             });
         });
     }
@@ -113,93 +112,98 @@ export class CdmRuntime extends EventEmitter {
         return super.once(eventName, listener);
     }    
 
-    private send(obj: any) {
+    private send(obj: any): void {
+        let marshalled = JSON.stringify(obj);
         if (this.ws.readyState !== this.ws.OPEN) {
-            this.bufferUntilOpened.push(obj);
-            return;
+            console.log(`Pushing message to buffer, as websocket hasn't connected to the debug server yet; message - ${marshalled}`);
+            this.buffered.push(marshalled);
+        } else {
+            console.log(`Sending message directly to the debug server; message - ${marshalled}`);
+            this.ws.send(marshalled);
         }
-
-        this.ws.send(JSON.stringify(obj));
     }
 
-    initialize(target: TargetID, arch: Arch) {
-        console.log(`Initializing debug server with ${target} target and ${arch} architecture`);
+    initialize(target: TargetID, arch: ArchitectureID): this {
         this.send({
             action: "init",
             target: target,
             arch: arch,
         });
+        return this;
     }
 
-    loadFromPath(path: string) {
-        console.log(`Passing path (${path}) to image to debug server;`);
+    loadFromPath(path: string): this {
         this.send({
             action: "load",
             source: "path",
             path: path,
         });
+        return this;
     }
 
-    loadFromBytes(bytes: number[]) {
+    loadFromBytes(bytes: number[]): this {
         this.send({
             action: "load",
             source: "bytes",
             bytes: bytes,
         });
+        return this;
     }
 
-    reset() {
-        console.log("Resetting execution of debuggee");
+    reset(): this {
         this.send({
             action: "reset",
         });
+        return this;
     }
 
-    setBreakpoints(locations: number[]) {
-        console.log(`Passing breakpoints (${locations}) to debug server`);
+    setBreakpoints(locations: number[]): this {
         this.send({
             action: "setBreakpoints",
             breakpoints: locations,
         });
+        return this;
     }
 
-    setLines(locations: number[]) {
-        console.log(`Passing line locations (${locations}) to debug server`);
+    setLines(locations: number[]): this {
         this.send({
             action: "setLineLocations",
             locations: locations,
         });
+        return this;
     }
 
-    run(...conditions: Reason[]) {
-        console.log(`Starting execution of debuggee, stop conditions: ${conditions.join(", ")}`);
+    run(conditions: BreakCondition[]): this {
         this.send({
             action: "run",
             stopConditions: conditions,
         });
+        return this;
     }
 
-    pause() {
-        console.log("Pausing execution of debuggee");
+    pause(): this {
         this.send({
             action: "pause",
         });
+        return this;
     }
 
-    requestRegisters() {
-        console.log("Requesting register values");
+    requestRegisters(): this {
         this.send({
             action: "getRegisters",
         });
+        return this;
     }
 
-    requestMemory() {
+    requestMemory(): this {
         this.send({
             action: "getMemory",
         });
+        return this;
     }
 
-    shutdown() {
+    shutdown(): this {
         this.ws.close();
+        return this;
     }
 }

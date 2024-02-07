@@ -1,117 +1,142 @@
+import { ArchitectureID } from "./architectures";
 import { TargetID } from "./targets";
 
-export const architectures = ["vonNeumann", "harvard"] as const;
-export type Arch = typeof architectures[number];
+export const INITIALIZE = "init";
+export const LOAD_IMAGE = "load";
+export const SET_BREAKPOINTS = "setBreakpoints";
+export const SET_LINES = "setLineLocations";
+export const RUN_EXECUTION = "run";
+export const RESET_EXECUTION = "reset";
+export const PAUSE_EXECUTION = "pause";
+export const REQUEST_REGISTERS = "getRegisters";
+export const REQUEST_MEMORY = "getMemory";
+export const WRITE_MEMORY = "setMemory";
+export const EXECUTION_STOPPED = "debugEvent";
 
-export const languages = ["cdm8-assembly", "cdm8e-assembly", "cdm16-assembly"];
-
-export const reasons = ["breakpoint", "line", "exception", "halt"] as const;
-export type Reason = typeof reasons[number];
-
-export const stopConditions = ["breakpoint", "exception", "line"] as const;
-export type StopCondition = typeof stopConditions[number];
-
-export const actions = [
-    "init",
-    "load",
-    "setBreakpoints",
-    "setLineLocations",
-    "run",
-    "reset",
-    "pause",
-    "getRegisters",
-    "getMemory",
-    "setMemory",
-    "debugEvent",
+export const MARKERS = [
+    INITIALIZE,
+    LOAD_IMAGE,
+    SET_BREAKPOINTS,
+    SET_LINES,
+    RUN_EXECUTION,
+    RESET_EXECUTION,
+    PAUSE_EXECUTION,
+    REQUEST_REGISTERS,
+    REQUEST_MEMORY,
+    WRITE_MEMORY,
+    EXECUTION_STOPPED,
 ] as const;
-export type Action = typeof actions[number];
+export type Marker = typeof MARKERS[number];
 
-export interface DAPMessage {
-    action: Action;
-}
 
-export interface DAPResponse extends DAPMessage {
-    status: "OK" | "FAIL";
-}
+export const EXCEPTION = "exception";
+export const FETCH = "fetch";
+export const STEP = "line";
+export const BREAKPOINT = "breakpoint";
+export const STOP = "halt";
+export const PAUSE = "pause";
+export const UNKNOWN = "unknown";
 
-export interface InitializationMessage extends DAPMessage {
-    action: "init";
-    target: TargetID;
-    memoryConfiguration: Arch;
-}
+export const BREAK_CONDITIONS = [EXCEPTION, FETCH, STEP, BREAKPOINT] as const;
+export type BreakCondition = typeof BREAK_CONDITIONS[number];
+export const REASONS = [...BREAK_CONDITIONS, STOP, PAUSE, UNKNOWN] as const;
+export type Reason = typeof REASONS[number];
 
-export interface InitializationResponse extends DAPResponse {
-    action: "init";
-    supportsExceptions: boolean;
-    registers: string[];
-    ramSize: number;
-}
 
-export interface LoadMessage extends DAPMessage {
-    action: "load";
-    source: "path" | "bytes";
-}
+export const SUCCESS = "OK";
+export const FAILURE = "FAIL";
 
-export interface PathLoadMessage extends LoadMessage {
-    source: "path";
-    path: String;
-}
 
-export interface BytesLoadMessage extends LoadMessage {
-    source: "bytes";
-    bytes: Uint8Array;
-}
+export const LOAD_FROM_PATH = "path";
+export const LOAD_FROM_BYTESTREAM = "bytes";
 
-export interface SetBreakpointsMessage extends DAPMessage {
-    action: "setBreakpoints";
-    breakpoints: Array<Number>;
-}
 
-export interface SetLineLocationsMessage extends DAPMessage {
-    action: "setLineLocations"
-    locations: Array<Number>;
-}
+export type Message = {
+    action: Marker,
+};
 
-export interface RunMessage extends DAPMessage {
-    action: "run";
-    stopConditions: Set<StopCondition>;
-}
+export type Response = Message & {
+    status: typeof SUCCESS | typeof FAILURE,
+};
 
-export interface RestartMessage extends DAPMessage {
-    action: "reset";
-}
+export type InitializationMessage = Message & {
+    action: typeof INITIALIZE,
+    target: TargetID,
+    memoryConfiguration: ArchitectureID,
+};
 
-export interface PauseMessage extends DAPMessage {
-    action: "pause";
-}
+export type InitializationResponse = Response & {
+    action: typeof INITIALIZE,
+    supportsExceptions: boolean,
+    registers: string[],
+    ramSize: number,
+};
 
-export interface GetRegistersMessage extends DAPMessage {
-    action: "getRegisters";
-}
+export type LoadImageMessage = Message & {
+    action: typeof LOAD_IMAGE,
+    source: typeof LOAD_FROM_PATH | typeof LOAD_FROM_BYTESTREAM,
+};
 
-export interface GetRegistersResponse extends DAPResponse {
-    action: "getRegisters";
-    registers: BigUint64Array;
-}
+export type PathLoadMessage = LoadImageMessage & {
+    source: typeof LOAD_FROM_PATH,
+    path: string,
+};
 
-export interface GetMemoryMessage extends DAPMessage {
-    action: "getMemory";
-    offset: Number;
-    size: Number;
-}
+export type BytesLoadMessage = LoadImageMessage & {
+    source: typeof LOAD_FROM_BYTESTREAM,
+    bytes: number[],
+};
 
-export interface SetMemoryMessage extends DAPMessage {
-    action: "setMemory";
-    offset: Number;
-    value: Number; 
-}
+export type SetBreakpointsMessage = Message & {
+    action: typeof SET_BREAKPOINTS,
+    breakpoints: number[],
+};
 
-export interface GetMemoryResponse extends DAPResponse {
-    action: "getMemory";
-    bytes: Uint8Array;
-}
+export type SetLinesMessage = Message & {
+    action: typeof SET_LINES,
+    locations: number[],
+};
 
-export interface DebugEvent extends DAPResponse {
-    action: "debugEvent";
-    reason: Reason;
-}
+export type RunExecutionMessage = Message & {
+    action: typeof RUN_EXECUTION,
+    stopConditions: BreakCondition[],
+};
+
+export type ResetExecutionMessage = Message & {
+    action: typeof RESET_EXECUTION,
+};
+
+export type PauseExecutionMessage = Message & {
+    action: typeof PAUSE_EXECUTION,
+};
+
+export type RequestRegistersMessage = Message & {
+    action: typeof REQUEST_REGISTERS,
+};
+
+export type RequestRegistersResponse = Response & {
+    action: typeof REQUEST_REGISTERS,
+    registers: number[],
+};
+
+export type RequestMemoryMessage = Message & {
+    action: typeof REQUEST_MEMORY,
+    offset: number,
+    size: number,
+};
+
+export type RequestMemoryResponse = Response & {
+    action: typeof REQUEST_MEMORY,
+    bytes: number[],
+};
+
+export type WriteMemoryMessage = Message & {
+    action: typeof WRITE_MEMORY,
+    offset: number,
+    value: number,
+};
+
+export type ExecutionStop = Response & {
+    action: typeof EXECUTION_STOPPED,
+    reason: Reason,
+};
