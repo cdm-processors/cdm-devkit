@@ -26,7 +26,13 @@ import java.awt.event.MouseEvent;
 public class DebuggerComponent extends InstanceFactory {
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
-    private static final Attribute<Integer> PORT_ATTR = Attributes.forIntegerRange("Port", 0, 65535);
+    private static final Attribute<Integer> PORT_ATTR =
+            Attributes.forIntegerRange("Port", 0, 65535);
+    private static final int DEFAULT_PORT = 7001;
+
+    private static final Attribute<Integer> RESET_TIMEOUT_ATTR =
+            Attributes.forIntegerRange("Reset timeout (ms)", 0, 5000);
+    private static final int DEFAULT_RESET_TIMEOUT = 250;
     /*private static final Attribute<ProcessorType> PROC_ATTR = Attributes.forOption("Processor", getter("Processor"), new ProcessorType[]{
             ProcessorType.CDM8, ProcessorType.CDM8E, ProcessorType.CDM16_CIRCUIT, ProcessorType.CDM16_EMU
     });*/
@@ -50,6 +56,9 @@ public class DebuggerComponent extends InstanceFactory {
 
     private boolean simulatorListenerRegistered = false;
 
+    @Getter
+    private static int resetTimeout = DEFAULT_RESET_TIMEOUT;
+
     public DebuggerComponent() {
         super("Debugger");
 
@@ -65,12 +74,24 @@ public class DebuggerComponent extends InstanceFactory {
         this.setInstancePoker(Poker.class);
         this.setAttributes(
                 new Attribute[]{
-                        PORT_ATTR/*, PROC_ATTR*/
+                        PORT_ATTR, RESET_TIMEOUT_ATTR/*, PROC_ATTR*/
                 },
                 new Object[]{
-                        7001/*, ProcessorType.CDM16_CIRCUIT*/
+                        DEFAULT_PORT, DEFAULT_RESET_TIMEOUT/*, ProcessorType.CDM16_CIRCUIT*/
                 }
         );
+    }
+
+    @Override
+    protected void configureNewInstance(Instance instance) {
+        instance.addAttributeListener();
+    }
+
+    @Override
+    protected void instanceAttributeChanged(Instance instance, Attribute<?> attr) {
+        if (attr == RESET_TIMEOUT_ATTR) {
+            resetTimeout = (int) instance.getAttributeValue(attr);
+        }
     }
 
     @Override
@@ -88,10 +109,11 @@ public class DebuggerComponent extends InstanceFactory {
         startButton.draw(bds, painter);
         stopButton.draw(bds, painter);
 
-        String statusString = String.format("Status: %.10s", serverStatus);
+        // String statusString = String.format("Status: %.10s", serverStatus);
+        String statusString = String.format("%.18s", serverStatus);
 
         GraphicsUtil.drawText(g, "CdM Debugger", bds.getX() + 60, bds.getY() + 5, 0, -1);
-        GraphicsUtil.drawText(g, statusString, bds.getX() + 10, bds.getY() + 25, -1, -1);
+        GraphicsUtil.drawText(g, statusString, bds.getX() + 60, bds.getY() + 25, 0, -1);
 
         // System.err.println("Draw from paint");
     }
@@ -164,6 +186,7 @@ public class DebuggerComponent extends InstanceFactory {
                     try {
                         debuggerCircuit = state.getProject().getCurrentCircuit();
                         simulationTicker.setProject(state.getProject());
+                        resetTimeout = state.getAttributeValue(RESET_TIMEOUT_ATTR);
 
                         int port = state.getAttributeValue(PORT_ATTR);
                         server = new Server(port);

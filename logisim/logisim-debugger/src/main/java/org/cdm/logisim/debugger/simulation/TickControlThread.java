@@ -10,6 +10,7 @@ import org.cdm.logisim.debugger.DebuggerComponent;
 import org.cdm.logisim.debugger.adapters.ProcessorAdapter;
 import org.cdm.logisim.debugger.adapters.ProcessorAdapterFactory;
 import org.cdm.logisim.debugger.adapters.ProcessorState;
+import org.cdm.logisim.debugger.dto.ActionResponse;
 import org.cdm.logisim.debugger.dto.BreakpointsMessage;
 import org.cdm.logisim.debugger.dto.BytesLoadMessage;
 import org.cdm.logisim.debugger.dto.DebugEvent;
@@ -257,21 +258,21 @@ public class TickControlThread extends Thread {
         System.out.println("Break");
         breakpoints = message.breakpoints;
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.SET_BREAKPOINTS));
     }
 
     private void handleLineLocationsMessage(LineLocationsMessage message) {
         System.out.println("LLoc");
         lineLocations = message.lineLocations;
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.SET_LINE_LOCATIONS));
     }
 
     private void handleStepMessage() {
         System.out.println("Step");
         runSimulation(new StopConditions().all());
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.STEP));
     }
 
     private void handleRunMessage(RunMessage message) {
@@ -287,14 +288,14 @@ public class TickControlThread extends Thread {
 //                        .breakpoint()
 //        );
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.RUN));
     }
 
     private void handlePauseMessage() {
         System.out.println("Pause");
         stopSimulation();
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.PAUSE));
     }
 
     private void handleResetMessage() {
@@ -306,9 +307,14 @@ public class TickControlThread extends Thread {
                 .getSimulator()
                 .requestReset();
 
+        System.out.println("Sleep " + DebuggerComponent.getResetTimeout() + " ms");
+        try {
+            sleep(DebuggerComponent.getResetTimeout());
+        } catch (InterruptedException ignored) {
 
+        }
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.RESET));
     }
 
     private void handleInitMessage(InitializationMessage message) {
@@ -345,6 +351,8 @@ public class TickControlThread extends Thread {
         }
 
         System.out.println("Init with " + message.memoryConfiguration);
+
+        DebuggerComponent.setServerStatus("Debug active"/* + processorAdapter.getDisplayName()*/);
 
         sendResponse(
                 InitializationResponse.builder()
@@ -428,7 +436,7 @@ public class TickControlThread extends Thread {
             return;
         }
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.LOAD));
     }
 
     private void handleBytesLoadMessage(BytesLoadMessage message) {
@@ -457,7 +465,7 @@ public class TickControlThread extends Thread {
 
         contents.set(0, message.bytes);
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.LOAD));
     }
 
     private void handleSetMemoryMessage(SetMemoryMessage message) {
@@ -486,7 +494,7 @@ public class TickControlThread extends Thread {
 
         contents.set(message.offset, message.value);
 
-        sendResponse(new DebuggerResponse());
+        sendResponse(new ActionResponse(MessageActions.SET_MEMORY));
     }
 
     private void handleGetTunnelMessage(GetTunnelMessage message) {
