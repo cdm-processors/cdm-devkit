@@ -2,7 +2,7 @@ from enum import Enum
 
 from antlr4.error.ErrorListener import ErrorListener
 
-from cocas.assembler.generated import AsmParser
+from .generated import AsmParser
 
 
 class AsmExceptionTag(Enum):

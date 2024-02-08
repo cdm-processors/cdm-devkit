@@ -9,9 +9,7 @@ from antlr4 import CommonTokenStream, InputStream
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
 
 from .exceptions import AntlrErrorListener, ObjectFileException
-from .generated.ObjectFileLexer import ObjectFileLexer
-from .generated.ObjectFileParser import ObjectFileParser
-from .generated.ObjectFileParserVisitor import ObjectFileParserVisitor
+from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor
 from .targets import TargetParams, import_target
 
 
@@ -29,13 +27,13 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             if header != exp_header:
                 if exp_header:
                     raise ObjectFileException(self.file, ctx.start.line,
-                                                 f'Wrong target header {header}, expected {exp_header}')
+                                              f'Wrong target header {header}, expected {exp_header}')
                 else:
                     raise ObjectFileException(self.file, ctx.start.line,
-                                                 f'Expected no header for {target_name} target, got {header}')
+                                              f'Expected no header for {target_name} target, got {header}')
         elif exp_header:
             raise ObjectFileException(self.file, ctx.start.line,
-                                         f'Expected non-empty target header for {target_name}, got empty')
+                                      f'Expected non-empty target header for {target_name}, got empty')
 
         modules = []
         for i in ctx.object_block():
@@ -67,7 +65,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                 if sect == '$abs':
                     if not asects:
                         raise ObjectFileException(self.file, xtrn.start.line,
-                                                     'No absolute sections found, but needed for xtrn entry')
+                                                  'No absolute sections found, but needed for xtrn entry')
                     # what is this?
                     ind = max(bisect.bisect_right(asect_addr, entry.offset) - 1, 0)
                     asects[asect_addr[ind]].external[label].append(entry)

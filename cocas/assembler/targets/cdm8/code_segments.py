@@ -2,15 +2,14 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation, ExternalEntry
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AsmExceptionTag, AssemblerException
 from .. import IAlignmentPaddingSegment, ICodeSegment
 
 if TYPE_CHECKING:
-    from cocas.assembler.code_block import Section
-    from cocas.object_module import ObjectSectionRecord
+    from ...code_block import Section
 
 
 def _error(segment: ICodeSegment, message: str):

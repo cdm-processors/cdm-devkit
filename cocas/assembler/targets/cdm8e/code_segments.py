@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation, ExternalEntry
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AsmExceptionTag, AssemblerException
@@ -12,8 +12,6 @@ from .simple_instructions import simple_instructions
 TAG = AsmExceptionTag.ASM
 
 if TYPE_CHECKING:
-    from cocas.object_module import ObjectSectionRecord
-
     from ...code_block import Section
 
 

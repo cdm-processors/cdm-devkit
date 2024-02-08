@@ -6,7 +6,7 @@ from cocas.object_module import CodeLocation
 from .abstract_code_segments import ICodeSegment
 
 if TYPE_CHECKING:
-    from cocas.assembler.ast_nodes import InstructionNode
+    from ..ast_nodes import InstructionNode
 
 
 class TargetInstructionsInterface(ABC):

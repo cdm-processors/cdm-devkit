@@ -2,13 +2,11 @@ from abc import ABC, abstractmethod
 from math import lcm
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation
+from cocas.object_module import CodeLocation, ObjectSectionRecord
 
 from ..exceptions import AsmExceptionTag, AssemblerException
 
 if TYPE_CHECKING:
-    from cocas.object_module import ObjectSectionRecord
-
     from ..code_block import Section
 
 

@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from typing import Type
 
-from cocas.assembler.targets import IVaryingLengthSegment
 from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
 from .exceptions import AsmExceptionTag
-from .targets import TargetInstructionsInterface
+from .targets import IVaryingLengthSegment, TargetInstructionsInterface
 
 TAG = AsmExceptionTag.ASM
 

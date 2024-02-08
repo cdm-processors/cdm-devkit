@@ -57,7 +57,7 @@ class TargetInstructions(TargetInstructionsInterface):
             if line.mnemonic.startswith('b'):
                 return TargetInstructions.branch(line)
             raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line,
-                                        f'Unknown instruction "{line.mnemonic}"')
+                                     f'Unknown instruction "{line.mnemonic}"')
         except CdmTempException as e:
             raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
@@ -185,7 +185,7 @@ class TargetInstructions(TargetInstructionsInterface):
                 break
         else:
             raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line,
-                                        f'Invalid branch condition: {cond}')
+                                     f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
         return [Branch(line.location, branch_code, line.arguments[0])]
 

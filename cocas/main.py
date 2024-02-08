@@ -78,7 +78,7 @@ def main():
     if obj_files and args.compile:
         print("Error: object files should not be provided with --compile option")
         return 2
-    objects: list[tuple[Path, ObjectModule]] = []
+    objects: list[tuple[Path, ObjectModule]]
     try:
         objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
             assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath),

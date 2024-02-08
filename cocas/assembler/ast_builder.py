@@ -127,7 +127,7 @@ class BuildAstVisitor(AsmParserVisitor):
         cond.conjunction = ctx.conjunction().getText()
         if cond.conjunction != 'and' and cond.conjunction != 'or':
             raise AssemblerException(AsmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                                        'Expected "and" or "or" in compound condition')
+                                     'Expected "and" or "or" in compound condition')
         return cond
 
     def visitCondition(self, ctx: AsmParser.ConditionContext):
@@ -219,7 +219,7 @@ class BuildAstVisitor(AsmParserVisitor):
         label_decl.external = ctx.Ext() is not None
         if label_decl.entry and label_decl.external:
             raise AssemblerException(AsmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                                        f'Label {label_decl.label.name} cannot be both external and entry')
+                                     f'Label {label_decl.label.name} cannot be both external and entry')
         return label_decl
 
     def visitLabel_declaration(self, ctx: AsmParser.Label_declarationContext) -> LabelDeclarationNode:
