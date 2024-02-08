@@ -7,7 +7,7 @@ import bitstruct
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 
 from ...ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
-from ...exceptions import AsmExceptionTag, AssemblerException
+from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignedSegment, IAlignmentPaddingSegment, ICodeSegment, IVaryingLengthSegment
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ def pack(fmt, *args):
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise AssemblerException(AsmExceptionTag.ASM, segment.location.file, segment.location.line, message)
+    raise AssemblerException(AssemblerExceptionTag.ASM, segment.location.file, segment.location.line, message)
 
 
 class CodeSegment(ICodeSegment, ABC):

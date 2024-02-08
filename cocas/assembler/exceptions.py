@@ -5,7 +5,8 @@ from antlr4.error.ErrorListener import ErrorListener
 from .generated import AsmParser
 
 
-class AsmExceptionTag(Enum):
+class AssemblerExceptionTag(Enum):
+    """Shows if an exception caused in macros or in usual source code"""
     MACRO = "Macro"
     ASM = "Assembler"
 
@@ -20,7 +21,9 @@ class CdmTempException(Exception):
 
 
 class AssemblerException(Exception):
-    def __init__(self, tag: AsmExceptionTag, file: str, line: int, description: str):
+    """Exception raised when given source code is invalid"""
+
+    def __init__(self, tag: AssemblerExceptionTag, file: str, line: int, description: str):
         self.tag = tag
         self.file = file
         self.line = line

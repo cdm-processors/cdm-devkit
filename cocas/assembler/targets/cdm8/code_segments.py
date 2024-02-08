@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from ...exceptions import AsmExceptionTag, AssemblerException
+from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignmentPaddingSegment, ICodeSegment
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise AssemblerException(AsmExceptionTag.ASM, segment.location.file, segment.location.line, message)
+    raise AssemblerException(AssemblerExceptionTag.ASM, segment.location.file, segment.location.line, message)
 
 
 # noinspection DuplicatedCode

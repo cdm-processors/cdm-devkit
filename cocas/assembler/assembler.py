@@ -54,12 +54,13 @@ def assemble_files(target: str,
     """
     Open and assemble multiple files into object modules
 
-    :param target: name of processor target
+    :param target: name of processor, should be valid
     :param files: list of assembler files' paths to process
     :param debug: if debug information should be collected
     :param relative_path: if debug paths should be relative to some path
     :param absolute_path: if relative paths should be converted to absolute
     :param realpath: if paths should be converted to canonical
+    :return: list of pairs [source file path, object module]
     """
     _ = absolute_path
     target_instructions = import_target(target)

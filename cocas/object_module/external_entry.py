@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ExternalEntry:
+    """Contains location in binary image where to add some value that was not known at compile time"""
     offset: int
     entry_bytes: range
     sign: int = field(default=1)

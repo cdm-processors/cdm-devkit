@@ -9,6 +9,7 @@ from .location import CodeLocation
 
 @dataclass
 class ObjectSectionRecord:
+    """Structure that represents object code and debug information of a section"""
     name: str
     address: int
     data: bytearray
@@ -23,6 +24,7 @@ class ObjectSectionRecord:
 
 @dataclass
 class ObjectModule:
+    """Object code representation of one source file with multiple sections, and debug information"""
     asects: list[ObjectSectionRecord]
     rsects: list[ObjectSectionRecord]
     source_file_path: Union[Path, None] = field(default=None)

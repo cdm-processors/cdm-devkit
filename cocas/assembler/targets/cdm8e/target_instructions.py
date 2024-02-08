@@ -3,7 +3,7 @@ from typing import Union, get_args, get_origin
 import bitstruct
 
 from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
-from ...exceptions import AsmExceptionTag, AssemblerException, CdmTempException
+from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment, TargetInstructionsInterface
 from .code_segments import (
     BytesSegment,
@@ -53,7 +53,7 @@ class TargetInstructions(TargetInstructionsInterface):
                 segment.location = line.location
             return segments
         except CdmTempException as e:
-            raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line, e.message)
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
     @staticmethod
     def finish(temp_storage: dict):

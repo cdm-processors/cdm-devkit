@@ -216,8 +216,15 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         pass
 
 
-def import_object(input_stream: InputStream, filepath: Path,
-                  target: str) -> List[ObjectModule]:
+def import_object(input_stream: InputStream, filepath: Path, target: str) -> List[ObjectModule]:
+    """
+    Open multiple object files and create object modules
+
+    :param input_stream: contents of file
+    :param filepath: path of the file to use in error handling
+    :param target: name of processor target
+    :return: list of object modules contained in object file
+    """
     str_path = filepath.absolute().as_posix()
     lexer = ObjectFileLexer(input_stream)
     lexer.removeErrorListeners()
@@ -240,12 +247,15 @@ def read_object_files(target: str,
                       absolute_path: Optional[Path],
                       realpath: bool) -> list[tuple[Path, ObjectModule]]:
     """
+    Open multiple object files and create object modules
+
     :param target: name of processor target
     :param files: list of object files' paths to process
     :param debug: if debug information should be exported
     :param relative_path: if debug paths should be converted to relative to some path
     :param absolute_path: if relative paths should be converted to absolute
     :param realpath: if paths should be converted to canonical
+    :return: list of pairs [object file path, object module]
     """
     _ = debug
     objects = []

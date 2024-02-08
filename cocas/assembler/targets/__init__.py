@@ -6,6 +6,7 @@ from .abstract_instructions import TargetInstructionsInterface
 
 
 def list_assembler_targets() -> set[str]:
+    """Returns a set of supported assembler targets. Takes submodules of assembler/target module"""
     targets_dir = Path(__file__).parent.absolute()
     targets = map(lambda x: x.name, filter(lambda x: x.is_dir(), targets_dir.glob("[!_]*")))
     return set(targets)

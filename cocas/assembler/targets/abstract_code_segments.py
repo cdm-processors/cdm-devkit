@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from cocas.object_module import CodeLocation, ObjectSectionRecord
 
-from ..exceptions import AsmExceptionTag, AssemblerException
+from ..exceptions import AssemblerException, AssemblerExceptionTag
 
 if TYPE_CHECKING:
     from ..code_block import Section
@@ -96,4 +96,4 @@ class IAlignedSegment(ICodeSegment, ABC):
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise AssemblerException(AsmExceptionTag.ASM, segment.location.file, segment.location.line, message)
+    raise AssemblerException(AssemblerExceptionTag.ASM, segment.location.file, segment.location.line, message)

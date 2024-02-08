@@ -5,10 +5,10 @@ from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
-from .exceptions import AsmExceptionTag
+from .exceptions import AssemblerExceptionTag
 from .targets import IVaryingLengthSegment, TargetInstructionsInterface
 
-TAG = AsmExceptionTag.ASM
+TAG = AssemblerExceptionTag.ASM
 
 
 @dataclass

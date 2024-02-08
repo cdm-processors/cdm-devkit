@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, Union, get_args, get_origin
 
 from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
-from ...exceptions import AsmExceptionTag, AssemblerException, CdmTempException
+from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment, TargetInstructionsInterface
 from .code_segments import (
     AlignmentPaddingSegment,
@@ -56,10 +56,10 @@ class TargetInstructions(TargetInstructionsInterface):
                     return h.handler(line, temp_storage, h.instructions[line.mnemonic])
             if line.mnemonic.startswith('b'):
                 return TargetInstructions.branch(line)
-            raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line,
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                      f'Unknown instruction "{line.mnemonic}"')
         except CdmTempException as e:
-            raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line, e.message)
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
     @staticmethod
     def finish(temp_storage: dict):
@@ -184,7 +184,7 @@ class TargetInstructions(TargetInstructionsInterface):
                 branch_code = pair.inv_code if not inverse else pair.code
                 break
         else:
-            raise AssemblerException(AsmExceptionTag.ASM, line.location.file, line.location.line,
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                      f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
         return [Branch(line.location, branch_code, line.arguments[0])]

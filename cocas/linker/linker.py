@@ -90,7 +90,13 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[tuple[Any, ObjectModule]]):
+def link(objects: list[tuple[Any, ObjectModule]]) -> tuple[bytearray, dict[int, CodeLocation]]:
+    """
+    Link object modules into one image
+
+    :param objects: list of pairs (file path, object module)
+    :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
+    """
     asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
     rsects = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
 

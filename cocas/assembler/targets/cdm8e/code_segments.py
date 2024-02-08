@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from ...exceptions import AsmExceptionTag, AssemblerException
+from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import ICodeSegment, IVaryingLengthSegment
 from .simple_instructions import simple_instructions
 
-TAG = AsmExceptionTag.ASM
+TAG = AssemblerExceptionTag.ASM
 
 if TYPE_CHECKING:
     from ...code_block import Section
