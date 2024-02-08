@@ -7,9 +7,9 @@ from typing import Optional
 from antlr4 import CommonTokenStream, FileStream, InputStream
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 
-from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag, CdmTempException
 from cocas.object_module import CodeLocation
 
+from .exceptions import AntlrErrorListener, CdmAssemblerException, CdmExceptionTag, CdmTempException
 from .generated import MacroLexer, MacroParser, MacroVisitor
 
 
@@ -182,7 +182,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             try:
                 self.add_macro(self.visitMlb_macro(child))
             except CdmTempException as e:
-                raise CdmException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
+                raise CdmAssemblerException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
         return self.macros
 
     def visitProgram(self, ctx: MacroParser.ProgramContext):
@@ -205,7 +205,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                         self.rewriter.insertBeforeToken(child.start, expanded_text)
                         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, child.start, child.stop)
             except CdmTempException as e:
-                raise CdmException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
+                raise CdmAssemblerException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
 
     def visitMacro(self, ctx: MacroParser.MacroContext):
         header = ctx.macro_header()

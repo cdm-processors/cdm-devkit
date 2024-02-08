@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from math import lcm
 from typing import TYPE_CHECKING
 
-from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation
+
+from ..exceptions import CdmAssemblerException, CdmExceptionTag
 
 if TYPE_CHECKING:
     from cocas.object_module import ObjectSectionRecord
@@ -97,4 +98,4 @@ class IAlignedSegment(ICodeSegment, ABC):
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise CdmException(CdmExceptionTag.ASM, segment.location.file, segment.location.line, message)
+    raise CdmAssemblerException(CdmExceptionTag.ASM, segment.location.file, segment.location.line, message)

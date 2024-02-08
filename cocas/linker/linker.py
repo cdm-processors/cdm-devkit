@@ -1,8 +1,9 @@
 import itertools
 from typing import Any
 
-from cocas.error import CdmLinkException
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord
+
+from .exceptions import CdmLinkException
 
 
 def init_bins(asects: list[ObjectSectionRecord]):

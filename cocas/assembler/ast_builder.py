@@ -3,7 +3,6 @@ from pathlib import Path
 
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.error import AntlrErrorListener, CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation
 
 from .ast_nodes import (
@@ -25,6 +24,7 @@ from .ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
+from .exceptions import AntlrErrorListener, CdmAssemblerException, CdmExceptionTag
 from .generated import AsmLexer, AsmParser, AsmParserVisitor
 
 
@@ -126,8 +126,8 @@ class BuildAstVisitor(AsmParserVisitor):
         cond = self.visitCondition(ctx.condition())
         cond.conjunction = ctx.conjunction().getText()
         if cond.conjunction != 'and' and cond.conjunction != 'or':
-            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                               'Expected "and" or "or" in compound condition')
+            raise CdmAssemblerException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                                        'Expected "and" or "or" in compound condition')
         return cond
 
     def visitCondition(self, ctx: AsmParser.ConditionContext):
@@ -218,8 +218,8 @@ class BuildAstVisitor(AsmParserVisitor):
         label_decl = self.visitLabel_declaration(ctx.label_declaration())
         label_decl.external = ctx.Ext() is not None
         if label_decl.entry and label_decl.external:
-            raise CdmException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                               f'Label {label_decl.label.name} cannot be both external and entry')
+            raise CdmAssemblerException(CdmExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                                        f'Label {label_decl.label.name} cannot be both external and entry')
         return label_decl
 
     def visitLabel_declaration(self, ctx: AsmParser.Label_declarationContext) -> LabelDeclarationNode:

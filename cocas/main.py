@@ -5,18 +5,11 @@ from typing import Union
 import colorama
 
 from cocas.assembler import assemble_files, list_assembler_targets
-from cocas.error import CdmException, log_error
+from cocas.assembler.exceptions import CdmAssemblerException
 from cocas.linker import link, write_debug_export, write_image
 from cocas.object_file import list_object_targets, read_object_files, write_object_file
 from cocas.object_module import ObjectModule
-
-
-def handle_os_error(e: OSError):
-    message = e.strerror
-    if e.filename is not None:
-        message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
-    log_error("MAIN", message)
-    exit(1)
+from cocas import exception_handlers as handlers
 
 
 def main():
@@ -95,8 +88,8 @@ def main():
                 objects += assemble_files(target, [filepath], bool(args.debug),
                                           relative_path, absolute_path, realpath)
 
-        except CdmException as e:
-            e.log()
+        except CdmAssemblerException as e:
+            handlers.log_asm_exception(e)
             return 1
 
     if args.merge:

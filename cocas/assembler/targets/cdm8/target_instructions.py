@@ -4,9 +4,8 @@ from typing import Callable, get_args, get_origin
 
 from bitstruct import pack
 
-from cocas.error import CdmException, CdmExceptionTag, CdmTempException
-
 from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from ...exceptions import CdmAssemblerException, CdmExceptionTag, CdmTempException
 from .. import ICodeSegment, TargetInstructionsInterface
 from .code_segments import AlignmentPaddingSegment, BytesSegment, ExpressionSegment
 
@@ -49,10 +48,10 @@ class TargetInstructions(TargetInstructionsInterface):
                     return h.handler(line, temp_storage, h.instructions[line.mnemonic])
             if line.mnemonic.startswith('b'):
                 return TargetInstructions.branch(line)
-            raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
-                               f'Unknown instruction "{line.mnemonic}"')
+            raise CdmAssemblerException(CdmExceptionTag.ASM, line.location.file, line.location.line,
+                                        f'Unknown instruction "{line.mnemonic}"')
         except CdmTempException as e:
-            raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line, e.message)
+            raise CdmAssemblerException(CdmExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
     @staticmethod
     def finish(temp_storage: dict):
@@ -156,8 +155,8 @@ class TargetInstructions(TargetInstructionsInterface):
                 branch_code = pair.inv_code if not inverse else pair.code
                 break
         else:
-            raise CdmException(CdmExceptionTag.ASM, line.location.file, line.location.line,
-                               f'Invalid branch condition: {cond}')
+            raise CdmAssemblerException(CdmExceptionTag.ASM, line.location.file, line.location.line,
+                                        f'Invalid branch condition: {cond}')
         assert_count_args(line.arguments, RelocatableExpressionNode)
         return [BytesSegment(pack('u4u4', 0xE, branch_code), line.location),
                 ExpressionSegment(line.arguments[0], line.location)]

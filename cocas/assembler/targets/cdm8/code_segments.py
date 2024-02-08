@@ -2,10 +2,10 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.error import CdmException, CdmExceptionTag
 from cocas.object_module import CodeLocation, ExternalEntry
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
+from ...exceptions import CdmAssemblerException, CdmExceptionTag
 from .. import IAlignmentPaddingSegment, ICodeSegment
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise CdmException(CdmExceptionTag.ASM, segment.location.file, segment.location.line, message)
+    raise CdmAssemblerException(CdmExceptionTag.ASM, segment.location.file, segment.location.line, message)
 
 
 # noinspection DuplicatedCode
