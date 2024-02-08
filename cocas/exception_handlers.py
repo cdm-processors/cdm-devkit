@@ -1,8 +1,8 @@
 from colorama import Fore, Style
 
-from cocas.assembler import CdmAssemblerException
-from cocas.linker import CdmLinkException
-from cocas.object_file import CdmObjectFileException
+from cocas.assembler import AssemblerException
+from cocas.linker import LinkerException
+from cocas.object_file import ObjectFileException
 
 
 def log_exception(tag: str, message: str):
@@ -18,18 +18,18 @@ def log_os_error(e: OSError):
     exit(1)
 
 
-def log_asm_exception(e: CdmAssemblerException):
+def log_asm_exception(e: AssemblerException):
     print(f'[{e.tag.value}] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{e.line}{Style.RESET_ALL} of '
           f'{Style.BRIGHT}{e.file}{Style.RESET_ALL}')
     print(f'{e.description}')
 
 
-def log_object_file_exception(e: CdmObjectFileException):
+def log_object_file_exception(e: ObjectFileException):
     print(f'[Object file] {Fore.RED}ERROR{Fore.RESET} at line {Style.BRIGHT}{e.line}{Style.RESET_ALL} of '
           f'{Style.BRIGHT}{e.file}{Style.RESET_ALL}')
     print(f'{e.description}')
 
 
-def log_link_exception(_: CdmLinkException):
+def log_link_exception(_: LinkerException):
     # todo: find this code from previous revisions
     pass

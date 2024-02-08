@@ -4,12 +4,12 @@ from typing import Union
 
 import colorama
 
+from cocas import exception_handlers as handlers
 from cocas.assembler import assemble_files, list_assembler_targets
-from cocas.assembler.exceptions import CdmAssemblerException
+from cocas.assembler.exceptions import AssemblerException
 from cocas.linker import link, write_debug_export, write_image
 from cocas.object_file import list_object_targets, read_object_files, write_object_file
 from cocas.object_module import ObjectModule
-from cocas import exception_handlers as handlers
 
 
 def main():
@@ -88,7 +88,7 @@ def main():
                 objects += assemble_files(target, [filepath], bool(args.debug),
                                           relative_path, absolute_path, realpath)
 
-        except CdmAssemblerException as e:
+        except AssemblerException as e:
             handlers.log_asm_exception(e)
             return 1
 

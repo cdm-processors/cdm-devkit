@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from cocas.object_module import CodeLocation, ExternalEntry
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
-from ...exceptions import CdmAssemblerException, CdmExceptionTag
+from ...exceptions import AsmExceptionTag, AssemblerException
 from .. import ICodeSegment, IVaryingLengthSegment
 from .simple_instructions import simple_instructions
 
-TAG = CdmExceptionTag.ASM
+TAG = AsmExceptionTag.ASM
 
 if TYPE_CHECKING:
     from cocas.object_module import ObjectSectionRecord
@@ -178,10 +178,10 @@ class GotoSegment(RelocatableExpressionSegment, VaryingLengthSegment):
                         if label_name in labels:
                             labels[label_name] += shift_length
                 return shift_length
-        except CdmAssemblerException as e:
+        except AssemblerException as e:
             raise e
         except Exception as e:
-            raise CdmAssemblerException(TAG, self.location.file, self.location.line, str(e))
+            raise AssemblerException(TAG, self.location.file, self.location.line, str(e))
 
     def fill(self, object_record: "ObjectSectionRecord", section: "Section", labels: dict[str, int],
              templates: dict[str, dict[str, int]]):
@@ -201,7 +201,7 @@ class GotoSegment(RelocatableExpressionSegment, VaryingLengthSegment):
 
 
 def _error(segment: ICodeSegment, message: str):
-    raise CdmAssemblerException(TAG, segment.location.file, segment.location.line, message)
+    raise AssemblerException(TAG, segment.location.file, segment.location.line, message)
 
 
 def eval_rel_expr_seg(seg: RelocatableExpressionSegment, s: "Section",

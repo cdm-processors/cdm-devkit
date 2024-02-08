@@ -6,10 +6,10 @@ from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
-from .exceptions import CdmExceptionTag
+from .exceptions import AsmExceptionTag
 from .targets import TargetInstructionsInterface
 
-TAG = CdmExceptionTag.ASM
+TAG = AsmExceptionTag.ASM
 
 
 @dataclass

@@ -8,7 +8,7 @@ from antlr4 import CommonTokenStream, InputStream
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
 
-from .exceptions import AntlrErrorListener, CdmObjectFileException
+from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated.ObjectFileLexer import ObjectFileLexer
 from .generated.ObjectFileParser import ObjectFileParser
 from .generated.ObjectFileParserVisitor import ObjectFileParserVisitor
@@ -28,13 +28,13 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             header = self.visitTarg_record(ctx.targ_record())
             if header != exp_header:
                 if exp_header:
-                    raise CdmObjectFileException(self.file, ctx.start.line,
+                    raise ObjectFileException(self.file, ctx.start.line,
                                                  f'Wrong target header {header}, expected {exp_header}')
                 else:
-                    raise CdmObjectFileException(self.file, ctx.start.line,
+                    raise ObjectFileException(self.file, ctx.start.line,
                                                  f'Expected no header for {target_name} target, got {header}')
         elif exp_header:
-            raise CdmObjectFileException(self.file, ctx.start.line,
+            raise ObjectFileException(self.file, ctx.start.line,
                                          f'Expected non-empty target header for {target_name}, got empty')
 
         modules = []
@@ -57,7 +57,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         for block in ctx.rsect_block():
             name, rsect = self.visitRsect_block(block)
             if name in rsects:
-                raise CdmObjectFileException(self.file, block.start.line, f'Repeating section: {name}')
+                raise ObjectFileException(self.file, block.start.line, f'Repeating section: {name}')
             rsects[name] = rsect
 
         xtrn: ObjectFileParser.Xtrn_recordContext
@@ -66,7 +66,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             for sect, entry in entries:
                 if sect == '$abs':
                     if not asects:
-                        raise CdmObjectFileException(self.file, xtrn.start.line,
+                        raise ObjectFileException(self.file, xtrn.start.line,
                                                      'No absolute sections found, but needed for xtrn entry')
                     # what is this?
                     ind = max(bisect.bisect_right(asect_addr, entry.offset) - 1, 0)
@@ -74,7 +74,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                 elif sect in rsects:
                     rsects[sect].external[label].append(entry)
                 else:
-                    raise CdmObjectFileException(self.file, xtrn.start.line, f'Section not found: {sect}')
+                    raise ObjectFileException(self.file, xtrn.start.line, f'Section not found: {sect}')
         if filename:
             f = Path(filename)
             for i in (asects | rsects).values():
@@ -172,9 +172,9 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         try:
             value = int(byte, 16)
         except ValueError:
-            raise CdmObjectFileException(self.file, ctx.start.line, f'Not a hex number: {byte}')
+            raise ObjectFileException(self.file, ctx.start.line, f'Not a hex number: {byte}')
         if not 0 <= value <= 255:
-            raise CdmObjectFileException(self.file, ctx.start.line, f'To big hex number: {byte}, expected byte')
+            raise ObjectFileException(self.file, ctx.start.line, f'To big hex number: {byte}, expected byte')
         return value
 
     def visitData(self, ctx: ObjectFileParser.DataContext):
@@ -184,13 +184,13 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         try:
             return int(ctx.getText(), 16)
         except ValueError:
-            raise CdmObjectFileException(self.file, ctx.start.line, f'Not a hex number: {ctx.getText()}')
+            raise ObjectFileException(self.file, ctx.start.line, f'Not a hex number: {ctx.getText()}')
 
     def visitNumber(self, ctx: ObjectFileParser.NumberContext):
         try:
             return int(ctx.getText(), 16)
         except ValueError:
-            raise CdmObjectFileException(self.file, ctx.start.line, f'Not a hex number: {ctx.getText()}')
+            raise ObjectFileException(self.file, ctx.start.line, f'Not a hex number: {ctx.getText()}')
 
     def visitEntry_usage(self, ctx: ObjectFileParser.Entry_usageContext):
         addr = self.visitNumber(ctx.number())

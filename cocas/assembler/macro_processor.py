@@ -9,7 +9,7 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 
 from cocas.object_module import CodeLocation
 
-from .exceptions import AntlrErrorListener, CdmAssemblerException, CdmExceptionTag, CdmTempException
+from .exceptions import AntlrErrorListener, AsmExceptionTag, AssemblerException, CdmTempException
 from .generated import MacroLexer, MacroParser, MacroVisitor
 
 
@@ -182,7 +182,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             try:
                 self.add_macro(self.visitMlb_macro(child))
             except CdmTempException as e:
-                raise CdmAssemblerException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
+                raise AssemblerException(AsmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
         return self.macros
 
     def visitProgram(self, ctx: MacroParser.ProgramContext):
@@ -205,7 +205,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                         self.rewriter.insertBeforeToken(child.start, expanded_text)
                         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, child.start, child.stop)
             except CdmTempException as e:
-                raise CdmAssemblerException(CdmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
+                raise AssemblerException(AsmExceptionTag.MACRO, self.filepath, child.start.line, e.message)
 
     def visitMacro(self, ctx: MacroParser.MacroContext):
         header = ctx.macro_header()
@@ -305,12 +305,12 @@ def process_macros(input_stream: InputStream, library_macros, filepath: Path):
     str_path = filepath.absolute().as_posix()
     lexer = MacroLexer(input_stream)
     lexer.removeErrorListeners()
-    lexer.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, str_path))
+    lexer.addErrorListener(AntlrErrorListener(AsmExceptionTag.MACRO, str_path))
     token_stream = CommonTokenStream(lexer)
 
     parser = MacroParser(token_stream)
     parser.removeErrorListeners()
-    parser.addErrorListener(AntlrErrorListener(CdmExceptionTag.MACRO, str_path))
+    parser.addErrorListener(AntlrErrorListener(AsmExceptionTag.MACRO, str_path))
     cst = parser.program()
     rewriter = TokenStreamRewriter(token_stream)
     emv = ExpandMacrosVisitor(rewriter, library_macros, str_path)

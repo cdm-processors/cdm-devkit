@@ -16,7 +16,7 @@ from .ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
-from .exceptions import CdmAssemblerException, CdmExceptionTag, CdmTempException
+from .exceptions import AsmExceptionTag, AssemblerException, CdmTempException
 from .targets import ICodeSegment, TargetInstructionsInterface
 
 
@@ -39,8 +39,8 @@ class CodeBlock:
             target_instructions.finish(temp_storage)
         except CdmTempException as e:
             # if it isn't ok, must be at least one line
-            raise CdmAssemblerException(CdmExceptionTag.ASM, lines[-1].location.file,
-                                        lines[-1].location.line, e.message)
+            raise AssemblerException(AsmExceptionTag.ASM, lines[-1].location.file,
+                                     lines[-1].location.line, e.message)
 
     def append_label(self, label_name):
         self.labels[label_name] = self.address + self.size

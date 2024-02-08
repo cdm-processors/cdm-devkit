@@ -5,7 +5,7 @@ from antlr4.error.ErrorListener import ErrorListener
 from cocas.assembler.generated import AsmParser
 
 
-class CdmExceptionTag(Enum):
+class AsmExceptionTag(Enum):
     MACRO = "Macro"
     ASM = "Assembler"
 
@@ -19,8 +19,8 @@ class CdmTempException(Exception):
         self.message = message
 
 
-class CdmAssemblerException(Exception):
-    def __init__(self, tag: CdmExceptionTag, file: str, line: int, description: str):
+class AssemblerException(Exception):
+    def __init__(self, tag: AsmExceptionTag, file: str, line: int, description: str):
         self.tag = tag
         self.file = file
         self.line = line
@@ -36,4 +36,4 @@ class AntlrErrorListener(ErrorListener):
         if isinstance(recognizer, AsmParser):
             line = line - recognizer.current_offset
             self.file = recognizer.current_file
-        raise CdmAssemblerException(self.tag, self.file, line, msg)
+        raise AssemblerException(self.tag, self.file, line, msg)
