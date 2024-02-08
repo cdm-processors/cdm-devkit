@@ -1,14 +1,14 @@
 import argparse
+import itertools
 from pathlib import Path
 from typing import Union
 
 import colorama
 
 from cocas import exception_handlers as handlers
-from cocas.assembler import assemble_files, list_assembler_targets
-from cocas.assembler.exceptions import AssemblerException
-from cocas.linker import link, write_debug_export, write_image
-from cocas.object_file import list_object_targets, read_object_files, write_object_file
+from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets
+from cocas.linker import LinkerException, link, write_debug_export, write_image
+from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
 from cocas.object_module import ObjectModule
 
 
@@ -49,8 +49,6 @@ def main():
         print('Error: cannot use --compile and --merge options at same time')
         return 2
 
-    objects: list[tuple[Path, ObjectModule]] = []
-
     realpath = bool(args.realpath)
     if args.relative_path:
         relative_path: Union[Path, None] = args.relative_path.absolute()
@@ -65,55 +63,66 @@ def main():
     else:
         absolute_path = None
 
+    asm_files = []
+    obj_files = []
     filepath: Path
     for filepath in args.sources:
-        try:
-            filetype = filepath.suffix
-            if not filetype:
-                if args.merge:
-                    filetype = '.obj'
-                else:
-                    filetype = '.asm'
-
-            if filetype in ['.obj', '.lib', ]:
-                if args.compile:
-                    print("Error: object files should not be provided with --compile option")
-                    return 2
-                objects += read_object_files(target, [filepath], bool(args.debug),
-                                             relative_path, absolute_path, realpath)
-            else:  # filetype == '.asm'
-                if args.merge:
-                    print("Error: source files should not be provided with --merge option")
-                    return 2
-                objects += assemble_files(target, [filepath], bool(args.debug),
-                                          relative_path, absolute_path, realpath)
-
-        except AssemblerException as e:
-            handlers.log_asm_exception(e)
-            return 1
-
-    if args.merge:
-        write_object_file('merged.obj', [tup[1] for tup in objects], target, (args.debug or args.merge))
-    elif args.compile and args.output:
-        write_object_file(args.output, [tup[1] for tup in objects], target, (args.debug or args.merge))
-    elif args.compile:
-        for path, obj in objects:
-            write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
-    else:
-        data, code_locations = link(objects)
-        if args.output:
-            write_image(args.output, data)
+        filetype = filepath.suffix or args.merge and '.obj' or '.asm'
+        if filetype in ['.obj', '.lib', ]:
+            obj_files.append(filepath)
         else:
-            write_image("out.img", data)
-        if args.debug:
-            if args.debug is True:
-                if args.output:
-                    filename = Path(args.output).with_suffix('.dbg.json')
-                else:
-                    filename = Path('out.dbg.json')
+            asm_files.append(filepath)
+    if asm_files and args.merge:
+        print("Error: source files should not be provided with --merge option")
+        return 2
+    if obj_files and args.compile:
+        print("Error: object files should not be provided with --compile option")
+        return 2
+    objects: list[tuple[Path, ObjectModule]] = []
+    try:
+        objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
+            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath),
+            read_object_files(target, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
+        ))
+    except AssemblerException as e:
+        handlers.log_asm_exception(e)
+        return 1
+    except ObjectFileException as e:
+        handlers.log_object_file_exception(e)
+        return 1
+    except OSError as e:
+        handlers.log_os_error(e)
+        return 3
+
+    try:
+        if args.merge:
+            write_object_file('merged.obj', [tup[1] for tup in objects], target, (args.debug or args.merge))
+        elif args.compile and args.output:
+            write_object_file(args.output, [tup[1] for tup in objects], target, args.debug)
+        elif args.compile:
+            for path, obj in objects:
+                write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
+        else:
+            data, code_locations = link(objects)
+            if args.output:
+                write_image(args.output, data)
             else:
-                filename = args.debug
-            write_debug_export(filename, code_locations)
+                write_image("out.img", data)
+            if args.debug:
+                if args.debug is True:
+                    if args.output:
+                        filename = Path(args.output).with_suffix('.dbg.json')
+                    else:
+                        filename = Path('out.dbg.json')
+                else:
+                    filename = args.debug
+                write_debug_export(filename, code_locations)
+    except LinkerException as e:
+        handlers.log_link_exception(e)
+        return 1
+    except OSError as e:
+        handlers.log_os_error(e)
+        return 3
 
 
 if __name__ == '__main__':

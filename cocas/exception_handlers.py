@@ -30,6 +30,5 @@ def log_object_file_exception(e: ObjectFileException):
     print(f'{e.description}')
 
 
-def log_link_exception(_: LinkerException):
-    # todo: find this code from previous revisions
-    pass
+def log_link_exception(e: LinkerException):
+    log_exception("Linker", e.message)
