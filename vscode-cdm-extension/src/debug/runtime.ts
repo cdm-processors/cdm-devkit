@@ -38,8 +38,8 @@ export class CdmDebugRuntime extends EventEmitter {
             switch (unmarshalled?.action) {
                 case "init": {
                     let casted: InitializationResponse = unmarshalled;
-                    let { supportsExceptions, registers, ramSize } = casted;
-                    this.emit("initialized", supportsExceptions, registers, ramSize);
+                    let { supportsExceptions, registerNames, registerSizes, ramSize } = casted;
+                    this.emit("initialized", supportsExceptions, registerNames, registerSizes, ramSize);
                     break;
                 }
                 case "load": {
@@ -88,7 +88,7 @@ export class CdmDebugRuntime extends EventEmitter {
         });
     }
 
-    on(eventName: "initialized", listener: (supportsExceptions: boolean, registers: string[], ramSize: number) => void): this;
+    on(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
     on(eventName: "loaded", listener: () => void): this;
     on(eventName: "setBreakpoints", listener: () => void): this;
     on(eventName: "setLines", listener: () => void): this;
@@ -100,7 +100,7 @@ export class CdmDebugRuntime extends EventEmitter {
         return super.on(eventName, listener);
     }
 
-    once(eventName: "initialized", listener: (supportsExceptions: boolean, registers: string[], ramSize: number) => void): this;
+    once(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
     once(eventName: "loaded", listener: () => void): this;
     once(eventName: "setBreakpoints", listener: () => void): this;
     once(eventName: "setLines", listener: () => void): this;
@@ -168,7 +168,7 @@ export class CdmDebugRuntime extends EventEmitter {
     setLines(locations: number[]): this {
         this.send({
             action: "setLineLocations",
-            locations: locations,
+            lineLocations: locations,
         });
         return this;
     }

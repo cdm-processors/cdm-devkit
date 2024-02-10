@@ -1,4 +1,4 @@
-import { ArchitectureID } from "./architectures";
+ import { ArchitectureID } from "./architectures";
 import { TargetID } from "./targets";
 
 export const INITIALIZE = "init";
@@ -68,7 +68,8 @@ export type InitializationMessage = Message & {
 export type InitializationResponse = Response & {
     action: typeof INITIALIZE,
     supportsExceptions: boolean,
-    registers: string[],
+    registerNames: string[],
+    registerSizes: number[],
     ramSize: number,
 };
 
@@ -94,7 +95,7 @@ export type SetBreakpointsMessage = Message & {
 
 export type SetLinesMessage = Message & {
     action: typeof SET_LINES,
-    locations: number[],
+    lineLocations: number[],
 };
 
 export type RunExecutionMessage = Message & {

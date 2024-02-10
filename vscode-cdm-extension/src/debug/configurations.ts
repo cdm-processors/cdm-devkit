@@ -1,3 +1,5 @@
+import * as pathlib from "path";
+
 import * as vscode from "vscode";
 
 export class CdmConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -6,16 +8,18 @@ export class CdmConfigurationProvider implements vscode.DebugConfigurationProvid
         debugConfig: vscode.DebugConfiguration,
         token?: vscode.CancellationToken | undefined
     ): vscode.ProviderResult<vscode.DebugConfiguration> {
-        if (debugConfig.type || debugConfig.request || debugConfig.name) {
+        if (debugConfig.type !== "cdm" || debugConfig.request !== "launch") {
             return debugConfig;
         }
 
-        debugConfig.type = "cdm";
-        debugConfig.request = "launch";
-        debugConfig.artifacts = {
-            image: "${fileDirname}/${fileBasenameNoExtension}.img",
-            debug: "${fileDirname}/${fileBasenameNoExtension}.dbg"
-        };
+        let filename = vscode.window.activeTextEditor?.document?.fileName;
+        // if (filename?.) {
+        //     vscode.window.showErrorMessage("There either no active text editor or opened file is not a assembly file, so debugging can't be started.")
+        //     return undefined;
+        // }
+
+        debugConfig.address ??= "ws://localhost:7001";
+        debugConfig.architecture ??= "harvard";
 
         return debugConfig;
     }
