@@ -4,6 +4,7 @@ import com.cburch.logisim.circuit.Circuit;
 import org.cdm.logisim.debugger.DebuggerComponent;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,16 @@ public class ProcessorAdapterFactory {
 
     static {
         supportedTargets.put(
+                "cdm8",
+                Collections.singletonList(ProcessorType.CDM8)
+        );
+
+        supportedTargets.put(
+                "cdm8e",
+                Collections.singletonList(ProcessorType.CDM8E)
+        );
+
+        supportedTargets.put(
                 "cdm16",
                 Arrays.asList(ProcessorType.CDM16_CIRCUIT, ProcessorType.CDM16_EMU)
         );
@@ -22,9 +33,9 @@ public class ProcessorAdapterFactory {
     public static ProcessorAdapter getProcessorAdapter(ProcessorType processorType) {
         switch (processorType) {
             case CDM8:
-                throw new UnsupportedOperationException();
+                return new Cdm8CircuitAdapter();
             case CDM8E:
-                throw new UnsupportedOperationException();
+                return new Cdm8eCircuitAdapter();
             case CDM16_CIRCUIT:
                 return new Cdm16CircuitAdapter();
             case CDM16_EMU:
