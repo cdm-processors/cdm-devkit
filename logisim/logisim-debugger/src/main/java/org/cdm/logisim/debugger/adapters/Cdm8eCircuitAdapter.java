@@ -47,7 +47,7 @@ public class Cdm8eCircuitAdapter implements ProcessorAdapter {
         return circuit
                 .getNonWires()
                 .stream()
-                .filter(x -> x.getFactory() instanceof SubcircuitFactory && x.getFactory().getName().equals("CdM_8_mark5"))
+                .filter(x -> x.getFactory() instanceof SubcircuitFactory && x.getFactory().getName().equals("CdM_8e"))
                 .findAny()
                 .orElse(null);
     }
