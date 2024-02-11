@@ -84,7 +84,7 @@ public class Server extends WebSocketServer {
     }
 
     public void sendMessage(String message) {
-        if (currentConnection != null) {
+        if (currentConnection != null && currentConnection.isOpen()) {
             currentConnection.send(message);
         }
     }
