@@ -10,8 +10,12 @@ def normalize_imm8(val: int):
         return val
 
 
-def decode(image: bytearray, has_ivt: bool = False) -> DecodedSection:
+def append_new_instructions():
     inst_decoders[InstructionGroup.LDI_GR].mnemonics[13] = "jmp"
+
+
+def decode(image: bytearray, has_ivt: bool = False) -> DecodedSection:
+    append_new_instructions()
 
     section = DecodedSection()
 
