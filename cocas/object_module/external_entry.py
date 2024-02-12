@@ -3,11 +3,17 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ExternalEntry:
-    """Contains location in binary image where to add some value that was not known at compile time"""
+    """Describes where and how some unknown at compile time value will be placed over the binary image.
+    Takes certain bytes of teh image as a number (maybe also from `lower_parts`) and adds the value.
+    Also used for relative entries."""
     offset: int
+    """Position from start of the section where some value will be placed"""
     entry_bytes: range
+    """Selection of bytes from binary representation of the added value"""
     sign: int = field(default=1)
+    """Should value be added or subtracted (not tested with -1)"""
     full_bytes: bool = field(default=True)
+    """Whether no bytes were excluded by entry_bytes. Used when exporting this to object file"""
 
     def __str__(self):
         s = f'{self.sign * self.offset:02x}'

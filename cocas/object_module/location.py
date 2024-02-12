@@ -4,10 +4,8 @@ from typing import Union
 
 @dataclass
 class CodeLocation:
-    """
-    Store information about to which place in the source file the instruction belongs.
-    File is None if and only if there is no information for this line.
-    """
+    """Store information about to which place in the source file the instruction belongs."""
     file: Union[str, None] = None
+    """Name of the source file that generated this instruction. None if unknown"""
     line: int = 0
     column: int = 0
