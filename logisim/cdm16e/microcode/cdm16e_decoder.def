@@ -130,11 +130,11 @@ stssp:          r_asrtD
 move:           r_asrt0, alu_asrtD, r_latch, ps_latch_flags
 2op_1:
 
-sww:            mem, data, read, word, r_asrt0;
+swpw:           mem, data, read, word, r_asrt0;
                 mem, data, word, r_asrt0, r_asrtD;
                 r_latch
 
-swb:            mem, data, read, r_asrt0;
+swpb:           mem, data, read, r_asrt0;
                 mem, data, r_asrt0, r_asrtD;
                 r_latch
 
