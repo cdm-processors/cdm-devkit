@@ -1,0 +1,238 @@
+# Coco-de-Mer 16e (CdM-16e) Processor Secondary Decoder Specification
+# Extension microcode
+
+:3, 8,   # 3-bit Sequencer with 8 phases 
+
+#
+#### Secondary Decoder Output Signal Definition
+#
+
+nop,
+
+vec,
+
+privileged,
+
+# double_fault,       # Reserved, probably should be in main microcode
+
+shadow_sp_latch,
+shadow_sp_asrtD,
+
+rx0_latch,
+rx0_asrtD,
+
+rx1_latch,
+rx1_asrtD
+
+#####################
+#
+#   INSTRUCTION SET
+#
+#####################
+
+#_0:
+#_1:
+#_2:
+#_3:
+#_4:
+#_5:
+#_6:
+#_7:
+#_8:
+#_9:
+#_A:
+#_B:
+#_C:
+#_D:
+#_E:
+#_F:
+
+# 0 op
+zero:           # Treat 0x0000 op code as invalid
+
+res_1:
+res_2:
+res_3:
+
+halt:           privileged
+wait:           privileged
+ei:             privileged
+di:             privileged
+
+jsr:            
+                
+
+rti:            privileged
+                
+
+pupc:           
+
+popc:           
+
+pusp:           
+
+posp:           
+
+pups:           
+
+pops:           privileged
+
+# 1 op
+push:           
+
+pop:            
+
+ldi:            
+
+jsrr:           
+
+ldsp:           
+
+stsp:           
+
+ldps:           
+
+stps:           privileged
+
+ldpc:           
+
+stpc:           
+
+addsp:          
+1op_B:
+1op_C:
+1op_D:
+
+ldssp:          privileged, shadow_sp_asrtD
+
+stssp:          privileged, shadow_sp_latch
+
+# 2op
+move:           
+2op_1:
+
+swpw:           rx0_latch;
+                nop;
+                rx0_asrtD
+
+swpb:           rx0_latch;
+                nop;
+                rx0_asrtD
+
+2op_4:
+2op_5:
+2op_6:
+2op_7:
+2op_8:
+2op_9:
+2op_A:
+2op_B:
+2op_C:
+2op_D:
+2op_E:
+2op_F:
+
+# mem2
+ldw_2:          
+ldb_2:          
+ldsb_2:         
+
+ldcw_2:         
+ldcb_2:         
+ldcsb_2:        
+
+stw_2:          
+stb_2:          
+
+mem2_8:
+mem2_9:
+mem2_A:
+mem2_B:
+mem2_C:
+mem2_D:
+mem2_E:
+mem2_F:
+
+# imm6
+lsw_p:          
+lsw_n:          
+
+lsb_p:          
+lsb_n:          
+
+lssb_p:         
+lssb_n:         
+
+ssw_p:          
+ssw_n:          
+
+ssb_p:          
+ssb_n:          
+
+ldi_p:          
+ldi_n:          
+add_p:          
+add_n:          
+cmp_p:          
+cmp_n:          
+
+# imm9
+int:            privileged, rx0_latch;
+                rx1_latch;
+                vec;
+                vec;
+                rx0_asrtD;
+                rx1_asrtD
+
+reset:          privileged, vec;
+                vec
+
+push_p:         
+push_n:         
+
+addsp_p:        
+addsp_n:        
+
+jsr_rel_p:         
+
+jsr_rel_n:      
+
+imm9_8:
+imm9_9:
+imm9_A:
+imm9_B:
+imm9_C:
+imm9_D:
+imm9_E:
+imm9_F:
+
+# mem3
+ldw_3:          
+ldb_3:          
+ldsb_3:         
+
+ldcw_3:         
+ldcb_3:         
+ldcsb_3:        
+
+stw_3:          
+stb_3:          
+
+mem3_8:
+mem3_9:
+mem3_A:
+mem3_B:
+mem3_C:
+mem3_D:
+mem3_E:
+mem3_F:
+
+# dir
+br_abs:         
+shifts_alu2:    
+alu3_ind:       
+alu3:           
+br_rel_p:       
+br_rel_n:       
+br_nop:         
+fetch:          
