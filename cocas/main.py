@@ -7,14 +7,14 @@ import colorama
 
 from cocas import exception_handlers as handlers
 from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets
-from cocas.linker import LinkerException, link, write_debug_export, write_image
+from cocas.linker import LinkerException, list_linker_targets, target_link, write_debug_export, write_image
 from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
 from cocas.object_module import ObjectModule
 
 
 def main():
     colorama.init()
-    available_targets = list_assembler_targets() & list_object_targets()
+    available_targets = list_assembler_targets() & list_object_targets() & list_linker_targets()
 
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('sources', type=Path, nargs='*', help='source files')
@@ -103,7 +103,8 @@ def main():
             for path, obj in objects:
                 write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
         else:
-            data, code_locations = link(objects)
+            # data, code_locations = link(objects)
+            data, code_locations = target_link(objects, target)
             if args.output:
                 write_image(args.output, data)
             else:

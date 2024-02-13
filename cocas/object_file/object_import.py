@@ -1,7 +1,7 @@
 import bisect
 import codecs
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
@@ -216,7 +216,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         pass
 
 
-def import_object(input_stream: InputStream, filepath: Path, target: str) -> List[ObjectModule]:
+def import_object(input_stream: InputStream, filepath: Path, target: str) -> list[ObjectModule]:
     """
     Open multiple object files and create object modules
 

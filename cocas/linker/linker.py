@@ -1,12 +1,14 @@
 import itertools
-from typing import Any
+from math import inf
+from typing import Any, Optional
 
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord
 
 from .exceptions import LinkerException
+from .targets import TargetParams, import_target
 
 
-def init_bins(asects: list[ObjectSectionRecord]):
+def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
     rsect_bins = []
     last_bin_begin = 0
     for i in range(len(asects)):
@@ -21,14 +23,19 @@ def init_bins(asects: list[ObjectSectionRecord]):
                 len2 = len(asects[i].data)
                 raise LinkerException(f'Overlapping sections at {addr1} (size {len1}) and {addr2} (size {len2})')
             last_bin_begin = asects[i].address + len(asects[i].data)
-
-    if last_bin_begin < 2 ** 16:
-        rsect_bins.append((last_bin_begin, 2 ** 16 - last_bin_begin))
+            if image_size and last_bin_begin > image_size:
+                raise LinkerException(f'Absolute section at address {asects[i].address} (size {len(asects[i].data)}) '
+                                      f'exceeds image size limit {image_size}')
+    if image_size:
+        if last_bin_begin < image_size:
+            rsect_bins.append((last_bin_begin, image_size - last_bin_begin))
+    else:
+        rsect_bins.append((last_bin_begin, inf))
 
     return rsect_bins
 
 
-def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
+def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[str, int]:
     sect_addresses = {'$abs': 0}
     for rsect in rsects:
         rsect_size = len(rsect.data)
@@ -36,14 +43,14 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list):
             bin_begin, bin_size = rsect_bins[i]
             if bin_size >= rsect_size:
                 address = (bin_begin + rsect.alignment - 1) // rsect.alignment * rsect.alignment
-                if address + rsect_size < bin_begin + bin_size:
+                if address + rsect_size <= bin_begin + bin_size:
                     if rsect.name in sect_addresses:
                         raise LinkerException(f'Duplicate sections "{rsect.name}"')
                     sect_addresses[rsect.name] = address
                     rsect_bins[i] = (address + rsect_size, bin_size - rsect_size)
                     break
         else:
-            raise LinkerException(f'Section "{rsect.name}" exceeds image size limit')
+            raise LinkerException(f'Section "{rsect.name}" exceeds image size limit {image_size}')
     return sect_addresses
 
 
@@ -90,11 +97,13 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[tuple[Any, ObjectModule]]) -> tuple[bytearray, dict[int, CodeLocation]]:
+def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = None) -> \
+        tuple[bytearray, dict[int, CodeLocation]]:
     """
     Link object modules into one image
 
     :param objects: list of pairs (file path, object module)
+    :param image_size: maximum size of image for current target or None if no limit
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
     asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
@@ -108,8 +117,8 @@ def link(objects: list[tuple[Any, ObjectModule]]) -> tuple[bytearray, dict[int, 
     rsects.sort(key=lambda s: -len(s.data))
     asects.sort(key=lambda s: s.address)
 
-    rsect_bins = init_bins(asects)
-    sect_addresses = place_sects(rsects, rsect_bins)
+    rsect_bins = init_bins(asects, image_size)
+    sect_addresses = place_sects(rsects, rsect_bins, image_size)
     ents = gather_ents(asects + rsects, sect_addresses)
     image = bytearray(2 ** 16)
     code_locations: dict[int, CodeLocation] = {}
@@ -154,3 +163,16 @@ def link(objects: list[tuple[Any, ObjectModule]]) -> tuple[bytearray, dict[int, 
                     sect.lower_parts[pos] = val % lower_limit
 
     return image, code_locations
+
+
+def target_link(objects: list[tuple[Any, ObjectModule]], target_name: str) -> \
+        tuple[bytearray, dict[int, CodeLocation]]:
+    """
+    Link object modules with checking constraints for the target
+
+    :param objects: list of pairs (file path, object module)
+    :param target_name: name of the target
+    :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
+    """
+    params: TargetParams = import_target(target_name)
+    return link(objects, params.image_size)
