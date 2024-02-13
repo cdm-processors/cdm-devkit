@@ -387,25 +387,27 @@ class TargetInstructions(TargetInstructionsInterface):
     handlers: list[Handler]
 
     handlers = [
-        Handler(ds, {'ds': -1}),
-        Handler(dc, {'dc': -1, 'db': -1, 'dw': -1}),
-        Handler(align, {'align': -1}),
-        Handler(save, {'save': -1}),
-        Handler(restore, {'restore': -1}),
-        Handler(ldi, {'ldi': -1}),
-        Handler(op0, {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'rti': 9,
-                      'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
-        Handler(shifts, {'shl': 0, 'shr': 1, 'shra': 2, 'rol': 3, 'ror': 4, 'rcl': 5, 'rcr': 6}),
-        Handler(op1, {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
-                      'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
-        Handler(op2, {'move': 0}),
-        Handler(alu3_ind, {'bit': 0}),
-        Handler(mem, {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3, 'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
-        Handler(alu2, {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
-        Handler(imm6, {'lsb': 1, 'lssb': 2, 'ssb': 4}),
-        Handler(imm6_word, {'lsw': 0, 'ssw': 3}),
-        Handler(alu3, {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
-        Handler(special, {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1, 'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
+        Handler(ds.__get__(object), {'ds': -1}),
+        Handler(dc.__get__(object), {'dc': -1, 'db': -1, 'dw': -1}),
+        Handler(align.__get__(object), {'align': -1}),
+        Handler(save.__get__(object), {'save': -1}),
+        Handler(restore.__get__(object), {'restore': -1}),
+        Handler(ldi.__get__(object), {'ldi': -1}),
+        Handler(op0.__get__(object), {'halt': 4, 'wait': 5, 'ei': 6, 'di': 7, 'rti': 9,
+                                      'pupc': 10, 'popc': 11, 'pusp': 12, 'posp': 13, 'pups': 14, 'pops': 15}),
+        Handler(shifts.__get__(object), {'shl': 0, 'shr': 1, 'shra': 2, 'rol': 3, 'ror': 4, 'rcl': 5, 'rcr': 6}),
+        Handler(op1.__get__(object), {'pop': 1, 'jsrr': 3, 'ldsp': 4, 'stsp': 5,
+                                      'ldps': 6, 'stps': 7, 'ldpc': 8, 'stpc': 9}),
+        Handler(op2.__get__(object), {'move': 0}),
+        Handler(alu3_ind.__get__(object), {'bit': 0}),
+        Handler(mem.__get__(object), {'ldw': 0, 'ldb': 1, 'ldsb': 2, 'lcw': 3,
+                                      'lcb': 4, 'lcsb': 5, 'stw': 6, 'stb': 7}),
+        Handler(alu2.__get__(object), {'neg': 0, 'not': 1, 'sxt': 2, 'scl': 3}),
+        Handler(imm6.__get__(object), {'lsb': 1, 'lssb': 2, 'ssb': 4}),
+        Handler(imm6_word.__get__(object), {'lsw': 0, 'ssw': 3}),
+        Handler(alu3.__get__(object), {'and': 0, 'or': 1, 'xor': 2, 'bic': 3, 'addc': 5, 'subc': 7}),
+        Handler(special.__get__(object), {'add': -1, 'sub': -1, 'cmp': -1, 'int': -1,
+                                          'reset': -1, 'addsp': -1, 'jsr': -1, 'push': -1})
     ]
 
     @staticmethod

@@ -198,12 +198,12 @@ class TargetInstructions(TargetInstructionsInterface):
 
     handlers: list[Handler]
     handlers = [
-        Handler(ds, {'ds': -1}),
-        Handler(dc, {'dc': -1}),
-        Handler(align, {'align': -1}),
-        Handler(save, {'save': -1}),
-        Handler(restore, {'restore': -1}),
-        Handler(zero, {
+        Handler(ds.__get__(object), {'ds': -1}),
+        Handler(dc.__get__(object), {'dc': -1}),
+        Handler(align.__get__(object), {'align': -1}),
+        Handler(save.__get__(object), {'save': -1}),
+        Handler(restore.__get__(object), {'restore': -1}),
+        Handler(zero.__get__(object), {
             'pushall': 0xCE,
             'popall': 0xCF,
             'rts': 0xD7,
@@ -213,7 +213,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'rti': 0xD9,
             'crc': 0xDA
         }),
-        Handler(unary, {
+        Handler(unary.__get__(object), {
             'not': 0x80,
             'neg': 0x84,
             'dec': 0x88,
@@ -225,7 +225,7 @@ class TargetInstructions(TargetInstructionsInterface):
             'push': 0xC0,
             'pop': 0xC4
         }),
-        Handler(binary, {
+        Handler(binary.__get__(object), {
             'move': 0x00,
             'add': 0x10,
             'addc': 0x20,
@@ -238,13 +238,13 @@ class TargetInstructions(TargetInstructionsInterface):
             'ld': 0xB0,
             'ldc': 0xF0
         }),
-        Handler(imm, {
+        Handler(imm.__get__(object), {
             'jsr': 0xD6,
             'osix': 0xDB,
             'addsp': 0xCC,
             'setsp': 0xCD
         }),
-        Handler(unary_imm, {
+        Handler(unary_imm.__get__(object), {
             'ldsa': 0xC8,
             'ldi': 0xD0
         })
