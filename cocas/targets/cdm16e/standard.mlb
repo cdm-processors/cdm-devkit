@@ -29,6 +29,12 @@
 _nop':
     bfalse _nop'
 
+*swp/2
+    swpw $1, $2
+
+*syscall/0
+    int 0x7
+
 ####################
 # Define constants #
 ####################
