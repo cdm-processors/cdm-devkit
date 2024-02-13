@@ -5,13 +5,18 @@ import { WebSocket } from "ws";
 import { ArchitectureID } from "../protocol/architectures";
 import { TargetID } from "../protocol/targets";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
+import { Cdm16VariableProvider, RegisterController } from "./variables";
+
 
 export class CdmDebugRuntime extends EventEmitter {
-    private readonly ws: WebSocket;
-    private buffered: string[];
+    private ws: WebSocket;
+    private buffered: string[] = [];
+
+    provider!: RegisterController;
 
     constructor(
-        address: string
+        address: string,
+        variablesReference: number,
     ) {
         super();
 
@@ -39,7 +44,8 @@ export class CdmDebugRuntime extends EventEmitter {
                 case "init": {
                     let casted: InitializationResponse = unmarshalled;
                     let { supportsExceptions, registerNames, registerSizes, ramSize } = casted;
-                    this.emit("initialized", supportsExceptions, registerNames, registerSizes, ramSize);
+                    const newRef = this.provider.initialize(variablesReference, registerNames, registerSizes);
+                    this.emit("initialized", supportsExceptions, newRef, ramSize);
                     break;
                 }
                 case "load": {
@@ -60,7 +66,8 @@ export class CdmDebugRuntime extends EventEmitter {
                 }
                 case "getRegisters": {
                     let casted: RequestRegistersResponse = unmarshalled;
-                    this.emit("receivedRegisters", casted.registers);
+                    this.provider.set(casted.registers);
+                    this.emit("receivedRegisters");
                     break;
                 }
                 case "getMemory": {
@@ -79,7 +86,6 @@ export class CdmDebugRuntime extends EventEmitter {
             }
         });
 
-        this.buffered = [];
         this.ws.once("open", () => {
             console.log(`Websocket has connected to the debug server, sending buffered messages to the debug server, message quantity - ${this.buffered.length}`);
             this.buffered.forEach((message) => {
@@ -88,24 +94,24 @@ export class CdmDebugRuntime extends EventEmitter {
         });
     }
 
-    on(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
+    on(eventName: "initialized", listener: (supportsExceptions: boolean, variablesReference: number, ramSize: number) => void): this;
     on(eventName: "loaded", listener: () => void): this;
     on(eventName: "setBreakpoints", listener: () => void): this;
     on(eventName: "setLines", listener: () => void): this;
     on(eventName: "run", listener: () => void): this;
-    on(eventName: "receivedRegisters", listener: (registers: number[]) => void): this;
+    on(eventName: "receivedRegisters", listener: () => void): this;
     on(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
     on(eventName: "stopped", listener: (reason: Reason) => void): this;
     on(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.on(eventName, listener);
     }
 
-    once(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
+    once(eventName: "initialized", listener: (supportsExceptions: boolean, variablesReference: number, ramSize: number) => void): this;
     once(eventName: "loaded", listener: () => void): this;
     once(eventName: "setBreakpoints", listener: () => void): this;
     once(eventName: "setLines", listener: () => void): this;
     once(eventName: "run", listener: () => void): this;
-    once(eventName: "receivedRegisters", listener: (registers: number[]) => void): this;
+    once(eventName: "receivedRegisters", listener: () => void): this;
     once(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
     once(eventName: "stopped", listener: (reason: Reason) => void): this;
     once(eventName: string | symbol, listener: (...args: any[]) => void): this {
@@ -124,6 +130,10 @@ export class CdmDebugRuntime extends EventEmitter {
     }
 
     initialize(target: TargetID, arch: ArchitectureID): this {
+        if (target === "cdm16") {
+            this.provider = new Cdm16VariableProvider();
+        }
+
         this.send({
             action: "init",
             target: target,

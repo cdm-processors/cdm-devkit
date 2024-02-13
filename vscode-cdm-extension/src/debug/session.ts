@@ -3,13 +3,14 @@ import * as pathlib from "path";
 import * as os from "os";
 
 import * as vscode from "vscode";
-import { ContinuedEvent, DebugSession, ExitedEvent, InitializedEvent, Source, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
+import { ContinuedEvent, DebugSession, ExitedEvent, InitializedEvent, Scope, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
 import { CdmDebugRuntime } from "./runtime";
 import { ArchitectureID } from "../protocol/architectures";
 import { TargetID } from "../protocol/targets";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
+import { BreakpointHandler } from "./breakpoints";
 
 type BuildArtifacts = {
     image: string;
@@ -24,28 +25,13 @@ interface CdmLaunchArguments extends DebugProtocol.LaunchRequestArguments {
     artifacts: BuildArtifacts;
 }
 
-type LineLocation = {
-    f: number;
-    l: number;
-    c: number;
-};
-
-type DebugInformation = {
-    files: string[];
-    codeLocations: Map<number, LineLocation>;
-};
-
-type Register = {
-    size: number;
-    value: number;
-};
-
 export class CdmDebugSession extends DebugSession {
     private static THREAD_ID = 1;
+    private static FRAME_ID = 1;
+    private registers_scope_id = 1;
 
     private runtime!: CdmDebugRuntime;
-    private debugInformation!: DebugInformation;
-    private registers!: Map<string, Register>;
+    private handler!: BreakpointHandler;
 
     protected initializeRequest(
         response: DebugProtocol.InitializeResponse,
@@ -73,12 +59,9 @@ export class CdmDebugSession extends DebugSession {
         args: CdmLaunchArguments,
         request?: DebugProtocol.Request,
     ): Promise<void> {
-        this.runtime = new CdmDebugRuntime(args.address);
-        this.runtime.once("initialized", (exceptions, names, sizes, ram) => {
-            this.registers = new Map();
-            names.forEach((name, index) => {
-                this.registers.set(name, { size: sizes[index], value: NaN });
-            });
+        this.runtime = new CdmDebugRuntime(args.address, this.registers_scope_id);
+        this.runtime.once("initialized", (exceptions, newRef, ram) => {
+            this.registers_scope_id = newRef;
         }).on("stopped", (reason) => {
             switch (reason) {
                 case PAUSE:
@@ -119,7 +102,7 @@ export class CdmDebugSession extends DebugSession {
         debug ??= pathlib.join(path, "out.dbg");
 
         const _ = await vscode.tasks.executeTask(this.compileSources(args.target, args.sources, image, debug));
-        while (!this.debugInformation) {
+        while (!this.handler) {
             const raw = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
 
             if (!raw) {
@@ -127,20 +110,41 @@ export class CdmDebugSession extends DebugSession {
                 continue;
             }
 
-            this.debugInformation = { files: raw.files, codeLocations: new Map() };
+            const codeLocations = new Map();
             Object.entries(raw.codeLocations).forEach(([key, value]) => {
-                this.debugInformation.codeLocations.set(Number(key), value as LineLocation);
+                codeLocations.set(Number(key), value);
             });
+            this.handler = new BreakpointHandler(raw.files, codeLocations);
         }
 
         this.runtime.once("loaded", async () => {
             await fs.rm(path, { recursive: true, force: true });
-            this.runtime.setLines(Array.from(this.debugInformation.codeLocations.keys()));
+            this.runtime.setLines(Array.from(this.handler.codes()));
             this.sendEvent(new InitializedEvent());
             this.runtime.reset().run([BREAKPOINT, EXCEPTION]);
             this.sendResponse(response);
             console.log("Sent a LaunchResponse response to the client");
         }).loadFromPath(image);
+    }
+
+    protected setBreakPointsRequest(
+        response: DebugProtocol.SetBreakpointsResponse,
+        args: DebugProtocol.SetBreakpointsArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a SetBreakpointsRequest from the client");
+
+        if (args.source.path && args.breakpoints) {
+            let { checkedBreakpoints, codes } = this.handler.fromSetBreakpointsRequest(args.source.path!, args.breakpoints) ?? {};
+            if (codes) {
+                this.runtime.setBreakpoints(codes);
+            }
+
+            response.body = { breakpoints: checkedBreakpoints ?? [] };
+            this.sendResponse(response);
+
+            console.log("Sent a SetBreakpointsResponse response to the client");
+        }
     }
 
     protected threadsRequest(
@@ -158,41 +162,65 @@ export class CdmDebugSession extends DebugSession {
     protected stackTraceRequest(
         response: DebugProtocol.StackTraceResponse,
         args: DebugProtocol.StackTraceArguments,
-        request?: DebugProtocol.Request | undefined,
+        request?: DebugProtocol.Request,
     ): void {
         console.log("Received a StackTraceRequest from the client");
 
-        this.runtime.once("receivedRegisters", (values) => {
-            const registers = this.registers.values();
-            values.forEach((value) => {
-                registers.next().value.value = value;
-            });
-            console.log(this.registers);
+        if (args.threadId !== CdmDebugSession.THREAD_ID) {
+            this.sendResponse(response);
+            console.warn("The client sent an invalid thread ID, sent an empty StackTraceResponse response to the client");
+            return;
+        }
 
-            const programCounter = this.registers.get("pc")!.value;
-            const lineLocation = this.debugInformation.codeLocations.get(programCounter);
-            if (lineLocation === undefined) {
-                return console.error(`Program counter has an invalid value: ${lineLocation}`);
-            }
+        this.runtime.once("receivedRegisters", () => {
+            let { source, line } = this.handler.fromProgramCounter(this.runtime.provider.programCounter()) ?? {};
 
-            const file = this.debugInformation.files[lineLocation.f];
-            const short = file.substring(file.lastIndexOf("/"));
-            const frame = new StackFrame(0, "main", new Source(short, file), lineLocation.l);
-
-            response.body = {
-                stackFrames: [frame],
-                totalFrames: 1,
-            };
+            const frame = new StackFrame(CdmDebugSession.FRAME_ID, "main", source, line);
+            response.body = { stackFrames: [frame], totalFrames: 1 };
 
             this.sendResponse(response);
             console.log("Sent a StackTraceResponse response to the client");
         }).requestRegisters();
     }
 
+    protected scopesRequest(
+        response: DebugProtocol.ScopesResponse,
+        args: DebugProtocol.ScopesArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a ScopesRequest from the client");
+
+        if (args.frameId !== CdmDebugSession.FRAME_ID) {
+            this.sendResponse(response);
+            return console.warn("The client sent an invalid frame ID, sent an empty ScopesResponse response to the client");
+        }
+
+        const scope = new Scope("REGISTERS", 1, false);
+        response.body = { scopes: [scope] };
+
+        this.sendResponse(response);
+        console.log("Sent a ScopesResponse response to the client");
+    }
+
+    protected variablesRequest(
+        response: DebugProtocol.VariablesResponse,
+        args: DebugProtocol.VariablesArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a VariablesRequest from the client");
+
+        response.body = {
+            variables: this.runtime.provider.find(args.variablesReference)?.sliceVariables(args.start ?? 0, args.count) ?? []
+        };
+
+        this.sendResponse(response);
+        console.log("Sent a VariablesResponse response to the client");
+    }
+
     protected restartRequest(
         response: DebugProtocol.RestartResponse,
         args: DebugProtocol.RestartArguments,
-        request?: DebugProtocol.Request | undefined
+        request?: DebugProtocol.Request,
     ): void {
         console.log("Received a RestartRequest from the client");
 
@@ -208,7 +236,7 @@ export class CdmDebugSession extends DebugSession {
     protected pauseRequest(
         response: DebugProtocol.PauseResponse,
         args: DebugProtocol.PauseArguments,
-        request?: DebugProtocol.Request | undefined
+        request?: DebugProtocol.Request,
     ): void {
         console.log("Received a PauseRequest from the client");
 
@@ -221,33 +249,40 @@ export class CdmDebugSession extends DebugSession {
     protected continueRequest(
         response: DebugProtocol.ContinueResponse,
         args: DebugProtocol.ContinueArguments,
-        request?: DebugProtocol.Request | undefined
+        request?: DebugProtocol.Request,
     ): void {
         console.log("Received a ContinueRequest from the client");
 
         this.runtime.run([EXCEPTION, BREAKPOINT]);
 
         this.sendResponse(response);
+        console.log("Sent a ContinueResponse response to the client");
     }
 
     protected stepInRequest(
         response: DebugProtocol.StepInResponse,
         args: DebugProtocol.StepInArguments,
-        request?: DebugProtocol.Request | undefined
+        request?: DebugProtocol.Request,
     ): void {
         console.log("Received a StepInRequest from the client");
 
         this.runtime.run([EXCEPTION, BREAKPOINT, STEP]);
 
         this.sendResponse(response);
+        console.log("Sent a StepInResponse response to the client");
     }
 
-    protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): void {
+    protected disconnectRequest(
+        response: DebugProtocol.DisconnectResponse,
+        args: DebugProtocol.DisconnectArguments,
+        request?: DebugProtocol.Request,
+    ): void {
         console.log("Received a DisconnectRequest from the client");
 
         this.runtime.pause();
         this.runtime.shutdown();
 
         this.sendResponse(response);
+        console.log("Sent a DisconnectResponse response to the client");
     }
 }
