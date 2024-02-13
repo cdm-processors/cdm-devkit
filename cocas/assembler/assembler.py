@@ -78,7 +78,7 @@ def assemble_files(target: str,
 
         debug_info_path = get_debug_info_path(filepath, debug, relative_path, realpath)
         if debug_info_path:
-            obj.source_file_path = filepath
+            obj.source_file_path = debug_info_path
             fp = filepath.absolute().as_posix()
             dip = debug_info_path.as_posix()
             for i in chain(obj.asects, obj.rsects):
