@@ -18,7 +18,8 @@ def main():
 
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('sources', type=Path, nargs='*', help='source files')
-    parser.add_argument('-t', '--target', type=str, default='cdm-16', help='target processor, CdM-16 is default')
+    parser.add_argument('-t', '--target', type=str, default='cdm-16',
+                        help='target processor, CdM-16 is default. May omit "cdm"')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
@@ -37,6 +38,8 @@ def main():
         print('Available targets: ' + ', '.join(available_targets))
         return
     target: str = args.target.replace('-', '').lower()
+    if target[:1].isdecimal():
+        target = 'cdm' + target
 
     if target not in available_targets:
         print('Error: unknown target ' + target)
