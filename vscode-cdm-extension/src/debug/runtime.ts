@@ -32,6 +32,7 @@ export class CdmDebugRuntime extends EventEmitter {
                 }
                 case "FAIL": {
                     console.error(`Received an error message from the debug server: ${decoded}`);
+                    this.emit("error", unmarshalled);
                     return;
                 }
                 default: {
@@ -102,6 +103,7 @@ export class CdmDebugRuntime extends EventEmitter {
     on(eventName: "receivedRegisters", listener: () => void): this;
     on(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
     on(eventName: "stopped", listener: (reason: Reason) => void): this;
+    on(eventName: "error", listener: (body: any) => void): this;
     on(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.on(eventName, listener);
     }
@@ -114,6 +116,7 @@ export class CdmDebugRuntime extends EventEmitter {
     once(eventName: "receivedRegisters", listener: () => void): this;
     once(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
     once(eventName: "stopped", listener: (reason: Reason) => void): this;
+    once(eventName: "error", listener: (body: any) => void): this;
     once(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.once(eventName, listener);
     }    
@@ -130,9 +133,7 @@ export class CdmDebugRuntime extends EventEmitter {
     }
 
     initialize(target: TargetID, arch: ArchitectureID): this {
-        if (target === "cdm16") {
-            this.provider = new Cdm16VariableProvider();
-        }
+        this.provider = new Cdm16VariableProvider();
 
         this.send({
             action: "init",

@@ -80,6 +80,10 @@ export class CdmDebugSession extends DebugSession {
                     break;
                 }
             }
+        }).on("error", (body) => {
+            this.sendEvent(new TerminatedEvent());
+            this.sendEvent(new ExitedEvent(0));
+            vscode.window.showErrorMessage(`Something went terribly wrong with the debug server; contact the developers and show them this!\n${JSON.stringify(body)}`);
         }).initialize(args.target, args.architecture);
 
         if (!args.sources && !vscode.window.activeTextEditor) {
