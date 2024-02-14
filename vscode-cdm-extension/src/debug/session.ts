@@ -11,6 +11,7 @@ import { ArchitectureID } from "../protocol/architectures";
 import { TargetID } from "../protocol/targets";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { BreakpointHandler } from "./breakpoints";
+import { createEventHack } from "../event-hack";
 
 type BuildArtifacts = {
     image: string;
@@ -37,15 +38,18 @@ export class CdmDebugSession extends DebugSession {
         response: DebugProtocol.InitializeResponse,
         args: DebugProtocol.InitializeRequestArguments,
     ): void {
+        console.log("Received a InitializeRequest from the client");
+
         response.body = {
             supportsConfigurationDoneRequest: true,
+            supportsRestartRequest: true,
             supportsConditionalBreakpoints: undefined,
             supportsHitConditionalBreakpoints: undefined,
             exceptionBreakpointFilters: undefined,
-            supportsRestartRequest: true,
         };
 
         this.sendResponse(response);
+        console.log("Sent a InitializeResponse response to the client");
     }
 
     private compileSources(target: TargetID, sources: string[], image: string, debug: string): vscode.Task {
@@ -59,6 +63,45 @@ export class CdmDebugSession extends DebugSession {
         args: CdmLaunchArguments,
         request?: DebugProtocol.Request,
     ): Promise<void> {
+        console.log("Received a LaunchRequest from the client");
+
+        if (!args.sources && !vscode.window.activeTextEditor) {
+            vscode.window.showErrorMessage("Open a .asm-file to launch debugging.");
+            return this.sendEvent(new TerminatedEvent());
+        } else if (!args.sources && !vscode.window.activeTextEditor!!.document.fileName.endsWith(".asm")) {
+            vscode.window.showErrorMessage("The opened file should have a .asm extension.");
+            return this.sendEvent(new TerminatedEvent());
+        } else if (!args.sources) {
+            args.sources = [vscode.window.activeTextEditor!!.document.fileName];
+        }
+
+        let { image, debug } = args.artifacts;
+        const path = await fs.mkdtemp(pathlib.join(os.tmpdir(), "cdm-"));
+
+        image ? await fs.mkdir(pathlib.dirname(image), { recursive: true }) : null;
+        debug ? await fs.mkdir(pathlib.dirname(debug), { recursive: true }) : null;
+
+        image ??= pathlib.join(path, "out.img");
+        debug ??= pathlib.join(path, "out.dbg");
+
+        const _ = await vscode.tasks.executeTask(this.compileSources(args.target, args.sources, image, debug));
+        const { event, submit } = createEventHack<number>();
+        const disposable = vscode.tasks.onDidEndTaskProcess((taskEvent) => {
+            if (taskEvent.execution.task.source === "CdM") {
+                submit(taskEvent.exitCode!);
+            }
+        });
+
+        const compileCode = await event();
+        disposable.dispose();
+        if (compileCode !== 0) {
+            this.sendEvent(new TerminatedEvent());
+            this.sendEvent(new ExitedEvent(compileCode));
+            this.sendErrorResponse(response, compileCode);
+
+            return;
+        }
+
         this.runtime = new CdmDebugRuntime(args.address, this.registers_scope_id);
         this.runtime.once("initialized", (exceptions, newRef, ram) => {
             this.registers_scope_id = newRef;
@@ -86,46 +129,18 @@ export class CdmDebugSession extends DebugSession {
             vscode.window.showErrorMessage(`Something went terribly wrong with the debug server; contact the developers and show them this!\n${JSON.stringify(body)}`);
         }).initialize(args.target, args.architecture);
 
-        if (!args.sources && !vscode.window.activeTextEditor) {
-            vscode.window.showErrorMessage("Open a .asm-file to launch debugging.");
-            return this.sendEvent(new TerminatedEvent());
-        } else if (!args.sources && !vscode.window.activeTextEditor!!.document.fileName.endsWith(".asm")) {
-            vscode.window.showErrorMessage("The opened file should have a .asm extension.");
-            return this.sendEvent(new TerminatedEvent());
-        } else if (!args.sources) {
-            args.sources = [vscode.window.activeTextEditor!!.document.fileName];
-        }
+        const raw = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
 
-        let { image, debug } = args.artifacts;
-        const path = await fs.mkdtemp(pathlib.join(os.tmpdir(), "cdm-"));
-
-        image ? await fs.mkdir(pathlib.dirname(image), { recursive: true }) : null;
-        debug ? await fs.mkdir(pathlib.dirname(debug), { recursive: true }) : null;
-
-        image ??= pathlib.join(path, "out.img");
-        debug ??= pathlib.join(path, "out.dbg");
-
-        const _ = await vscode.tasks.executeTask(this.compileSources(args.target, args.sources, image, debug));
-        while (!this.handler) {
-            const raw = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
-
-            if (!raw) {
-                let _ = await new Promise(f => setTimeout(f, 100));
-                continue;
-            }
-
-            const codeLocations = new Map();
-            Object.entries(raw.codeLocations).forEach(([key, value]) => {
-                codeLocations.set(Number(key), value);
-            });
-            this.handler = new BreakpointHandler(raw.files, codeLocations);
-        }
+        const codeLocations = new Map();
+        Object.entries(raw.codeLocations).forEach(([key, value]) => {
+            codeLocations.set(Number(key), value);
+        });
+        this.handler = new BreakpointHandler(raw.files, codeLocations);
 
         this.runtime.once("loaded", async () => {
             await fs.rm(path, { recursive: true, force: true });
             this.runtime.setLines(Array.from(this.handler.codes()));
             this.sendEvent(new InitializedEvent());
-            this.runtime.reset().run([BREAKPOINT, EXCEPTION]);
             this.sendResponse(response);
             console.log("Sent a LaunchResponse response to the client");
         }).loadFromPath(image);
@@ -139,7 +154,7 @@ export class CdmDebugSession extends DebugSession {
         console.log("Received a SetBreakpointsRequest from the client");
 
         if (args.source.path && args.breakpoints) {
-            let { checkedBreakpoints, codes } = this.handler.fromSetBreakpointsRequest(args.source.path!, args.breakpoints) ?? {};
+            let { checkedBreakpoints, codes } = this.handler.fromSetBreakpointsRequest(args.source.path, args.breakpoints) ?? {};
             if (codes) {
                 this.runtime.setBreakpoints(codes);
             }
@@ -149,6 +164,19 @@ export class CdmDebugSession extends DebugSession {
 
             console.log("Sent a SetBreakpointsResponse response to the client");
         }
+    }
+
+    protected configurationDoneRequest(
+        response: DebugProtocol.ConfigurationDoneResponse,
+        args: DebugProtocol.ConfigurationDoneArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a ConfigurationDoneRequest from the client");
+
+        this.runtime.reset().run([BREAKPOINT, EXCEPTION]);
+
+        this.sendResponse(response);
+        console.log("Sent a ConfigurationDoneResponse response to the client");
     }
 
     protected threadsRequest(
