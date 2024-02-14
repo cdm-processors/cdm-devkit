@@ -5,10 +5,8 @@ from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
-from .exceptions import AssemblerExceptionTag
+from .exceptions import AssemblerException, AssemblerExceptionTag
 from .targets import IVaryingLengthSegment, TargetInstructionsInterface
-
-TAG = AssemblerExceptionTag.ASM
 
 
 @dataclass
@@ -23,19 +21,22 @@ class Template:
             if isinstance(line, LabelDeclarationNode):
                 label_name = line.label.name
                 if label_name in self.labels:
-                    raise Exception(f'Duplicate label "{label_name}" declaration')
-
+                    raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
+                                             f'Duplicate label "{label_name}" declaration')
                 if line.external:
-                    raise Exception('External labels not allowed in templates')
+                    raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
+                                             'External labels not allowed in templates')
                 elif line.entry:
-                    raise Exception('Ents not allowed in templates')
+                    raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
+                                             'Ents not allowed in templates')
                 else:
                     self.labels[label_name] = size
 
             elif isinstance(line, InstructionNode):
                 if line.mnemonic not in target_instructions.assembly_directives():
-                    raise Exception('Only these directives allowed in templates: ' +
-                                    ', '.join(target_instructions.assembly_directives()))
+                    raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
+                                             'Only these directives allowed in templates: ' +
+                                             ', '.join(target_instructions.assembly_directives()))
                 for seg in target_instructions.assemble_instruction(line, temp_storage):
                     size += seg.size
 

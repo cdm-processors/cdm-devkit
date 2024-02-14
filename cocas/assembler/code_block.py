@@ -71,7 +71,8 @@ class CodeBlock:
         if (label_name in self.labels or
                 label_name in self.ents or
                 label_name in self.exts):
-            raise Exception(f'Duplicate label "{label_name}" declaration')
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                     f'Duplicate label "{label_name}" declaration')
 
         if line.external:
             self.exts.add(label_name)
@@ -150,13 +151,15 @@ class CodeBlock:
 
     def assemble_break_statement(self, line: BreakStatementNode, _):
         if len(self.loop_stack) == 0:
-            raise Exception('"break" not allowed outside of a loop')
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                     '"break" not allowed outside of a loop')
         _, finally_label = self.loop_stack[-1]
         self.append_branch_instruction(line.location, 'anything', finally_label)
 
     def assemble_continue_statement(self, line: ContinueStatementNode, _):
         if len(self.loop_stack) == 0:
-            raise Exception('"continue" not allowed outside of a loop')
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                     '"continue" not allowed outside of a loop')
         cond_label, _ = self.loop_stack[-1]
         self.append_branch_instruction(line.location, 'anything', cond_label)
 

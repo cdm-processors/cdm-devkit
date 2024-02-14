@@ -8,6 +8,7 @@ from .generated import AsmParser
 class AssemblerExceptionTag(Enum):
     """Shows if an exception caused in macros or in usual source code"""
     MACRO = "Macro"
+    TPLATE = "Template"
     ASM = "Assembler"
 
 

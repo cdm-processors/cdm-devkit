@@ -40,7 +40,7 @@ class RelocatableExpressionNode(LocatableNode):
 
 
 @dataclass
-class LabelDeclarationNode(Node):
+class LabelDeclarationNode(LocatableNode):
     label: LabelNode
     entry: bool
     external: bool
