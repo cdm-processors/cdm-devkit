@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 class ExternalEntry:
     """Describes where and how some unknown at compile time value will be placed over the binary image.
     Takes certain bytes of teh image as a number (maybe also from `lower_parts`) and adds the value.
-    Also used for relative entries."""
+    Used for external and relocatable entries."""
     offset: int
     """Position from start of the section where some value will be placed"""
     entry_bytes: range

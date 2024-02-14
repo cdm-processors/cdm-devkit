@@ -72,7 +72,7 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
             result.append(f'DATA {s}\n')
             if debug:
                 result += export_code_locations(rsect.code_locations)
-            result.append(f'REL  {" ".join(map(str, rsect.relative))}\n')
+            result.append(f'REL  {" ".join(map(str, rsect.relocatable))}\n')
             for label, address in rsect.entries.items():
                 result.append(f'NTRY {label} {address:02x}\n')
         external = defaultdict(list)

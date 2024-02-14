@@ -106,8 +106,8 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     :param image_size: maximum size of image for current target or None if no limit
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
-    asects = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
-    rsects = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
+    asects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
+    rsects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
 
     exts_by_sect = find_exts_by_sect(asects + rsects)
     sect_by_ent = find_sect_by_ent(asects + rsects)
@@ -135,7 +135,7 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         entry_bytes: range
-        for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), rsect.relative):
+        for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), rsect.relocatable):
             pos = image_begin + offset
             lower_limit = 1 << 8 * entry_bytes.start
             val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit

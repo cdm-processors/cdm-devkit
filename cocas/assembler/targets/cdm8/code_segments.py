@@ -68,17 +68,17 @@ class ExpressionSegment(CodeSegment):
         if not -128 <= value < 256:
             _error(self, 'Number out of range')
         object_record.data.extend((value % 256).to_bytes(1, 'little'))
-        add_relatives_externals(parsed, offset, object_record)
+        add_rel_ext_entries(parsed, offset, object_record)
 
 
 # noinspection DuplicatedCode
 @dataclass
 class ParsedExpression:
     value: int
-    relative_additions: int = field(default=0)
+    relocate_additions: int = field(default=0)
     asect: dict[str, int] = field(default_factory=dict)
-    relative: dict[str, int] = field(default_factory=dict)
-    external: dict[str, int] = field(default_factory=dict)
+    rel_labels: dict[str, int] = field(default_factory=dict)
+    ext_labels: dict[str, int] = field(default_factory=dict)
 
 
 def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels: dict[str, int],
@@ -89,9 +89,9 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
     for term, sign in [(t, 1) for t in expr.add_terms] + [(t, -1) for t in expr.sub_terms]:
         if isinstance(term, LabelNode):
             if term.name in section.exts:
-                result.external[term.name] = result.external.get(term.name, 0) + sign
+                result.ext_labels[term.name] = result.ext_labels.get(term.name, 0) + sign
             elif term.name in section.labels and section.name != '$abs':
-                result.relative[term.name] = result.relative.get(term.name, 0) + sign
+                result.rel_labels[term.name] = result.rel_labels.get(term.name, 0) + sign
             elif term.name in section.labels:
                 result.asect[term.name] = result.asect.get(term.name, 0) + sign
             elif term.name in labels:
@@ -100,11 +100,11 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
                 _error(segment, f'Label "{term.name}" not found')
         elif isinstance(term, TemplateFieldNode):
             result.value += templates[term.template_name][term.field_name] * sign
-    for label, n in result.relative.items():
-        result.relative_additions += n
+    for label, n in result.rel_labels.items():
+        result.relocate_additions += n
     result.asect = {label: n for label, n in result.asect.items() if n != 0}
-    result.external = {label: n for label, n in result.external.items() if n != 0}
-    result.relative = {label: n for label, n in result.relative.items() if n != 0}
+    result.ext_labels = {label: n for label, n in result.ext_labels.items() if n != 0}
+    result.rel_labels = {label: n for label, n in result.rel_labels.items() if n != 0}
     return result
 
 
@@ -115,39 +115,39 @@ def calculate_expression(parsed: ParsedExpression, section: "Section", labels: d
             value += section.labels[label] * n
         else:
             value += labels[label] * n
-    for label, n in parsed.relative.items():
+    for label, n in parsed.rel_labels.items():
         rel_address = section.labels[label]
         value += rel_address * n
     return value
 
 
 def forbid_multilabel_expressions(parsed: ParsedExpression, segment: CodeSegment):
-    if len(parsed.external) > 1:
+    if len(parsed.ext_labels) > 1:
         _error(segment, 'Cannot use multiple external labels in an address expression')
-    elif len(parsed.external) == 1:
-        label, n = next(iter(parsed.external.items()))
+    elif len(parsed.ext_labels) == 1:
+        label, n = next(iter(parsed.ext_labels.items()))
         if n < 0:
             _error(segment, 'Cannot subtract external labels in an address expression')
         elif n > 1:
             _error(segment, 'Cannot add external label multiple times in an address expression')
-        elif parsed.relative_additions != 0:
-            _error(segment, 'Cannot add both external and relative section labels')
-    elif parsed.relative_additions < 0:
+        elif parsed.relocate_additions != 0:
+            _error(segment, 'Cannot add both external and relocatable section labels')
+    elif parsed.relocate_additions < 0:
         _error(segment, 'Can subtract rsect labels only to get distance from another added rsect label')
-    elif parsed.relative_additions > 1:
+    elif parsed.relocate_additions > 1:
         _error(segment, 'Can add rsect labels multiple times only to find distance '
                         'from another subtracted rsect label')
 
 
-def add_relatives_externals(parsed: ParsedExpression, offset: int, object_record: "ObjectSectionRecord"):
-    for label in parsed.external:
-        if parsed.external[label] != 0:
+def add_rel_ext_entries(parsed: ParsedExpression, offset: int, object_record: "ObjectSectionRecord"):
+    for label in parsed.ext_labels:
+        if parsed.ext_labels[label] != 0:
             entry = object_record.external.setdefault(label, [])
-            n = abs(parsed.external[label])
-            sign = parsed.external[label] // n
+            n = abs(parsed.ext_labels[label])
+            sign = parsed.ext_labels[label] // n
             for i in range(n):
                 entry.append(ExternalEntry(offset, range(0, 1), sign))
-    if parsed.relative_additions != 0:
-        sign = parsed.relative_additions // abs(parsed.relative_additions)
-        for i in range(abs(parsed.relative_additions)):
-            object_record.relative.append(ExternalEntry(offset, range(0, 1), sign))
+    if parsed.relocate_additions != 0:
+        sign = parsed.relocate_additions // abs(parsed.relocate_additions)
+        for i in range(abs(parsed.relocate_additions)):
+            object_record.relocatable.append(ExternalEntry(offset, range(0, 1), sign))

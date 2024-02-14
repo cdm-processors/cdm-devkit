@@ -171,7 +171,7 @@ class Section(CodeBlock):
             self.name = sn.name
             address = 0
         else:
-            raise Exception('Section is neither Absolute nor Relative, can it happen? It was elif instead of else here')
+            raise Exception('Section is neither abs nor rel, can it happen? It was elif instead of else here')
         super().__init__(address, sn.lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):

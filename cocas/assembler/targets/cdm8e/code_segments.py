@@ -122,7 +122,7 @@ class OffsetExpressionSegment(RelocatableExpressionSegment):
         if section.name != '$abs' and not is_rel:
             _error(self, 'Invalid destination address (absolute address from rsect)')
         if self.expr.byte_specifier is not None and is_rel:
-            _error(self, 'Invalid destination address (byte of relative address)')
+            _error(self, 'Invalid destination address (byte of relocatable address)')
 
         val -= section.address + len(object_record.data)
         if not -2 ** 7 <= val < 2 ** 7:
@@ -274,9 +274,9 @@ def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.relative.append(ExternalEntry(offset, range(0, 1), full_bytes=False))
+        obj_rec.relocatable.append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.relative.append(ExternalEntry(offset, range(1, 2), full_bytes=False))
+        obj_rec.relocatable.append(ExternalEntry(offset, range(1, 2), full_bytes=False))
         obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
     else:
-        obj_rec.relative.append(ExternalEntry(offset, range(0, 2), full_bytes=True))
+        obj_rec.relocatable.append(ExternalEntry(offset, range(0, 2), full_bytes=True))
