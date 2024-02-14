@@ -87,7 +87,7 @@ class Register implements VariableProvider {
 
     set value(newValue: number) {
         this._value = newValue;
-        this._variable.value = this._value.toString();
+        this._variable.value = this._repr[2].variable.value;
     }
 
     get variable(): Variable {
