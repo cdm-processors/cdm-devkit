@@ -1,12 +1,14 @@
 import argparse
 import itertools
 from pathlib import Path
+from sys import stderr
 from typing import Union
 
 import colorama
 
 from cocas import exception_handlers as handlers
 from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets
+from cocas.exception_handlers import log_error
 from cocas.linker import LinkerException, list_linker_targets, target_link, write_debug_export, write_image
 from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
 from cocas.object_module import ObjectModule
@@ -42,14 +44,14 @@ def main():
         target = 'cdm' + target
 
     if target not in available_targets:
-        print('Error: unknown target ' + target)
-        print('Available targets: ' + ', '.join(available_targets))
+        log_error("Main", 'Unknown target ' + target)
+        print('Available targets: ' + ', '.join(available_targets), file=stderr)
         return 2
     if len(args.sources) == 0:
-        print('Error: no source files provided')
+        log_error("Main", 'No source files provided')
         return 2
     if args.compile and args.merge:
-        print('Error: cannot use --compile and --merge options at same time')
+        log_error("Main", 'Cannot use --compile and --merge options at same time')
         return 2
 
     realpath = bool(args.realpath)
@@ -76,10 +78,10 @@ def main():
         else:
             asm_files.append(filepath)
     if asm_files and args.merge:
-        print("Error: source files should not be provided with --merge option")
+        log_error("Main", 'Source files should not be provided with --merge option')
         return 2
     if obj_files and args.compile:
-        print("Error: object files should not be provided with --compile option")
+        log_error("Main", 'Object files should not be provided with --compile option')
         return 2
     objects: list[tuple[Path, ObjectModule]]
     try:
