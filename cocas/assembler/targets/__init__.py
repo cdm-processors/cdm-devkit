@@ -2,7 +2,7 @@ import importlib
 from pathlib import Path
 
 from .abstract_code_segments import IAlignedSegment, IAlignmentPaddingSegment, ICodeSegment, IVaryingLengthSegment
-from .abstract_instructions import TargetInstructionsInterface
+from .target_instructions_protocol import TargetInstructions
 
 
 def list_assembler_targets() -> set[str]:
@@ -12,9 +12,12 @@ def list_assembler_targets() -> set[str]:
     return set(targets)
 
 
-def import_target(target: str) -> TargetInstructionsInterface:
+def import_target(target: str) -> TargetInstructions:
     module = importlib.import_module(f'.{target}', __package__)
-    return module.TargetInstructions
+    if isinstance(module, TargetInstructions):
+        return module
+    else:
+        raise TypeError("Module is not a valid target")
 
 
 def mlb_path(target: str) -> Path:

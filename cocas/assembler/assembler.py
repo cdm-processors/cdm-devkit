@@ -10,11 +10,11 @@ from cocas.object_module import ObjectModule
 from .ast_builder import build_ast
 from .macro_processor import ExpandMacrosVisitor, process_macros, read_mlb
 from .object_generator import generate_object_module
-from .targets import TargetInstructionsInterface, import_target, mlb_path
+from .targets import TargetInstructions, import_target, mlb_path
 
 
 def assemble_module(input_stream: antlr4.InputStream,
-                    target_instructions: TargetInstructionsInterface,
+                    target_instructions: TargetInstructions,
                     macros_library: ExpandMacrosVisitor,
                     filepath: Path) -> ObjectModule:
     """

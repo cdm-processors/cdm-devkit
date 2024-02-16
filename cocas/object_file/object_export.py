@@ -99,4 +99,3 @@ def write_object_file(filepath: Union[Path, str], objs: list[ObjectModule], targ
     lines = export_object(objs, target, debug)
     with open(filepath, 'w') as file:
         file.writelines(lines)
-

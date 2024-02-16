@@ -11,18 +11,19 @@ from .ast_nodes import (
     InstructionNode,
     LabelDeclarationNode,
     LocatableNode,
+    Node,
     RelocatableSectionNode,
     SectionNode,
     UntilLoopNode,
     WhileLoopNode,
 )
 from .exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
-from .targets import ICodeSegment, TargetInstructionsInterface
+from .targets import ICodeSegment, TargetInstructions
 
 
 @dataclass
 class CodeBlock:
-    def __init__(self, address: int, lines: list, target_instructions: Type[TargetInstructionsInterface]):
+    def __init__(self, address: int, lines: list, target_instructions: TargetInstructions):
         self.target_instructions = target_instructions
         self.address = address
         self.size: int = 0
@@ -52,7 +53,7 @@ class CodeBlock:
         self.size += sum(map(lambda x: x.size, br))
 
     def assemble_lines(self, lines: list, temp_storage):
-        ast_node_handlers: dict[Type, Callable[[Any, Any], None]] = {
+        ast_node_handlers: dict[Type[Node], Callable[[Any, Any], None]] = {
             LabelDeclarationNode: self.assemble_label_declaration,
             InstructionNode: self.assemble_instruction,
             ConditionalStatementNode: self.assemble_conditional_statement,
@@ -166,7 +167,7 @@ class CodeBlock:
 
 @dataclass
 class Section(CodeBlock):
-    def __init__(self, sn: SectionNode, target_instructions: Type[TargetInstructionsInterface]):
+    def __init__(self, sn: SectionNode, target_instructions: TargetInstructions):
         if isinstance(sn, AbsoluteSectionNode):
             self.name = '$abs'
             address = sn.address

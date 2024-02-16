@@ -4,7 +4,7 @@ import bitstruct
 
 from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
-from .. import ICodeSegment, TargetInstructionsInterface
+from .. import ICodeSegment
 from .code_segments import (
     BytesSegment,
     ConstExpressionSegment,
@@ -33,85 +33,85 @@ def assert_args(args, *types, single_type=False):
             raise CdmTempException(f'Invalid register number r{args[i].number}')
 
 
-class TargetInstructions(TargetInstructionsInterface):
-    @staticmethod
-    def assemble_instruction(line: InstructionNode, temp_storage) \
-            -> list[ICodeSegment]:
-        try:
-            if line.mnemonic in TargetInstructions.assembly_directives():
-                handler = assembler_directives[line.mnemonic]
-                segments = handler(line.arguments)
-            elif line.mnemonic in cpu_instructions:
-                opcode, handler = cpu_instructions[line.mnemonic]
-                segments = handler(opcode, line.arguments)
-            elif line.mnemonic in TargetInstructions.special_instructions:
-                return TargetInstructions.special_instructions[line.mnemonic](line.arguments, temp_storage,
-                                                                              line.location)
-            else:
-                raise CdmTempException(f'Unknown instruction "{line.mnemonic}"')
-            for segment in segments:
-                segment.location = line.location
-            return segments
-        except CdmTempException as e:
-            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line, e.message)
+def assemble_instruction(line: InstructionNode, temp_storage) \
+        -> list[ICodeSegment]:
+    try:
+        if line.mnemonic in assembly_directives():
+            handler = assembler_directives[line.mnemonic]
+            segments = handler(line.arguments)
+        elif line.mnemonic in cpu_instructions:
+            opcode, handler = cpu_instructions[line.mnemonic]
+            segments = handler(opcode, line.arguments)
+        elif line.mnemonic in special_instructions:
+            return special_instructions[line.mnemonic](line.arguments, temp_storage, line.location)
+        else:
+            raise CdmTempException(f'Unknown instruction "{line.mnemonic}"')
+        for segment in segments:
+            segment.location = line.location
+        return segments
+    except CdmTempException as e:
+        raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line, e.message)
 
-    @staticmethod
-    def finish(temp_storage: dict):
-        if len(temp_storage.get("save_restore_stack", [])) != 0:
-            raise CdmTempException("Expected restore statement")
 
-    @staticmethod
-    def make_branch_instruction(location, branch_mnemonic: str, label_name: str, inverse: bool) \
-            -> list[ICodeSegment]:
-        arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
-        if inverse:
-            branch_mnemonic = 'n' + branch_mnemonic
-        return [GotoSegment(branch_mnemonic, arg2)]
+def finish(temp_storage: dict):
+    if len(temp_storage.get("save_restore_stack", [])) != 0:
+        raise CdmTempException("Expected restore statement")
 
-    @staticmethod
-    def goto_handler(arguments: list, _, location):
-        assert_args(arguments, RelocatableExpressionNode, RelocatableExpressionNode)
-        br_mnemonic: RelocatableExpressionNode
-        br_mnemonic = arguments[0]
-        if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
-                or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
-            raise CdmTempException('Branch mnemonic must be single word')
-        goto = GotoSegment(br_mnemonic.add_terms[0].name, arguments[1])
-        goto.location = location
-        return [goto]
 
-    @staticmethod
-    def save_handler(arguments: list, temp_storage: dict, _):
+def make_branch_instruction(location, branch_mnemonic: str, label_name: str, inverse: bool) \
+        -> list[ICodeSegment]:
+    arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
+    if inverse:
+        branch_mnemonic = 'n' + branch_mnemonic
+    seg = GotoSegment(branch_mnemonic, arg2)
+    seg.location = location
+    return [seg]
+
+
+def goto_handler(arguments: list, _, location):
+    assert_args(arguments, RelocatableExpressionNode, RelocatableExpressionNode)
+    br_mnemonic: RelocatableExpressionNode
+    br_mnemonic = arguments[0]
+    if br_mnemonic.byte_specifier is not None or len(br_mnemonic.sub_terms) != 0 \
+            or len(br_mnemonic.add_terms) != 1 or not isinstance(br_mnemonic.add_terms[0], LabelNode):
+        raise CdmTempException('Branch mnemonic must be single word')
+    goto = GotoSegment(br_mnemonic.add_terms[0].name, arguments[1])
+    goto.location = location
+    return [goto]
+
+
+def save_handler(arguments: list, temp_storage: dict, _):
+    assert_args(arguments, RegisterNode)
+    save_restore_stack: list[RegisterNode]
+    save_restore_stack = temp_storage.get("save_restore_stack", [])
+    save_restore_stack.append(arguments[0])
+    temp_storage["save_restore_stack"] = save_restore_stack
+    return assemble_instruction(InstructionNode("push", [arguments[0]]), temp_storage)
+
+
+def restore_handler(arguments: list, temp_storage: dict, _):
+    save_restore_stack: list[RegisterNode]
+    save_restore_stack = temp_storage.get("save_restore_stack", [])
+    if len(save_restore_stack) == 0:
+        raise CdmTempException("Every restore statement must be preceded by a save statement")
+    reg = save_restore_stack.pop()
+    if len(arguments) > 0:
         assert_args(arguments, RegisterNode)
-        save_restore_stack: list[RegisterNode]
-        save_restore_stack = temp_storage.get("save_restore_stack", [])
-        save_restore_stack.append(arguments[0])
-        temp_storage["save_restore_stack"] = save_restore_stack
-        return TargetInstructions.assemble_instruction(InstructionNode("push", [arguments[0]]), temp_storage)
+        reg = arguments[0]
+    return assemble_instruction(InstructionNode("pop", [reg]), temp_storage)
 
-    @staticmethod
-    def restore_handler(arguments: list, temp_storage: dict, _):
-        save_restore_stack: list[RegisterNode]
-        save_restore_stack = temp_storage.get("save_restore_stack", [])
-        if len(save_restore_stack) == 0:
-            raise CdmTempException("Every restore statement must be preceded by a save statement")
-        reg = save_restore_stack.pop()
-        if len(arguments) > 0:
-            assert_args(arguments, RegisterNode)
-            reg = arguments[0]
-        return TargetInstructions.assemble_instruction(InstructionNode("pop", [reg]), temp_storage)
 
-    special_instructions = {
-        'goto': goto_handler,
-        'save': save_handler,
-        'restore': restore_handler
-    }
+special_instructions = {
+    'goto': goto_handler,
+    'save': save_handler,
+    'restore': restore_handler
+}
 
-    simple_instructions = simple_instructions
+simple_instructions = simple_instructions
 
-    @staticmethod
-    def assembly_directives():
-        return {'ds', 'dc'}
+
+def assembly_directives():
+    return {'ds', 'dc'}
 
 
 def binary_handler(opcode: int, arguments: list):
@@ -236,11 +236,11 @@ assembler_directives = {}
 
 
 def initialize():
-    for category, instructions in TargetInstructions.simple_instructions.items():
+    for category, instructions in simple_instructions.items():
         for mnemonic, opcode in instructions.items():
             cpu_instructions[mnemonic] = (opcode, command_handlers[category])
 
-    for directive in TargetInstructions.assembly_directives():
+    for directive in assembly_directives():
         assembler_directives[directive] = command_handlers[directive]
 
 

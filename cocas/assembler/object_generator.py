@@ -1,17 +1,16 @@
 from dataclasses import dataclass
-from typing import Type
 
 from cocas.object_module import CodeLocation, ObjectModule
 
 from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
 from .code_block import Section
 from .exceptions import AssemblerException, AssemblerExceptionTag
-from .targets import IVaryingLengthSegment, TargetInstructionsInterface
+from .targets import IVaryingLengthSegment, TargetInstructions
 
 
 @dataclass
 class Template:
-    def __init__(self, sn: TemplateSectionNode, target_instructions: Type[TargetInstructionsInterface]):
+    def __init__(self, sn: TemplateSectionNode, target_instructions: TargetInstructions):
         self.name: str = sn.name
         self.labels: dict[str, int] = dict()
 
@@ -83,7 +82,7 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
-def generate_object_module(pn: ProgramNode, target_instructions) -> ObjectModule:
+def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
 
