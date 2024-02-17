@@ -1,38 +1,130 @@
 import * as fs from "fs/promises";
 import * as pathlib from "path";
-import * as os from "os";
 
 import * as vscode from "vscode";
-import { ContinuedEvent, DebugSession, ExitedEvent, InitializedEvent, Scope, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
+import { DebugSession, ExitedEvent, InitializedEvent, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
 import { CdmDebugRuntime } from "./runtime";
-import { ArchitectureID } from "../protocol/architectures";
-import { TargetID } from "../protocol/targets";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { BreakpointHandler } from "./breakpoints";
-import { createEventHack } from "../event-hack";
-
-type BuildArtifacts = {
-    image: string;
-    debug: string;
-};
-
-interface CdmLaunchArguments extends DebugProtocol.LaunchRequestArguments {
-    address: string;
-    architecture: ArchitectureID;
-    target: TargetID;
-    sources?: string[];
-    artifacts: BuildArtifacts;
-}
+import { createLifter } from "../lifter";
+import { CdmLaunchArguments } from "./configurations";
+import { ReferenceController, RegisterProvider } from "./variables";
 
 export class CdmDebugSession extends DebugSession {
     private static THREAD_ID = 1;
     private static FRAME_ID = 1;
-    private registers_scope_id = 1;
 
+    private controller = new ReferenceController();
+    private views = new Map<string, { offset: number, size: number, current: number }>();
+    private viewUpdateQueue: string[] = [];
+
+    private registerProvider!: RegisterProvider;
     private runtime!: CdmDebugRuntime;
     private handler!: BreakpointHandler;
+
+    private ram!: number;
+    private image!: string;
+    private tempDirectory!: string;
+
+    private updateMemoryView(path: string) {
+        this.viewUpdateQueue.push(path);
+        const { offset, size, current } = this.views.get(path)!;
+        const realOffset = offset + size * current;
+        this.runtime.requestMemory(realOffset, realOffset + size < this.ram ? size : this.ram - realOffset);
+    }
+
+    private createMemoryView() {
+        const tempFile = pathlib.join(this.tempDirectory, `memory-view-${this.views.size}.hex`);
+        const view = { offset: 0, size: 256, current: 0 };
+        this.views.set(tempFile, view);
+        this.runtime.requestMemory(view.offset + view.size * view.current, view.size).once("receivedMemory", (bytes) => {
+            fs.writeFile(tempFile, new Uint8Array(bytes)).then(() => {
+                vscode.commands.executeCommand("vscode.openWith", vscode.Uri.parse(`file://${tempFile}`), "hexEditor.hexedit", { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }); 
+            });
+        });
+    }
+
+    private previousMemoryView(path: string) {
+        const view = this.views.get(path);
+        if (view && view.current > 0) {
+            view.current -= 1;
+            this.views.set(path, view);
+            this.updateMemoryView(path);
+        }
+    }
+
+    private nextMemoryView(path: string) {
+        const view = this.views.get(path);
+        if (view && view.offset + (view.current + 1) * view.size < this.ram) {
+            view.current += 1;
+            this.views.set(path, view);
+            this.updateMemoryView(path);
+        }
+    }
+
+    private setViewOffset(path: string, offset: number) {
+        const view = this.views.get(path);
+        if (view && offset < this.ram) {
+            view.offset = offset;
+            view.current = 0;
+            view.size = view.offset + view.size < this.ram ? view.size : this.ram - view.size;
+            this.updateMemoryView(path);
+        }
+    }
+
+    private setViewRange(path: string, range: number) {
+        const view = this.views.get(path);
+        if (view && view.offset + range <= this.ram) {
+            view.current = 0;
+            view.size = range;
+            this.updateMemoryView(path);
+        }
+    }
+
+    private setViewPage(path: string, page: number) {
+        const view = this.views.get(path);
+        if (view && view.offset + view.size * page < this.ram) {
+            view.current = page;
+            this.updateMemoryView(path);
+        }
+    }
+
+    protected customRequest(
+        command: string,
+        response: DebugProtocol.Response,
+        args: any,
+        request?: DebugProtocol.Request,
+    ): void {
+        switch (command) {
+            case "createMemoryView": {
+                this.createMemoryView();
+                break;
+            }
+            case "previousMemoryView": {
+                this.previousMemoryView(args.path);
+                break;
+            }
+            case "nextMemoryView": {
+                this.nextMemoryView(args.path);
+                break;
+            }
+            case "setViewOffset": {
+                this.setViewOffset(args.path, args.offset);
+                break;
+            }
+            case "setViewRange": {
+                this.setViewRange(args.path, args.range);
+                break;
+            }
+            case "setViewPage": {
+                this.setViewPage(args.path, args.page);
+                break;
+            }
+            default:
+        }
+    }
 
     protected initializeRequest(
         response: DebugProtocol.InitializeResponse,
@@ -52,12 +144,6 @@ export class CdmDebugSession extends DebugSession {
         console.log("Sent a InitializeResponse response to the client");
     }
 
-    private compileSources(target: TargetID, sources: string[], image: string, debug: string): vscode.Task {
-        const command = `cocas ${sources.join(" ")} --output ${image} --debug ${debug} -t ${target}`;
-        const shell = new vscode.ShellExecution(command);
-        return new vscode.Task({ "type": "cdm" }, 2, "compile", "CdM", shell);
-    }
-
     protected async launchRequest(
         response: DebugProtocol.LaunchResponse,
         args: CdmLaunchArguments,
@@ -65,32 +151,21 @@ export class CdmDebugSession extends DebugSession {
     ): Promise<void> {
         console.log("Received a LaunchRequest from the client");
 
-        if (!args.sources && !vscode.window.activeTextEditor) {
-            vscode.window.showErrorMessage("Open a .asm-file to launch debugging.");
-            return this.sendEvent(new TerminatedEvent());
-        } else if (!args.sources && !vscode.window.activeTextEditor!!.document.fileName.endsWith(".asm")) {
-            vscode.window.showErrorMessage("The opened file should have a .asm extension.");
-            return this.sendEvent(new TerminatedEvent());
-        } else if (!args.sources) {
-            args.sources = [vscode.window.activeTextEditor!!.document.fileName];
-        }
+        const { address, architecture, target, sources, artifacts: { image, debug }, tempDirectory } = args;
+        this.image = image;
+        this.tempDirectory = tempDirectory;
 
-        let { image, debug } = args.artifacts;
-        const path = await fs.mkdtemp(pathlib.join(os.tmpdir(), "cdm-"));
-
-        image ? await fs.mkdir(pathlib.dirname(image), { recursive: true }) : null;
-        debug ? await fs.mkdir(pathlib.dirname(debug), { recursive: true }) : null;
-
-        image ??= pathlib.join(path, "out.img");
-        debug ??= pathlib.join(path, "out.dbg");
-
-        const _ = await vscode.tasks.executeTask(this.compileSources(args.target, args.sources, image, debug));
-        const { event, submit } = createEventHack<number>();
+        const { event, submit } = createLifter<number>();
         const disposable = vscode.tasks.onDidEndTaskProcess((taskEvent) => {
             if (taskEvent.execution.task.source === "CdM") {
                 submit(taskEvent.exitCode!);
             }
         });
+
+        const command = `cocas ${sources.join(" ")} --output ${image} --debug ${debug} -t ${target}`;
+        const shell = new vscode.ShellExecution(command);
+        const task = new vscode.Task({ "type": "cdm" }, 2, "compile", "CdM", shell);
+        const _ = await vscode.tasks.executeTask(task);
 
         const compileCode = await event();
         disposable.dispose();
@@ -102,9 +177,20 @@ export class CdmDebugSession extends DebugSession {
             return;
         }
 
-        this.runtime = new CdmDebugRuntime(args.address, this.registers_scope_id);
-        this.runtime.once("initialized", (exceptions, newRef, ram) => {
-            this.registers_scope_id = newRef;
+        this.runtime = new CdmDebugRuntime(address);
+        this.runtime.once("initialized", (exceptions, names, sizes, ram) => {
+            this.ram = ram;
+            this.controller.issueReference((ref) => {
+                return new RegisterProvider(this.controller, ref, names, sizes);
+            }).then((provider) => this.registerProvider = provider as RegisterProvider);
+        }).on("receivedMemory", (bytes) => {
+            const view = this.viewUpdateQueue.shift();
+            if (view) {
+                fs.writeFile(view, new Uint8Array(bytes));
+                // vscode.commands.executeCommand("workbench.action.files.revert");
+            }
+        }).on("receivedRegisters", (values) => {
+            this.registerProvider.update(values);
         }).on("stopped", (reason) => {
             switch (reason) {
                 case PAUSE:
@@ -127,7 +213,7 @@ export class CdmDebugSession extends DebugSession {
             this.sendEvent(new TerminatedEvent());
             this.sendEvent(new ExitedEvent(0));
             vscode.window.showErrorMessage(`Something went terribly wrong with the debug server; contact the developers and show them this!\n${JSON.stringify(body)}`);
-        }).initialize(args.target, args.architecture);
+        }).initialize(target, architecture).setLines([]).setBreakpoints([]).reset();
 
         const raw = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
 
@@ -137,8 +223,7 @@ export class CdmDebugSession extends DebugSession {
         });
         this.handler = new BreakpointHandler(raw.files, codeLocations);
 
-        this.runtime.once("loaded", async () => {
-            await fs.rm(path, { recursive: true, force: true });
+        this.runtime.once("loaded", () => {
             this.runtime.setLines(Array.from(this.handler.codes()));
             this.sendEvent(new InitializedEvent());
             this.sendResponse(response);
@@ -173,7 +258,7 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a ConfigurationDoneRequest from the client");
 
-        this.runtime.reset().run([BREAKPOINT, EXCEPTION]);
+        this.runtime.run([BREAKPOINT, EXCEPTION]);
 
         this.sendResponse(response);
         console.log("Sent a ConfigurationDoneResponse response to the client");
@@ -204,8 +289,13 @@ export class CdmDebugSession extends DebugSession {
             return;
         }
 
+        this.views.forEach(({ offset, size, current }, view) => {
+            this.viewUpdateQueue.push(view);
+            this.runtime.requestMemory(offset + size * current, size);
+        });
+
         this.runtime.once("receivedRegisters", () => {
-            let { source, line } = this.handler.fromProgramCounter(this.runtime.provider.programCounter()) ?? {};
+            let { source, line } = this.handler.fromProgramCounter(this.registerProvider.programCounter()) ?? {};
 
             const frame = new StackFrame(CdmDebugSession.FRAME_ID, "main", source, line);
             response.body = { stackFrames: [frame], totalFrames: 1 };
@@ -227,8 +317,11 @@ export class CdmDebugSession extends DebugSession {
             return console.warn("The client sent an invalid frame ID, sent an empty ScopesResponse response to the client");
         }
 
-        const scope = new Scope("REGISTERS", 1, false);
-        response.body = { scopes: [scope] };
+        response.body = {
+            scopes: [
+                this.registerProvider.scope,
+            ],
+        };
 
         this.sendResponse(response);
         console.log("Sent a ScopesResponse response to the client");
@@ -242,7 +335,7 @@ export class CdmDebugSession extends DebugSession {
         console.log("Received a VariablesRequest from the client");
 
         response.body = {
-            variables: this.runtime.provider.find(args.variablesReference)?.sliceVariables(args.start ?? 0, args.count) ?? []
+            variables: this.controller.retrieve(args.variablesReference)?.slice(args.start, args.count) ?? [],
         };
 
         this.sendResponse(response);
@@ -256,11 +349,8 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a RestartRequest from the client");
 
-        this.runtime.pause();
-        this.runtime.reset();
-        this.runtime.run([EXCEPTION, BREAKPOINT]);
+        this.runtime.pause().reset().loadFromPath(this.image).run([EXCEPTION, BREAKPOINT]);
 
-        this.sendEvent(new ContinuedEvent(CdmDebugSession.THREAD_ID));
         this.sendResponse(response);
         console.log("Sent a RestartResponse response to the client");
     }
@@ -304,6 +394,33 @@ export class CdmDebugSession extends DebugSession {
         console.log("Sent a StepInResponse response to the client");
     }
 
+    protected nextRequest(
+        response: DebugProtocol.StepOutResponse,
+        args: DebugProtocol.StepOutArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a NextRequest from the client");
+
+        this.runtime.run([EXCEPTION, BREAKPOINT, STEP]);
+
+        this.sendResponse(response);
+        console.log("Sent a NextResponse response to the client");
+    }
+
+    protected stepOutRequest(
+        response: DebugProtocol.StepOutResponse,
+        args: DebugProtocol.StepOutArguments,
+        request?: DebugProtocol.Request,
+    ): void {
+        console.log("Received a StepOutRequest from the client");
+
+        vscode.window.showInformationMessage("'Step Out' action isn't supported yet.");
+        this.sendEvent(new StoppedEvent("step", CdmDebugSession.THREAD_ID));
+
+        this.sendResponse(response);
+        console.log("Sent a StepOutResponse response to the client");
+    }
+
     protected disconnectRequest(
         response: DebugProtocol.DisconnectResponse,
         args: DebugProtocol.DisconnectArguments,
@@ -311,8 +428,18 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a DisconnectRequest from the client");
 
-        this.runtime.pause();
-        this.runtime.shutdown();
+        this.runtime.pause().shutdown();
+
+        vscode.window.tabGroups.all.forEach((group) => {
+            group.tabs.forEach((tab) => {
+                if (tab.label.startsWith("memory-view-") && tab.label.endsWith(".hex")) {
+                    vscode.window.tabGroups.close(tab);
+                }
+            });
+        });
+        fs.rm(this.tempDirectory, { recursive: true, force: true }).catch(() => {
+			console.error(`Failed to recursively remove the temporary directory at ${this.tempDirectory}`);
+		});
 
         this.sendResponse(response);
         console.log("Sent a DisconnectResponse response to the client");

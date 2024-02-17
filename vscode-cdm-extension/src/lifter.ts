@@ -6,9 +6,9 @@ export type OuterScope<T> = {
     event: () => Promise<T>;
 };
 
-export type EventHack<T> = OuterScope<T> & InnerScope<T>;
+export type Lifter<T> = OuterScope<T> & InnerScope<T>;
 
-export function createEventHack<T>(): EventHack<T> {
+export function createLifter<T>(): Lifter<T> {
     let promiseResolve: (value: T) => void;
 
     let promise = new Promise<T>((resolve) => {

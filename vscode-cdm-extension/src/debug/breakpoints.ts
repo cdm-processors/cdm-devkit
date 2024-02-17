@@ -20,7 +20,7 @@ export class BreakpointHandler {
     private direct: Map<number, CodeLocation>;
     private inverse: Map<string, number>;
 
-    constructor(
+    public constructor(
         files: string[],
         codeLocations: Map<number, CodeLocation>,
     ) {
@@ -31,11 +31,11 @@ export class BreakpointHandler {
         this.direct.forEach((value, key) => this.inverse.set(`${value.f}, ${value.l}, ${value.c}`, key));
     }
 
-    codes(): IterableIterator<number> {
+    public codes(): IterableIterator<number> {
         return this.direct.keys();
     }
 
-    fromProgramCounter(pc: number): { source: Source, line: number } | undefined {
+    public fromProgramCounter(pc: number): { source: Source, line: number } | undefined {
         const codeLocation = this.direct.get(pc);
         if (codeLocation === undefined) {
             return;
@@ -47,7 +47,7 @@ export class BreakpointHandler {
         };
     }
 
-    fromSetBreakpointsRequest(path: string, breakpoints: DebugProtocol.SourceBreakpoint[]): { checkedBreakpoints: Breakpoint[], codes: number[] } | undefined {
+    public fromSetBreakpointsRequest(path: string, breakpoints: DebugProtocol.SourceBreakpoint[]): { checkedBreakpoints: Breakpoint[], codes: number[] } | undefined {
         const file = this.full.indexOf(path);
         if (file === -1) {
             return;

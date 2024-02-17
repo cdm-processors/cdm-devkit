@@ -4,7 +4,7 @@
     "description": "Tools for CdM Processors",
     "version": "1.0.0",
     "engines": {
-        "vscode": "^1.63.0"
+        "vscode": "^1.76.0"
     },
     "categories": [
         "Debuggers",
@@ -124,6 +124,79 @@
                 "path": "./snippets/cdm-assembly-snippets.json"
             }
         ],
+        "commands": [
+            {
+                "command": "cdm.debug.showMemory",
+                "title": "Open a memory view",
+                "icon": "$(file-binary)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.previousView",
+                "title": "Previous",
+                "icon": "$(arrow-left)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.nextView",
+                "title": "Next",
+                "icon": "$(arrow-right)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.setViewOffset",
+                "title": "Set Offset",
+                "icon": "$(export)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.setViewRange",
+                "title": "Set Range",
+                "icon": "$(arrow-both)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.setViewPage",
+                "title": "Set Page",
+                "icon": "$(explorer-view-icon)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            }
+        ],
+        "menus": {
+            "debug/toolBar": [
+                {
+                    "when": "inDebugMode && debugType == 'cdm'",
+                    "command": "cdm.debug.showMemory"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.previousView",
+                    "group": "navigation@1"
+                },
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.nextView",
+                    "group": "navigation@2"
+                },
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.setViewOffset",
+                    "group": "navigation@3"
+                },
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.setViewRange",
+                    "group": "navigation@4"
+                },
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.setViewPage",
+                    "group": "navigation@5"
+                }
+            ]
+        },
         "debuggers": [
             {
                 "label": "CdM Debugger",
@@ -300,7 +373,7 @@
     "devDependencies": {
         "@types/mocha": "^10.0.3",
         "@types/node": "18.x",
-        "@types/vscode": "1.63.0",
+        "@types/vscode": "1.76.0",
         "@types/ws": "^8.5.9",
         "@typescript-eslint/eslint-plugin": "^6.9.0",
         "@typescript-eslint/parser": "^6.9.0",
@@ -309,7 +382,7 @@
         "eslint": "^8.52.0",
         "glob": "^10.3.10",
         "mocha": "^10.2.0",
-        "typescript": "^5.2.2"
+        "typescript": "^5.3.0"
     },
     "__metadata": {
         "publisherDisplayName": "CdM Processors"
@@ -317,6 +390,10 @@
     "dependencies": {
         "@vscode/debugadapter": "^1.64.0",
         "@vscode/debugprotocol": "^1.64.0",
+        "async-mutex": "^0.4.1",
         "ws": "^8.14.2"
-    }
+    },
+    "extensionDependencies": [
+        "ms-vscode.hexeditor"
+    ]
 }

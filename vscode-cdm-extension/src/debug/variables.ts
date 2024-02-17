@@ -1,161 +1,198 @@
-import { Variable } from "@vscode/debugadapter";
+import { Scope, Variable } from "@vscode/debugadapter";
+import { Mutex } from "async-mutex";
 
-interface Representation {
+export interface WithVariable {
     get variable(): Variable;
 }
 
-class Binary implements Representation {
-    private _variable: Variable;
-    prefix: string = "BIN";
-    radix: number = 2;
+export interface Provider {
+    get ref(): number;
 
-    constructor(
-        protected register: Register,
+    slice(start?: number, count?: number): Variable[];
+}
+
+export interface Sized {
+    get size(): number;
+}
+
+export class ReferenceController {
+    private mutex = new Mutex();
+    private issued = new Map<number, Provider>();
+    private value = 1;
+
+    public async resetCounter(): Promise<void> {
+        await this.mutex.runExclusive(() => {
+            this.issued.clear();
+            this.value = 1;
+        });
+    }
+
+    public async issueReference(factory: (ref: number) => Provider): Promise<Provider> {
+        let ref!: number;
+        await this.mutex.runExclusive(() => {
+            ref = this.value;
+            this.value += 1;
+        });
+
+        const provider = factory(ref);
+        this.issued.set(ref, provider);
+
+        return provider;
+    }
+
+    public retrieve(ref: number): Provider | undefined {
+        return this.issued.get(ref);
+    }
+}
+
+export class ParamVariable<T> implements WithVariable {
+    protected readonly _variable: Variable;
+
+    public constructor(
+        public value: T,
+        private name: string,
+        public update?: () => T,
+        public show?: (val: T) => string,
     ) {
-        this._variable = new Variable(this.prefix, "");
+        this._variable = new Variable(this.name, this.display());
     }
 
-    get variable(): Variable {
-        this._variable.value = this.register.value.toString(this.radix).padStart(this.register.size, "0");
+    protected display(): string {
+        return this.show ? this.show(this.value) : "ACHTUNG: show callback isn't set";
+    }
+
+    public get variable(): Variable {
+        this.value = this.update!();
+        this._variable.value = this.display();
+
         return this._variable;
     }
 }
 
-class Decimal implements Representation {
-    private _variable: Variable;
-    prefix: string = "DEC";
-    radix: number = 10;
+export class ProviderParamVariable<T> extends ParamVariable<T> implements Provider {
+    private readonly children: ParamVariable<any>[] = [];
 
-    constructor(
-        protected register: Register,
+    public constructor(
+        public readonly ref: number,
+        value: T,
+        name: string,
+        update?: () => T,
+        show?: (val: T) => string,
     ) {
-        this._variable = new Variable(this.prefix, "");
+        super(value, name, update, show);
+        this._variable.variablesReference = ref;
     }
 
-    get variable(): Variable {
-        this._variable.value = this.register.value.toString(this.radix);
-        return this._variable;
+    public addChildren(...paramVariable: ParamVariable<any>[]) {
+        this.children.push(...paramVariable);
+    }
+
+    public slice(start?: number, count?: number): Variable[] {
+        return this.children.slice(start, count ? (start! + count) : count).map((val) => val.variable);
     }
 }
 
-class Hex implements Representation {
-    private _variable: Variable;
-    prefix: string = "HEX";
-    radix: number = 16;
+class Binary extends ParamVariable<number> {
+    public constructor(source: ParamVariable<number>, size: number) {
+        super(0, "BIN", () => source.value, (val) => val.toString(2).padStart(size, "0"));
+    }
+}
 
-    constructor(
-        protected register: Register,
+class Unsigned extends ParamVariable<number> {
+    public constructor(source: ParamVariable<number>) {
+        super(0, "UNS", () => source.value, (val) => val.toString(10));
+    }
+}
+
+class Signed extends ParamVariable<number> {
+    private readonly border: number;
+    private readonly sub: number;
+
+    public constructor(source: ParamVariable<number>, size: number) {
+        super(0, "SIG", () => source.value);
+
+        this.border = 2 ** (size - 1);
+        this.sub = this.border * 2;
+        this.show = (val) => {
+            if (val >= this.border) {
+                return (this.sub - val).toString(10);
+            } else {
+                return val.toString();
+            }
+        };
+    }
+}
+
+class Hexadecimal extends ParamVariable<number> {
+    public constructor(source: ParamVariable<number>, size: number) {
+        super(0, "HEX", () => source.value, (val) => val.toString(16).toUpperCase().padStart(size / 4, "0"));
+    }
+}
+
+class Register extends ProviderParamVariable<number> {
+    public constructor(
+        size: number,
+        ref: number,
+        value: number,
+        name: string,
     ) {
-        this._variable = new Variable(this.prefix, "");
+        super(ref, value, name);
+        const hex = new Hexadecimal(this, size);
+        this.addChildren(
+            new Binary(this, size),
+            new Unsigned(this),
+            new Signed(this, size),
+            hex,
+        );
+
+        this.show = () => hex.variable.value;
     }
 
-    get variable(): Variable {
-        this._variable.value = this.register.value.toString(this.radix).padStart(this.register.size >> 2, "0");
+    public override get variable(): Variable {
+        this._variable.value = this.display();
+
         return this._variable;
     }
 }
 
-export interface VariableProvider {
-    matches(variablesReference: number): boolean;
+export class RegisterProvider implements Provider {
+    public readonly scope: Scope;
+    private readonly registers = new Map<string, Register>();
 
-    sliceVariables(from: number, quantity?: number): Variable[];
-}
-
-export interface RegisterController extends VariableProvider {
-    initialize(variablesReference: number, names: string[], sizes: number[]): number;
-
-    set(values: number[]): void;
-
-    find(variablesReference: number): VariableProvider | undefined;
-
-    programCounter(): number;
-}
-
-class Register implements VariableProvider {
-    private _value: number = 0;
-    private _variable!: Variable;
-    private _repr: Representation[] = [];
-
-    constructor(
-        readonly name: string,
-        public size: number,
-    ) {}
-
-    get value(): number {
-        return this._value;
-    }
-
-    set value(newValue: number) {
-        this._value = newValue;
-        this._variable.value = this._repr[2].variable.value;
-    }
-
-    get variable(): Variable {
-        return this._variable;
-    }
-
-    index(current: number): number {
-        current += 1;
-        this._variable = new Variable(this.name, this._value.toString());
-        this._variable.variablesReference = current;
-        this._repr.push(new Binary(this), new Decimal(this), new Hex(this));
-        return current;
-    }
-
-    matches(variablesReference: number): boolean {
-        return this._variable.variablesReference === variablesReference;
-    }
-
-    sliceVariables(from: number, quantity?: number | undefined): Variable[] {
-        quantity ??= this._repr.length;
-        return this._repr.slice(from, from + quantity).map((v) => v.variable);
-    }
-}
-
-export class Cdm16VariableProvider implements RegisterController {
-    private registers: Register[] = [];
-    private pc_index!: number;
-
-    initialize(variablesReference: number, names: string[], sizes: number[]): number {
+    public constructor(
+        controller: ReferenceController,
+        public readonly ref: number,
+        names: string[],
+        sizes: number[],
+    ) {
+        this.scope = new Scope("REGISTERS", ref, false);
         for (let index = 0; index < names.length; index += 1) {
-            const register = new Register(names[index], sizes[index]);
-            variablesReference = register.index(variablesReference);
-            this.registers.push(register);
-
-            if (names[index].toLowerCase() === "pc") {
-                this.pc_index = index;
-            }
-        }
-
-        return variablesReference;
-    }
-
-    set(values: number[]) {
-        values.forEach((value, index) => this.registers[index].value = value);
-    }
-
-    find(variablesReference: number): VariableProvider | undefined {
-        if (this.matches(variablesReference)) {
-            return this;
-        }
-
-        for (const register of this.registers) {
-            if (register.matches(variablesReference)) {
-                return register;
-            }
+            controller.issueReference((ref) => {
+                return new Register(sizes[index], ref, 0, names[index]);
+            }).then((provider) => {
+                const register = provider as Register;
+                this.registers.set(register.variable.name.toLowerCase(), provider as Register);
+            });
         }
     }
 
-    matches(variablesReference: number): boolean {
-        return 1 === variablesReference;
+    public slice(start?: number, count?: number): Variable[] {
+        return Array.from(this.registers.values()).slice(start, count ? (start! + count) : count).map((val) => val.variable);
     }
 
-    sliceVariables(from: number, quantity?: number | undefined): Variable[] {
-        quantity ??= this.registers.length;
-        return this.registers.slice(from, from + quantity).map((v) => v.variable);
+    public programCounter(): number {
+        return this.registers.get("pc")!.value;
     }
 
-    programCounter(): number {
-        return this.registers[this.pc_index].value;
+    public processorState(): number {
+        return this.registers.get("ps")!.value;
+    }
+
+    public update(values: number[]): void {
+        let counter = 0;
+        for (const register of this.registers.values()) {
+            register.value = values[counter];
+            counter += 1;
+        }
     }
 }

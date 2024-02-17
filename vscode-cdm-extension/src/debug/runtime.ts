@@ -5,18 +5,13 @@ import { WebSocket } from "ws";
 import { ArchitectureID } from "../protocol/architectures";
 import { TargetID } from "../protocol/targets";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
-import { Cdm16VariableProvider, RegisterController } from "./variables";
-
 
 export class CdmDebugRuntime extends EventEmitter {
     private ws: WebSocket;
     private buffered: string[] = [];
 
-    provider!: RegisterController;
-
-    constructor(
+    public constructor(
         address: string,
-        variablesReference: number,
     ) {
         super();
 
@@ -43,10 +38,8 @@ export class CdmDebugRuntime extends EventEmitter {
 
             switch (unmarshalled?.action) {
                 case "init": {
-                    let casted: InitializationResponse = unmarshalled;
-                    let { supportsExceptions, registerNames, registerSizes, ramSize } = casted;
-                    const newRef = this.provider.initialize(variablesReference, registerNames, registerSizes);
-                    this.emit("initialized", supportsExceptions, newRef, ramSize);
+                    const { supportsExceptions, registerNames, registerSizes, ramSize } = unmarshalled as InitializationResponse;
+                    this.emit("initialized", supportsExceptions, registerNames, registerSizes, ramSize);
                     break;
                 }
                 case "load": {
@@ -66,19 +59,18 @@ export class CdmDebugRuntime extends EventEmitter {
                     break;
                 }
                 case "getRegisters": {
-                    let casted: RequestRegistersResponse = unmarshalled;
-                    this.provider.set(casted.registers);
-                    this.emit("receivedRegisters");
+                    const { registers } = unmarshalled as RequestRegistersResponse;
+                    this.emit("receivedRegisters", registers);
                     break;
                 }
                 case "getMemory": {
-                    let casted: RequestMemoryResponse = unmarshalled;
-                    this.emit("receivedMemory", casted.bytes);
+                    const { bytes } = unmarshalled as RequestMemoryResponse;
+                    this.emit("receivedMemory", bytes);
                     break;
                 }
                 case "debugEvent": {
-                    let casted: ExecutionStop = unmarshalled;
-                    this.emit("stopped", casted.reason);
+                    const { reason } = unmarshalled as ExecutionStop;
+                    this.emit("stopped", reason);
                     break;
                 }
                 default: {
@@ -95,29 +87,29 @@ export class CdmDebugRuntime extends EventEmitter {
         });
     }
 
-    on(eventName: "initialized", listener: (supportsExceptions: boolean, variablesReference: number, ramSize: number) => void): this;
-    on(eventName: "loaded", listener: () => void): this;
-    on(eventName: "setBreakpoints", listener: () => void): this;
-    on(eventName: "setLines", listener: () => void): this;
-    on(eventName: "run", listener: () => void): this;
-    on(eventName: "receivedRegisters", listener: () => void): this;
-    on(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
-    on(eventName: "stopped", listener: (reason: Reason) => void): this;
-    on(eventName: "error", listener: (body: any) => void): this;
-    on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    public on(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
+    public on(eventName: "loaded", listener: () => void): this;
+    public on(eventName: "setBreakpoints", listener: () => void): this;
+    public on(eventName: "setLines", listener: () => void): this;
+    public on(eventName: "run", listener: () => void): this;
+    public on(eventName: "receivedRegisters", listener: (values: number[]) => void): this;
+    public on(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
+    public on(eventName: "stopped", listener: (reason: Reason) => void): this;
+    public on(eventName: "error", listener: (body: any) => void): this;
+    public on(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.on(eventName, listener);
     }
 
-    once(eventName: "initialized", listener: (supportsExceptions: boolean, variablesReference: number, ramSize: number) => void): this;
-    once(eventName: "loaded", listener: () => void): this;
-    once(eventName: "setBreakpoints", listener: () => void): this;
-    once(eventName: "setLines", listener: () => void): this;
-    once(eventName: "run", listener: () => void): this;
-    once(eventName: "receivedRegisters", listener: () => void): this;
-    once(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
-    once(eventName: "stopped", listener: (reason: Reason) => void): this;
-    once(eventName: "error", listener: (body: any) => void): this;
-    once(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    public once(eventName: "initialized", listener: (supportsExceptions: boolean, registerNames: string[], registerSizes: number[], ramSize: number) => void): this;
+    public once(eventName: "loaded", listener: () => void): this;
+    public once(eventName: "setBreakpoints", listener: () => void): this;
+    public once(eventName: "setLines", listener: () => void): this;
+    public once(eventName: "run", listener: () => void): this;
+    public once(eventName: "receivedRegisters", listener: (values: number[]) => void): this;
+    public once(eventName: "receivedMemory", listener: (bytes: number[]) => void): this;
+    public once(eventName: "stopped", listener: (reason: Reason) => void): this;
+    public once(eventName: "error", listener: (body: any) => void): this;
+    public once(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.once(eventName, listener);
     }    
 
@@ -132,9 +124,7 @@ export class CdmDebugRuntime extends EventEmitter {
         }
     }
 
-    initialize(target: TargetID, arch: ArchitectureID): this {
-        this.provider = new Cdm16VariableProvider();
-
+    public initialize(target: TargetID, arch: ArchitectureID): this {
         this.send({
             action: "init",
             target: target,
@@ -143,7 +133,7 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    loadFromPath(path: string): this {
+    public loadFromPath(path: string): this {
         this.send({
             action: "load",
             source: "path",
@@ -152,7 +142,7 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    loadFromBytes(bytes: number[]): this {
+    public loadFromBytes(bytes: number[]): this {
         this.send({
             action: "load",
             source: "bytes",
@@ -161,14 +151,14 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    reset(): this {
+    public reset(): this {
         this.send({
             action: "reset",
         });
         return this;
     }
 
-    setBreakpoints(locations: number[]): this {
+    public setBreakpoints(locations: number[]): this {
         this.send({
             action: "setBreakpoints",
             breakpoints: locations,
@@ -176,7 +166,7 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    setLines(locations: number[]): this {
+    public setLines(locations: number[]): this {
         this.send({
             action: "setLineLocations",
             lineLocations: locations,
@@ -184,7 +174,7 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    run(conditions: BreakCondition[]): this {
+    public run(conditions: BreakCondition[]): this {
         this.send({
             action: "run",
             stopConditions: conditions,
@@ -192,28 +182,30 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    pause(): this {
+    public pause(): this {
         this.send({
             action: "pause",
         });
         return this;
     }
 
-    requestRegisters(): this {
+    public requestRegisters(): this {
         this.send({
             action: "getRegisters",
         });
         return this;
     }
 
-    requestMemory(): this {
+    public requestMemory(offset: number, size: number): this {
         this.send({
             action: "getMemory",
+            offset: offset,
+            size: size,
         });
         return this;
     }
 
-    shutdown(): this {
+    public shutdown(): this {
         this.ws.close();
         return this;
     }
