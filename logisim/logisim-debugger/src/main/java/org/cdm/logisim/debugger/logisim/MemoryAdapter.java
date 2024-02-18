@@ -26,7 +26,7 @@ public class MemoryAdapter {
 
     public static void loadImage(File imageFile, ComponentFactory memoryComponentFactory, InstanceState memoryComponentState) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method loadImageMethod =
-                memoryComponentFactory.getClass().getDeclaredMethod("loadImage", InstanceState.class, File.class);
+                memoryComponentFactory.getClass().getMethod("loadImage", InstanceState.class, File.class);
         loadImageMethod.setAccessible(true);
 
         loadImageMethod.invoke(memoryComponentFactory, memoryComponentState, imageFile);
