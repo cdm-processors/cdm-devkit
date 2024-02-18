@@ -128,7 +128,7 @@ export class CdmDebugRuntime extends EventEmitter {
         this.send({
             action: "init",
             target: target,
-            arch: arch,
+            memoryConfiguration: arch,
         });
         return this;
     }

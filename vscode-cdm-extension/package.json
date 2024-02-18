@@ -132,33 +132,9 @@
                 "enablement": "inDebugMode && debugType == 'cdm'"
             },
             {
-                "command": "cdm.debug.previousView",
-                "title": "Previous",
-                "icon": "$(arrow-left)",
-                "enablement": "inDebugMode && debugType == 'cdm'"
-            },
-            {
-                "command": "cdm.debug.nextView",
-                "title": "Next",
-                "icon": "$(arrow-right)",
-                "enablement": "inDebugMode && debugType == 'cdm'"
-            },
-            {
                 "command": "cdm.debug.setViewOffset",
                 "title": "Set Offset",
                 "icon": "$(export)",
-                "enablement": "inDebugMode && debugType == 'cdm'"
-            },
-            {
-                "command": "cdm.debug.setViewRange",
-                "title": "Set Range",
-                "icon": "$(arrow-both)",
-                "enablement": "inDebugMode && debugType == 'cdm'"
-            },
-            {
-                "command": "cdm.debug.setViewPage",
-                "title": "Set Page",
-                "icon": "$(explorer-view-icon)",
                 "enablement": "inDebugMode && debugType == 'cdm'"
             }
         ],
@@ -172,28 +148,8 @@
             "editor/title": [
                 {
                     "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
-                    "command": "cdm.debug.previousView",
-                    "group": "navigation@1"
-                },
-                {
-                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
-                    "command": "cdm.debug.nextView",
-                    "group": "navigation@2"
-                },
-                {
-                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
                     "command": "cdm.debug.setViewOffset",
-                    "group": "navigation@3"
-                },
-                {
-                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
-                    "command": "cdm.debug.setViewRange",
-                    "group": "navigation@4"
-                },
-                {
-                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
-                    "command": "cdm.debug.setViewPage",
-                    "group": "navigation@5"
+                    "group": "navigation@1"
                 }
             ]
         },

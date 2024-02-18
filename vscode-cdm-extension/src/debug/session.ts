@@ -17,7 +17,7 @@ export class CdmDebugSession extends DebugSession {
     private static FRAME_ID = 1;
 
     private controller = new ReferenceController();
-    private views = new Map<string, { viewPath: string, offset: number, size: number, current: number }>();
+    private views = new Map<string, { viewPath: string }>();
     private viewUpdateQueue: string[] = [];
 
     private registerProvider!: RegisterProvider;
@@ -30,66 +30,14 @@ export class CdmDebugSession extends DebugSession {
 
     private createMemoryView() {
         const tempFile = pathlib.join(this.tempDirectory, `memory-view-${this.views.size}.hex`);
-        const view = { viewPath: tempFile, offset: 0, size: 256, current: 0 };
+        const view = { viewPath: tempFile };
         const viewUri = vscode.Uri.file(tempFile);
         this.views.set(viewUri.fsPath, view);
-        this.runtime.requestMemory(view.offset + view.size * view.current, view.size).once("receivedMemory", (bytes) => {
+        this.runtime.requestMemory(0, this.ram).once("receivedMemory", (bytes) => {
             fs.writeFile(tempFile, new Uint8Array(bytes)).then(() => {
                 vscode.commands.executeCommand("vscode.openWith", viewUri, "hexEditor.hexedit", { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }); 
             });
         });
-    }
-
-    private updateMemoryView(viewUri: string) {
-        this.viewUpdateQueue.push(viewUri);
-        const { offset, size, current } = this.views.get(viewUri)!;
-        const realOffset = offset + size * current;
-        this.runtime.requestMemory(realOffset, realOffset + size < this.ram ? size : this.ram - realOffset);
-    }
-
-    private previousMemoryView(viewUri: string) {
-        const view = this.views.get(viewUri);
-        if (view && view.current > 0) {
-            view.current -= 1;
-            this.views.set(viewUri, view);
-            this.updateMemoryView(viewUri);
-        }
-    }
-
-    private nextMemoryView(viewUri: string) {
-        const view = this.views.get(viewUri);
-        if (view && view.offset + (view.current + 1) * view.size < this.ram) {
-            view.current += 1;
-            this.views.set(viewUri, view);
-            this.updateMemoryView(viewUri);
-        }
-    }
-
-    private setViewOffset(viewUri: string, offset: number) {
-        const view = this.views.get(viewUri);
-        if (view && offset < this.ram) {
-            view.offset = offset;
-            view.current = 0;
-            view.size = view.offset + view.size < this.ram ? view.size : this.ram - view.size;
-            this.updateMemoryView(viewUri);
-        }
-    }
-
-    private setViewRange(viewUri: string, range: number) {
-        const view = this.views.get(viewUri);
-        if (view && view.offset + range <= this.ram) {
-            view.current = 0;
-            view.size = range;
-            this.updateMemoryView(viewUri);
-        }
-    }
-
-    private setViewPage(viewUri: string, page: number) {
-        const view = this.views.get(viewUri);
-        if (view && view.offset + view.size * page < this.ram) {
-            view.current = page;
-            this.updateMemoryView(viewUri);
-        }
     }
 
     protected customRequest(
@@ -101,26 +49,6 @@ export class CdmDebugSession extends DebugSession {
         switch (command) {
             case "createMemoryView": {
                 this.createMemoryView();
-                break;
-            }
-            case "previousMemoryView": {
-                this.previousMemoryView(args.viewUri);
-                break;
-            }
-            case "nextMemoryView": {
-                this.nextMemoryView(args.viewUri);
-                break;
-            }
-            case "setViewOffset": {
-                this.setViewOffset(args.viewUri, args.offset);
-                break;
-            }
-            case "setViewRange": {
-                this.setViewRange(args.viewUri, args.range);
-                break;
-            }
-            case "setViewPage": {
-                this.setViewPage(args.viewUri, args.page);
                 break;
             }
             default:
@@ -286,9 +214,9 @@ export class CdmDebugSession extends DebugSession {
             return;
         }
 
-        this.views.forEach(({ offset, size, current }, view) => {
+        this.views.forEach((_, view) => {
             this.viewUpdateQueue.push(view);
-            this.runtime.requestMemory(offset + size * current, size);
+            this.runtime.requestMemory(0, this.ram);
         });
 
         this.runtime.once("receivedRegisters", () => {
