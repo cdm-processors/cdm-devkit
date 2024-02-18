@@ -49,8 +49,9 @@ xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE;
 
 data: BYTES;
 filepath: FILEPATH;
-entry_usage: minus? number (COLON range)?;
+entry_usage: minus? number (COLON range lower_part?)?;
 range: number COLON number;
+lower_part: PLUS number;
 location: number COLON number COLON number;
 
 abs_address: WORD_ABS;

@@ -21,7 +21,9 @@ class ExternalEntry:
     def __str__(self):
         s = f'{self.sign * self.offset:02x}'
         if not self.full_bytes:
-            s += f':{self.entry_bytes.start}:{self.entry_bytes.stop}'
+            s += f':{self.entry_bytes.start:x}:{self.entry_bytes.stop:x}'
+            if self.lower_part:
+                s += f'+{self.lower_part:x}'
         return s
 
     def __repr__(self):

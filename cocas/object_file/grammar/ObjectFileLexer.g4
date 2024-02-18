@@ -16,6 +16,7 @@ ABS_SECTION: '$abs';
 
 COLON: ':';
 MINUS: '-';
+PLUS: '+';
 NEWLINE: ('\r'? '\n')+ ;
 WS : (' ' | '\t')+ -> skip ;
 
