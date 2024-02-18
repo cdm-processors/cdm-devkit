@@ -19,6 +19,7 @@ export class CdmDebugSession extends DebugSession {
     private controller = new ReferenceController();
     private views = new Map<string, { viewPath: string }>();
     private viewUpdateQueue: string[] = [];
+    private isConfigured = false;
 
     private registerProvider!: RegisterProvider;
     private runtime!: CdmDebugRuntime;
@@ -169,6 +170,9 @@ export class CdmDebugSession extends DebugSession {
         response.body = {
             breakpoints: this.debugInfoHandler.validateBreakpoints(args.source.path!, args.breakpoints!)
         };
+        if (this.isConfigured) {
+            this.runtime.setBreakpoints(this.debugInfoHandler.emitBreakpointLocations());
+        }
 
         this.sendResponse(response);
         console.log("Sent a SetBreakpointsResponse response to the client");
@@ -182,6 +186,7 @@ export class CdmDebugSession extends DebugSession {
         console.log("Received a ConfigurationDoneRequest from the client");
 
         this.runtime.setBreakpoints(this.debugInfoHandler.emitBreakpointLocations()).run([BREAKPOINT, EXCEPTION]);
+        this.isConfigured = true;
 
         this.sendResponse(response);
         console.log("Sent a ConfigurationDoneResponse response to the client");

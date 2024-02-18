@@ -8,7 +8,7 @@ type Location = {
 };
 
 export class DebugInfoHander {
-    private breakpointLocations: number[] = [];
+    private breakpointLocations = new Map<string, number[]>();
 
     private constructor(
         private sources: Source[],
@@ -94,24 +94,27 @@ export class DebugInfoHander {
 
         const source = this.sources[sourceIndex];
         const validated = [];
+        const locations = [];
         for (const { column, line } of breakpoints) {
             let verified = false;
             let address = this.addresses.get([sourceIndex, line, 0].join(", "));
 
             if (address !== undefined) {
                 verified = true;
-                this.breakpointLocations.push(address);
+                locations.push(address);
             }
 
             validated.push(new Breakpoint(verified, line, column, source));
         }
 
+        this.breakpointLocations.set(uriParsed, locations);
+
         return validated;
     }
 
     public emitBreakpointLocations(): number[] {
-        const collected = this.breakpointLocations;
-        this.breakpointLocations = [];
+        const collected: number[] = [];
+        this.breakpointLocations.forEach((locations) => collected.push(...locations));
         return collected;
     }
 }
