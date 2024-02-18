@@ -399,7 +399,7 @@ public class TickControlThread extends Thread {
         long firstOffset = contents.getFirstOffset();
         long lastOffset = contents.getLastOffset();
 
-        if (message.offset < firstOffset || message.offset + message.size > lastOffset) {
+        if (message.offset < firstOffset || message.offset + message.size - 1 > lastOffset) {
             sendFailResponse("Invalid memory range");
             return;
         }
