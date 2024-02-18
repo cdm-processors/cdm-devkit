@@ -2,7 +2,7 @@
     "name": "vscode-cdm-extension",
     "displayName": "CdM Processors",
     "description": "Tools for CdM Processors",
-    "version": "1.0.0",
+    "version": "0.2.0",
     "engines": {
         "vscode": "^1.76.0"
     },
