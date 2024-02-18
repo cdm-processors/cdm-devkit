@@ -12,12 +12,15 @@ import { createLifter } from "../lifter";
 import { CdmLaunchArguments } from "./configurations";
 import { ReferenceController, RegisterProvider } from "./variables";
 
+type ViewUriFsPath = string;
+type ViewPath = string;
+
 export class CdmDebugSession extends DebugSession {
     private static THREAD_ID = 1;
     private static FRAME_ID = 1;
 
     private controller = new ReferenceController();
-    private views = new Map<string, { viewPath: string }>();
+    private views = new Map<ViewUriFsPath, ViewPath>();
     private viewUpdateQueue: string[] = [];
     private isConfigured = false;
 
@@ -31,9 +34,8 @@ export class CdmDebugSession extends DebugSession {
 
     private createMemoryView() {
         const tempFile = pathlib.join(this.tempDirectory, `memory-view-${this.views.size}.hex`);
-        const view = { viewPath: tempFile };
         const viewUri = vscode.Uri.file(tempFile);
-        this.views.set(viewUri.fsPath, view);
+        this.views.set(viewUri.fsPath, tempFile);
         this.runtime.requestMemory(0, this.ram).once("receivedMemory", (bytes) => {
             fs.writeFile(tempFile, new Uint8Array(bytes)).then(() => {
                 vscode.commands.executeCommand("vscode.openWith", viewUri, "hexEditor.hexedit", { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }); 
@@ -43,9 +45,9 @@ export class CdmDebugSession extends DebugSession {
 
     protected customRequest(
         command: string,
-        response: DebugProtocol.Response,
-        args: any,
-        request?: DebugProtocol.Request,
+        _response: DebugProtocol.Response,
+        _args: any,
+        _request?: DebugProtocol.Request,
     ): void {
         switch (command) {
             case "createMemoryView": {
@@ -58,7 +60,7 @@ export class CdmDebugSession extends DebugSession {
 
     protected initializeRequest(
         response: DebugProtocol.InitializeResponse,
-        args: DebugProtocol.InitializeRequestArguments,
+        _args: DebugProtocol.InitializeRequestArguments,
     ): void {
         console.log("Received a InitializeRequest from the client");
 
@@ -77,7 +79,7 @@ export class CdmDebugSession extends DebugSession {
     protected async launchRequest(
         response: DebugProtocol.LaunchResponse,
         args: CdmLaunchArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): Promise<void> {
         console.log("Received a LaunchRequest from the client");
 
@@ -112,14 +114,17 @@ export class CdmDebugSession extends DebugSession {
             this.controller.issueReference((ref) => {
                 return new RegisterProvider(this.controller, ref, names, sizes);
             }).then((provider) => this.registerProvider = provider as RegisterProvider);
+
         }).on("receivedMemory", (bytes) => {
-            const viewUri = this.viewUpdateQueue.shift() ?? "";
-            const { viewPath } = this.views.get(viewUri) ?? {};
+            const viewUriFsPath = this.viewUpdateQueue.shift() ?? "";
+            const viewPath = this.views.get(viewUriFsPath) ?? "";
             if (viewPath) {
                 fs.writeFile(viewPath, new Uint8Array(bytes));
             }
+
         }).on("receivedRegisters", (values) => {
             this.registerProvider.update(values);
+
         }).on("stopped", (reason) => {
             switch (reason) {
                 case PAUSE:
@@ -138,9 +143,11 @@ export class CdmDebugSession extends DebugSession {
                     break;
                 }
             }
+
         }).on("error", (body) => {
             this.sendEvent(new TerminatedEvent());
             vscode.window.showErrorMessage(`Something went terribly wrong with the debug server; contact the developers and show them this!\n${JSON.stringify(body)}`);
+
         }).initialize(target, architecture).setLines([]).setBreakpoints([]).reset();
 
         try {
@@ -163,7 +170,7 @@ export class CdmDebugSession extends DebugSession {
     protected setBreakPointsRequest(
         response: DebugProtocol.SetBreakpointsResponse,
         args: DebugProtocol.SetBreakpointsArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a SetBreakpointsRequest from the client");
 
@@ -180,8 +187,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected configurationDoneRequest(
         response: DebugProtocol.ConfigurationDoneResponse,
-        args: DebugProtocol.ConfigurationDoneArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.ConfigurationDoneArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a ConfigurationDoneRequest from the client");
 
@@ -194,7 +201,7 @@ export class CdmDebugSession extends DebugSession {
 
     protected threadsRequest(
         response: DebugProtocol.ThreadsResponse,
-        request?: DebugProtocol.Request
+        _request?: DebugProtocol.Request
     ): void {
         console.log("Received a ThreadsRequest from the client");
 
@@ -209,7 +216,7 @@ export class CdmDebugSession extends DebugSession {
     protected stackTraceRequest(
         response: DebugProtocol.StackTraceResponse,
         args: DebugProtocol.StackTraceArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a StackTraceRequest from the client");
 
@@ -238,7 +245,7 @@ export class CdmDebugSession extends DebugSession {
     protected scopesRequest(
         response: DebugProtocol.ScopesResponse,
         args: DebugProtocol.ScopesArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a ScopesRequest from the client");
 
@@ -260,7 +267,7 @@ export class CdmDebugSession extends DebugSession {
     protected variablesRequest(
         response: DebugProtocol.VariablesResponse,
         args: DebugProtocol.VariablesArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a VariablesRequest from the client");
 
@@ -275,7 +282,7 @@ export class CdmDebugSession extends DebugSession {
     protected restartRequest(
         response: DebugProtocol.RestartResponse,
         args: DebugProtocol.RestartArguments,
-        request?: DebugProtocol.Request,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a RestartRequest from the client");
 
@@ -287,8 +294,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected pauseRequest(
         response: DebugProtocol.PauseResponse,
-        args: DebugProtocol.PauseArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.PauseArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a PauseRequest from the client");
 
@@ -300,8 +307,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected continueRequest(
         response: DebugProtocol.ContinueResponse,
-        args: DebugProtocol.ContinueArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.ContinueArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a ContinueRequest from the client");
 
@@ -313,8 +320,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected stepInRequest(
         response: DebugProtocol.StepInResponse,
-        args: DebugProtocol.StepInArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.StepInArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a StepInRequest from the client");
 
@@ -326,8 +333,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected nextRequest(
         response: DebugProtocol.StepOutResponse,
-        args: DebugProtocol.StepOutArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.StepOutArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a NextRequest from the client");
 
@@ -339,8 +346,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected stepOutRequest(
         response: DebugProtocol.StepOutResponse,
-        args: DebugProtocol.StepOutArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.StepOutArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a StepOutRequest from the client");
 
@@ -353,8 +360,8 @@ export class CdmDebugSession extends DebugSession {
 
     protected disconnectRequest(
         response: DebugProtocol.DisconnectResponse,
-        args: DebugProtocol.DisconnectArguments,
-        request?: DebugProtocol.Request,
+        _args: DebugProtocol.DisconnectArguments,
+        _request?: DebugProtocol.Request,
     ): void {
         console.log("Received a DisconnectRequest from the client");
 

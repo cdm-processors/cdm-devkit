@@ -13,15 +13,32 @@
             "warn",
             {
                 "selector": "import",
-                "format": [ "camelCase", "PascalCase" ]
+                "format": [
+                    "camelCase",
+                    "PascalCase"
+                ]
             }
         ],
         "@typescript-eslint/semi": "warn",
+        "typescript-eslint/explicit-member-accessibility": "off",
         "curly": "warn",
         "eqeqeq": "warn",
         "no-throw-literal": "warn",
         "semi": "off"
     },
+    "overrides": [
+        {
+            "files": [
+                "*.ts",
+                "*.mts",
+                "*.cts",
+                "*.tsx"
+            ],
+            "rules": {
+                "@typescript-eslint/explicit-member-accessibility": "error"
+            }
+        }
+    ],
     "ignorePatterns": [
         "out",
         "dist",

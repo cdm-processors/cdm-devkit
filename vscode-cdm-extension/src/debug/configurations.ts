@@ -27,7 +27,7 @@ async function mkdirparent(file: string) {
         const _ = await fs.mkdir(directory, { recursive: true });
         await fs.access(directory);
     } catch (error) {
-        vscode.window.showErrorMessage(`Failed to start the debugging: can't create a directory at \`${directory}\`.`);
+        vscode.window.showErrorMessage(`Failed to start the debugging: can't create a directory at \`${directory}\`; reason: \`${error}\`.`);
         return false;
     }
 
@@ -36,9 +36,9 @@ async function mkdirparent(file: string) {
 
 export class CdmConfigurationProvider implements vscode.DebugConfigurationProvider {
     public async resolveDebugConfigurationWithSubstitutedVariables(
-        folder: vscode.WorkspaceFolder | undefined,
+        _folder: vscode.WorkspaceFolder | undefined,
         debugConfig: vscode.DebugConfiguration,
-        token?: vscode.CancellationToken,
+        _token?: vscode.CancellationToken,
     ): Promise<vscode.DebugConfiguration | null | undefined> {
         const tempDirectory = await fs.mkdtemp(pathlib.join(os.tmpdir(), "cdm-"));
 

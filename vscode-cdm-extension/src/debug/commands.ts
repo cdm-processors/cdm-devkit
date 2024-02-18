@@ -4,6 +4,6 @@ export function showMemory() {
     vscode.debug.activeDebugSession?.customRequest("createMemoryView");
 }
 
-export async function setViewOffset(uri: vscode.Uri) {
+export async function setViewOffset() {
     vscode.commands.executeCommand("hexEditor.goToOffset");
 }
