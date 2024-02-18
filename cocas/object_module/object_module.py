@@ -24,13 +24,8 @@ class ObjectSectionRecord:
     """Mapping between addresses in binary image and locations in the source file"""
     alignment: int = field(default=1)
     """If the relocatable section should get address that is a multiple of some number"""
-
     external: defaultdict[str, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
     """List of places in section where some external label is used"""
-    lower_parts: dict[int, int] = field(default_factory=dict)
-    """If there is an external record with some least significant bytes dropped, these 
-    least significant bytes of a constant value are saved to check for possible overflows.
-    The key in dict equals the offset of the entry (i.e. the beginning of the entry)"""
 
 
 @dataclass

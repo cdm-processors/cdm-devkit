@@ -14,11 +14,16 @@ class ExternalEntry:
     """Should value be added or subtracted (not tested with -1)"""
     full_bytes: bool = field(default=True)
     """Whether no bytes were excluded by entry_bytes. Used when exporting this to object file"""
+    lower_part: int = field(default=0)
+    """If least significant bytes are not selected, the corresponding bytes of the constant value 
+    are saved to check for possible overflows."""
 
     def __str__(self):
         s = f'{self.sign * self.offset:02x}'
         if not self.full_bytes:
-            s += f':{self.entry_bytes.start}:{self.entry_bytes.stop}'
+            s += f':{self.entry_bytes.start:x}:{self.entry_bytes.stop:x}'
+            if self.lower_part:
+                s += f'+{self.lower_part:x}'
         return s
 
     def __repr__(self):

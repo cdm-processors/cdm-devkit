@@ -104,6 +104,11 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#lower_part.
+    def visitLower_part(self, ctx:ObjectFileParser.Lower_partContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#location.
     def visitLocation(self, ctx:ObjectFileParser.LocationContext):
         return self.visitChildren(ctx)
@@ -131,6 +136,11 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ObjectFileParser#minus.
     def visitMinus(self, ctx:ObjectFileParser.MinusContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#plus.
+    def visitPlus(self, ctx:ObjectFileParser.PlusContext):
         return self.visitChildren(ctx)
 
 

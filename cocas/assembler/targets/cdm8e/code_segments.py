@@ -262,8 +262,8 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: 
     if seg.expr.byte_specifier == 'low':
         obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(1, 2), full_bytes=False))
-        obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
+        entry = ExternalEntry(offset, range(1, 2), full_bytes=False, lower_part=val_lo)
+        obj_rec.external.setdefault(ext, []).append(entry)
     else:
         obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2), full_bytes=True))
 
@@ -276,7 +276,7 @@ def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,
     if seg.expr.byte_specifier == 'low':
         obj_rec.relocatable.append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
-        obj_rec.relocatable.append(ExternalEntry(offset, range(1, 2), full_bytes=False))
-        obj_rec.lower_parts[offset] = obj_rec.lower_parts.get(offset, 0) + val_lo
+        entry = ExternalEntry(offset, range(1, 2), full_bytes=False, lower_part=val_lo)
+        obj_rec.relocatable.append(entry)
     else:
         obj_rec.relocatable.append(ExternalEntry(offset, range(0, 2), full_bytes=True))

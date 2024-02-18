@@ -194,7 +194,11 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         addr = self.visitNumber(ctx.number())
         sign = -1 if ctx.minus() else 1
         if ctx.range_():
-            return ExternalEntry(addr, self.visitRange(ctx.range_()), sign, False)
+            range_ = self.visitRange(ctx.range_())
+            if ctx.lower_part():
+                return ExternalEntry(addr, range_, sign, False, lower_part=self.visitLower_part(ctx.lower_part()))
+            else:
+                return ExternalEntry(addr, range_, sign, False)
         else:
             entry_size = self.target_params.max_entry_size
             return ExternalEntry(addr, range(0, entry_size), sign, True)
