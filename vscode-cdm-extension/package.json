@@ -50,7 +50,8 @@
                     "cdm8-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm",
+                    ".h"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
@@ -61,7 +62,8 @@
                     "cdm8e-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm",
+                    ".h"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
@@ -72,7 +74,8 @@
                     "cdm16-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm",
+                    ".h"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
