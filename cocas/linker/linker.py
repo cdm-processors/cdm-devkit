@@ -130,37 +130,38 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
         for loc_offset, location in asect.code_locations.items():
             code_locations[loc_offset + image_begin] = location
 
+    lower_parts: dict[int, int] = {}  # Won't be empty if two entries added together, currently targets don't do that
     for rsect in rsects:
         image_begin = sect_addresses[rsect.name]
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
-        entry_bytes: range
-        for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), rsect.relocatable):
-            pos = image_begin + offset
-            lower_limit = 1 << 8 * entry_bytes.start
-            val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
-            val += rsect.lower_parts.get(offset, 0)
-            val += image_begin * sign
-            val %= (1 << 8 * entry_bytes.stop)
-            if entry_bytes.start > 0:
-                rsect.lower_parts[pos] = val % lower_limit
-            image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little', signed=False)
+        for entry in rsect.relocatable:
+            pos = image_begin + entry.offset
+            lower_limit = 1 << 8 * entry.entry_bytes.start
+            val = int.from_bytes(image[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
+            val += entry.lower_part + lower_parts.get(entry.offset, 0)
+            val += image_begin * entry.sign
+            val %= (1 << 8 * entry.entry_bytes.stop)
+            if entry.entry_bytes.start > 0 and val % lower_limit != 0:
+                lower_parts[pos] = val % lower_limit
+            image[pos:pos + len(entry.entry_bytes)] = \
+                (val // lower_limit).to_bytes(len(entry.entry_bytes), 'little', signed=False)
         for loc_offset, location in rsect.code_locations.items():
             code_locations[loc_offset + image_begin] = location
 
     for sect in asects + rsects:
         for ext_name in sect.external:
-            for offset, entry_bytes, sign in map(lambda x: x.as_tuple(), sect.external[ext_name]):
-                pos = sect_addresses[sect.name] + offset
-                lower_limit = 1 << 8 * entry_bytes.start
-                val = int.from_bytes(image[pos:pos + len(entry_bytes)], 'little', signed=False) * lower_limit
-                val += sect.lower_parts.get(offset, 0)
-                val += ents[ext_name] * sign
-                val %= (1 << 8 * entry_bytes.stop)
-                image[pos:pos + len(entry_bytes)] = (val // lower_limit).to_bytes(len(entry_bytes), 'little',
-                                                                                  signed=False)
-                if entry_bytes.start > 0:
-                    sect.lower_parts[pos] = val % lower_limit
+            for entry in sect.external[ext_name]:
+                pos = sect_addresses[sect.name] + entry.offset
+                lower_limit = 1 << 8 * entry.entry_bytes.start
+                val = int.from_bytes(image[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
+                val += entry.lower_part + lower_parts.get(entry.offset, 0)
+                val += ents[ext_name] * entry.sign
+                val %= (1 << 8 * entry.entry_bytes.stop)
+                image[pos:pos + len(entry.entry_bytes)] = \
+                    (val // lower_limit).to_bytes(len(entry.entry_bytes), 'little', signed=False)
+                if entry.entry_bytes.start > 0 and val % lower_limit != 0:
+                    lower_parts[pos] = val % lower_limit
 
     return image, code_locations
 
