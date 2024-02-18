@@ -17,7 +17,7 @@ export class CdmDebugSession extends DebugSession {
     private static FRAME_ID = 1;
 
     private controller = new ReferenceController();
-    private views = new Map<string, { offset: number, size: number, current: number }>();
+    private views = new Map<string, { viewPath: string, offset: number, size: number, current: number }>();
     private viewUpdateQueue: string[] = [];
 
     private registerProvider!: RegisterProvider;
@@ -28,66 +28,67 @@ export class CdmDebugSession extends DebugSession {
     private image!: string;
     private tempDirectory!: string;
 
-    private updateMemoryView(path: string) {
-        this.viewUpdateQueue.push(path);
-        const { offset, size, current } = this.views.get(path)!;
-        const realOffset = offset + size * current;
-        this.runtime.requestMemory(realOffset, realOffset + size < this.ram ? size : this.ram - realOffset);
-    }
-
     private createMemoryView() {
         const tempFile = pathlib.join(this.tempDirectory, `memory-view-${this.views.size}.hex`);
-        const view = { offset: 0, size: 256, current: 0 };
-        this.views.set(tempFile, view);
+        const view = { viewPath: tempFile, offset: 0, size: 256, current: 0 };
+        const viewUri = vscode.Uri.file(tempFile);
+        this.views.set(viewUri.fsPath, view);
         this.runtime.requestMemory(view.offset + view.size * view.current, view.size).once("receivedMemory", (bytes) => {
             fs.writeFile(tempFile, new Uint8Array(bytes)).then(() => {
-                vscode.commands.executeCommand("vscode.openWith", vscode.Uri.parse(`file://${tempFile}`), "hexEditor.hexedit", { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }); 
+                vscode.commands.executeCommand("vscode.openWith", viewUri, "hexEditor.hexedit", { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }); 
             });
         });
     }
 
-    private previousMemoryView(path: string) {
-        const view = this.views.get(path);
+    private updateMemoryView(viewUri: string) {
+        this.viewUpdateQueue.push(viewUri);
+        const { offset, size, current } = this.views.get(viewUri)!;
+        const realOffset = offset + size * current;
+        this.runtime.requestMemory(realOffset, realOffset + size < this.ram ? size : this.ram - realOffset);
+    }
+
+    private previousMemoryView(viewUri: string) {
+        const view = this.views.get(viewUri);
         if (view && view.current > 0) {
             view.current -= 1;
-            this.views.set(path, view);
-            this.updateMemoryView(path);
+            this.views.set(viewUri, view);
+            this.updateMemoryView(viewUri);
         }
     }
 
-    private nextMemoryView(path: string) {
-        const view = this.views.get(path);
+    private nextMemoryView(viewUri: string) {
+        const view = this.views.get(viewUri);
         if (view && view.offset + (view.current + 1) * view.size < this.ram) {
             view.current += 1;
-            this.views.set(path, view);
-            this.updateMemoryView(path);
+            this.views.set(viewUri, view);
+            this.updateMemoryView(viewUri);
         }
     }
 
-    private setViewOffset(path: string, offset: number) {
-        const view = this.views.get(path);
+    private setViewOffset(viewUri: string, offset: number) {
+        const view = this.views.get(viewUri);
         if (view && offset < this.ram) {
             view.offset = offset;
             view.current = 0;
             view.size = view.offset + view.size < this.ram ? view.size : this.ram - view.size;
-            this.updateMemoryView(path);
+            this.updateMemoryView(viewUri);
         }
     }
 
-    private setViewRange(path: string, range: number) {
-        const view = this.views.get(path);
+    private setViewRange(viewUri: string, range: number) {
+        const view = this.views.get(viewUri);
         if (view && view.offset + range <= this.ram) {
             view.current = 0;
             view.size = range;
-            this.updateMemoryView(path);
+            this.updateMemoryView(viewUri);
         }
     }
 
-    private setViewPage(path: string, page: number) {
-        const view = this.views.get(path);
+    private setViewPage(viewUri: string, page: number) {
+        const view = this.views.get(viewUri);
         if (view && view.offset + view.size * page < this.ram) {
             view.current = page;
-            this.updateMemoryView(path);
+            this.updateMemoryView(viewUri);
         }
     }
 
@@ -103,23 +104,23 @@ export class CdmDebugSession extends DebugSession {
                 break;
             }
             case "previousMemoryView": {
-                this.previousMemoryView(args.path);
+                this.previousMemoryView(args.viewUri);
                 break;
             }
             case "nextMemoryView": {
-                this.nextMemoryView(args.path);
+                this.nextMemoryView(args.viewUri);
                 break;
             }
             case "setViewOffset": {
-                this.setViewOffset(args.path, args.offset);
+                this.setViewOffset(args.viewUri, args.offset);
                 break;
             }
             case "setViewRange": {
-                this.setViewRange(args.path, args.range);
+                this.setViewRange(args.viewUri, args.range);
                 break;
             }
             case "setViewPage": {
-                this.setViewPage(args.path, args.page);
+                this.setViewPage(args.viewUri, args.page);
                 break;
             }
             default:
@@ -183,10 +184,10 @@ export class CdmDebugSession extends DebugSession {
                 return new RegisterProvider(this.controller, ref, names, sizes);
             }).then((provider) => this.registerProvider = provider as RegisterProvider);
         }).on("receivedMemory", (bytes) => {
-            const view = this.viewUpdateQueue.shift();
-            if (view) {
-                fs.writeFile(view, new Uint8Array(bytes));
-                // vscode.commands.executeCommand("workbench.action.files.revert");
+            const viewUri = this.viewUpdateQueue.shift() ?? "";
+            const { viewPath } = this.views.get(viewUri) ?? {};
+            if (viewPath) {
+                fs.writeFile(viewPath, new Uint8Array(bytes));
             }
         }).on("receivedRegisters", (values) => {
             this.registerProvider.update(values);

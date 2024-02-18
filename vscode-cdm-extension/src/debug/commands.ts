@@ -5,11 +5,11 @@ export function showMemory() {
 }
 
 export function previousMemoryView(uri: vscode.Uri) {
-    vscode.debug.activeDebugSession?.customRequest("previousMemoryView", { path: uri.path });
+    vscode.debug.activeDebugSession?.customRequest("previousMemoryView", { viewUri: uri.fsPath });
 }
 
 export function nextMemoryView(uri: vscode.Uri) {
-    vscode.debug.activeDebugSession?.customRequest("nextMemoryView", { path: uri.path });
+    vscode.debug.activeDebugSession?.customRequest("nextMemoryView", { viewUri: uri.fsPath });
 }
 
 export async function setViewOffset(uri: vscode.Uri) {
@@ -31,7 +31,7 @@ export async function setViewOffset(uri: vscode.Uri) {
     });
 
     if (offset) {
-        vscode.debug.activeDebugSession?.customRequest("setViewOffset", { path: uri.path, offset: parseInt(offset) });
+        vscode.debug.activeDebugSession?.customRequest("setViewOffset", { viewUri: uri.fsPath, offset: parseInt(offset) });
     }
 }
 
@@ -54,7 +54,7 @@ export async function setViewRange(uri: vscode.Uri) {
     });
 
     if (range) {
-        vscode.debug.activeDebugSession?.customRequest("setViewRange", { path: uri.path, range: parseInt(range) });
+        vscode.debug.activeDebugSession?.customRequest("setViewRange", { viewUri: uri.fsPath, range: parseInt(range) });
     }
 }
 
@@ -77,6 +77,6 @@ export async function setViewPage(uri: vscode.Uri) {
     });
 
     if (page) {
-        vscode.debug.activeDebugSession?.customRequest("setViewPage", { path: uri.path, page: parseInt(page) });
+        vscode.debug.activeDebugSession?.customRequest("setViewPage", { viewUri: uri.fsPath, page: parseInt(page) });
     }
 }

@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { Breakpoint, Source } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
@@ -32,8 +33,9 @@ export class DebugInfoHander {
                 throw new Error(message);
             }
 
-            const filename = path.lastIndexOf("/");
-            sources.push(new Source(path.substring(filename + 1), path));
+            const uriParsed = vscode.Uri.parse("file:" + path).fsPath;
+            const filename = uriParsed.lastIndexOf("/");
+            sources.push(new Source(uriParsed.substring(filename + 1), uriParsed));
         }
 
         const rawLocations = obj?.codeLocations;
@@ -82,9 +84,10 @@ export class DebugInfoHander {
     }
 
     public validateBreakpoints(path: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Breakpoint[] {
-        const sourceIndex = this.sources.findIndex((source) => source.path === path);
+        const uriParsed = vscode.Uri.parse("file:" + path).fsPath;
+        const sourceIndex = this.sources.findIndex((source) => source.path === uriParsed);
         if (sourceIndex === -1) {
-            const message = `Failed to retrieve a Source object for file at '${path}'`;
+            const message = `Failed to retrieve a Source object for file at '${uriParsed}'`;
             console.error(message);
             throw new Error(message);
         }
