@@ -115,7 +115,7 @@ class Signed extends ParamVariable<number> {
         this.sub = this.border * 2;
         this.show = (val) => {
             if (val >= this.border) {
-                return (this.sub - val).toString(10);
+                return (val - this.sub).toString(10);
             } else {
                 return val.toString();
             }
