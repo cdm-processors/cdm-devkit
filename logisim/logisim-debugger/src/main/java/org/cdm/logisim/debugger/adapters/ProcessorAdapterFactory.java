@@ -39,7 +39,7 @@ public class ProcessorAdapterFactory {
             case CDM16_CIRCUIT:
                 return new Cdm16CircuitAdapter();
             case CDM16_EMU:
-                return new Cdm16CircuitAdapter();
+                return new Cdm16EmulatorAdapter();
             default:
                 throw new UnsupportedOperationException();
         }
