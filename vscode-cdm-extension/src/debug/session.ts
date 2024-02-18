@@ -2,12 +2,12 @@ import * as fs from "fs/promises";
 import * as pathlib from "path";
 
 import * as vscode from "vscode";
-import { DebugSession, ExitedEvent, InitializedEvent, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
+import { DebugSession, ExitedEvent, InitializedEvent, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
 import { CdmDebugRuntime } from "./runtime";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
-import { BreakpointHandler } from "./breakpoints";
+import { DebugInfoHander } from "./breakpoints";
 import { createLifter } from "../lifter";
 import { CdmLaunchArguments } from "./configurations";
 import { ReferenceController, RegisterProvider } from "./variables";
@@ -22,7 +22,7 @@ export class CdmDebugSession extends DebugSession {
 
     private registerProvider!: RegisterProvider;
     private runtime!: CdmDebugRuntime;
-    private handler!: BreakpointHandler;
+    private debugInfoHandler!: DebugInfoHander;
 
     private ram!: number;
     private image!: string;
@@ -171,7 +171,6 @@ export class CdmDebugSession extends DebugSession {
         disposable.dispose();
         if (compileCode !== 0) {
             this.sendEvent(new TerminatedEvent());
-            this.sendEvent(new ExitedEvent(compileCode));
             this.sendErrorResponse(response, compileCode);
 
             return;
@@ -211,20 +210,20 @@ export class CdmDebugSession extends DebugSession {
             }
         }).on("error", (body) => {
             this.sendEvent(new TerminatedEvent());
-            this.sendEvent(new ExitedEvent(0));
             vscode.window.showErrorMessage(`Something went terribly wrong with the debug server; contact the developers and show them this!\n${JSON.stringify(body)}`);
         }).initialize(target, architecture).setLines([]).setBreakpoints([]).reset();
 
-        const raw = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse).catch(() => {});
-
-        const codeLocations = new Map();
-        Object.entries(raw.codeLocations).forEach(([key, value]) => {
-            codeLocations.set(Number(key), value);
-        });
-        this.handler = new BreakpointHandler(raw.files, codeLocations);
+        try {
+            const contents = await fs.readFile(debug, { encoding: "utf-8" }).then(JSON.parse);
+            this.debugInfoHandler = DebugInfoHander.parse(contents);
+        } catch {
+            this.sendEvent(new TerminatedEvent());
+            vscode.window.showErrorMessage("Failed to initialize a debug information handler");
+            return;
+        }
 
         this.runtime.once("loaded", () => {
-            this.runtime.setLines(Array.from(this.handler.codes()));
+            this.runtime.setLines(Array.from(this.debugInfoHandler.stepLocations()));
             this.sendEvent(new InitializedEvent());
             this.sendResponse(response);
             console.log("Sent a LaunchResponse response to the client");
@@ -238,17 +237,12 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a SetBreakpointsRequest from the client");
 
-        if (args.source.path && args.breakpoints) {
-            let { checkedBreakpoints, codes } = this.handler.fromSetBreakpointsRequest(args.source.path, args.breakpoints) ?? {};
-            if (codes) {
-                this.runtime.setBreakpoints(codes);
-            }
+        response.body = {
+            breakpoints: this.debugInfoHandler.validateBreakpoints(args.source.path!, args.breakpoints!)
+        };
 
-            response.body = { breakpoints: checkedBreakpoints ?? [] };
-            this.sendResponse(response);
-
-            console.log("Sent a SetBreakpointsResponse response to the client");
-        }
+        this.sendResponse(response);
+        console.log("Sent a SetBreakpointsResponse response to the client");
     }
 
     protected configurationDoneRequest(
@@ -258,7 +252,7 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a ConfigurationDoneRequest from the client");
 
-        this.runtime.run([BREAKPOINT, EXCEPTION]);
+        this.runtime.setBreakpoints(this.debugInfoHandler.emitBreakpointLocations()).run([BREAKPOINT, EXCEPTION]);
 
         this.sendResponse(response);
         console.log("Sent a ConfigurationDoneResponse response to the client");
@@ -270,7 +264,9 @@ export class CdmDebugSession extends DebugSession {
     ): void {
         console.log("Received a ThreadsRequest from the client");
 
-        response.body = {"threads": [{ "id": CdmDebugSession.THREAD_ID, "name": "main" }]};
+        response.body = {
+            threads: [new Thread(CdmDebugSession.THREAD_ID, "main")],
+        };
 
         this.sendResponse(response);
         console.log("Sent a ThreadsResponse response to the client");
@@ -295,7 +291,7 @@ export class CdmDebugSession extends DebugSession {
         });
 
         this.runtime.once("receivedRegisters", () => {
-            let { source, line } = this.handler.fromProgramCounter(this.registerProvider.programCounter()) ?? {};
+            let { source, line } = this.debugInfoHandler.restoreSourceLocation(this.registerProvider.programCounter()) ?? {};
 
             const frame = new StackFrame(CdmDebugSession.FRAME_ID, "main", source, line);
             response.body = { stackFrames: [frame], totalFrames: 1 };

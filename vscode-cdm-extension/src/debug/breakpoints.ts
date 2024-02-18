@@ -1,75 +1,114 @@
-
 import { Breakpoint, Source } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
-type CodeLocation = {
-    f: number;
-    l: number;
-    c: number;
+type Location = {
+    source: Source;
+    line: number;
 };
 
-type DebugInformation = {
-    files: string[];
-    codeLocations: Map<number, CodeLocation>;
-};
+export class DebugInfoHander {
+    private breakpointLocations: number[] = [];
 
-export class BreakpointHandler {
-    private shorten: string[];
-    private full: string[];
+    private constructor(
+        private sources: Source[],
+        private locations: Map<number, Location>,
+        private addresses: Map<string, number>,
+        private collectedAddresses: number[],
+    ) {}
 
-    private direct: Map<number, CodeLocation>;
-    private inverse: Map<string, number>;
-
-    public constructor(
-        files: string[],
-        codeLocations: Map<number, CodeLocation>,
-    ) {
-        this.shorten = files.map((full) => full.substring(full.lastIndexOf("/")));
-        this.full = files;
-        this.direct = codeLocations;
-        this.inverse = new Map();
-        this.direct.forEach((value, key) => this.inverse.set(`${value.f}, ${value.l}, ${value.c}`, key));
-    }
-
-    public codes(): IterableIterator<number> {
-        return this.direct.keys();
-    }
-
-    public fromProgramCounter(pc: number): { source: Source, line: number } | undefined {
-        const codeLocation = this.direct.get(pc);
-        if (codeLocation === undefined) {
-            return;
+    public static parse(obj: any): DebugInfoHander {
+        const paths = obj?.files;
+        if (!Array.isArray(paths)) {
+            const message = "Failed to parse the debug information: 'files' property is either missing or not an array";
+            console.error(message);
+            throw new Error(message);
         }
 
-        return {
-            source: new Source(this.shorten[codeLocation.f], this.full[codeLocation.f]),
-            line: codeLocation.l,
-        };
-    }
+        const sources: Source[] = [];
+        for (const [index, path] of paths.entries()) {
+            if (typeof path !== "string") {
+                const message = `Failed to parse the debug information: 'files[${index}]' is not a string`;
+                console.error(message);
+                throw new Error(message);
+            }
 
-    public fromSetBreakpointsRequest(path: string, breakpoints: DebugProtocol.SourceBreakpoint[]): { checkedBreakpoints: Breakpoint[], codes: number[] } | undefined {
-        const file = this.full.indexOf(path);
-        if (file === -1) {
-            return;
+            const filename = path.lastIndexOf("/");
+            sources.push(new Source(path.substring(filename + 1), path));
         }
 
-        let checkedBreakpoints = [];
-        let codes = [];
+        const rawLocations = obj?.codeLocations;
+        if (rawLocations && typeof rawLocations !== "object") {
+            const message = "Failed to parse the debug information: 'codeLocations' property is either missing or not an object";
+            console.error(message);
+            throw new Error(message);
+        }
 
-        let source = new Source(this.shorten[file], path);
-        let key = { f: file, l: 0, c: 0 };
-        for (const breakpoint of breakpoints) {
-            key.l = breakpoint.line;
-            const candidate = this.inverse.get(`${key.f}, ${key.l}, ${key.c}`);
-            checkedBreakpoints.push(new Breakpoint(candidate !== undefined, breakpoint.line, breakpoint.column, source));
-            if (candidate !== undefined) {
-                codes.push(candidate);
+        const locations = new Map<number, Location>();
+        const addresses = new Map<string, number>();
+        const collectedAddresses = [];
+        for (const [rawAddress, location] of Object.entries(rawLocations)) {
+            const address = parseInt(rawAddress);
+            if (Number.isNaN(address)) {
+                const message = `Failed to parse the debug information: address '${rawAddress}' can't be parsed as a number`;
+                console.error(message);
+                throw new Error(message);
+            }
+
+            if (location && typeof location === "object" &&
+                "f" in location && typeof location.f === "number" &&
+                "l" in location && typeof location.l === "number" &&
+                "c" in location && typeof location.c === "number") {
+
+                const { f, l, c } = location;
+                locations.set(address, { source: sources[f], line: l });
+                addresses.set([f, l, c].join(", "), address);
+                collectedAddresses.push(address);
+            } else {
+                const message = `Failed to parse the debug information: address '${rawAddress}' profile contains invalid data`;
+                console.error(message);
+                throw new Error(message);
             }
         }
 
-        return {
-            checkedBreakpoints: checkedBreakpoints,
-            codes: codes,
-        };
+        return new DebugInfoHander(sources, locations, addresses, collectedAddresses);
+    }
+
+    public stepLocations(): number[] {
+        return this.collectedAddresses;
+    }
+
+    public restoreSourceLocation(address: number): Location | undefined {
+        return this.locations.get(address);
+    }
+
+    public validateBreakpoints(path: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Breakpoint[] {
+        const sourceIndex = this.sources.findIndex((source) => source.path === path);
+        if (sourceIndex === -1) {
+            const message = `Failed to retrieve a Source object for file at '${path}'`;
+            console.error(message);
+            throw new Error(message);
+        }
+
+        const source = this.sources[sourceIndex];
+        const validated = [];
+        for (const { column, line } of breakpoints) {
+            let verified = false;
+            let address = this.addresses.get([sourceIndex, line, 0].join(", "));
+
+            if (address !== undefined) {
+                verified = true;
+                this.breakpointLocations.push(address);
+            }
+
+            validated.push(new Breakpoint(verified, line, column, source));
+        }
+
+        return validated;
+    }
+
+    public emitBreakpointLocations(): number[] {
+        const collected = this.breakpointLocations;
+        this.breakpointLocations = [];
+        return collected;
     }
 }
