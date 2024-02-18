@@ -261,3 +261,5 @@ gen
 *.tokens
 *.interp
 notes.txt
+
+.DS_Store

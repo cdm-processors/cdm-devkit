@@ -1,0 +1,47 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "@typescript-eslint/naming-convention": [
+            "warn",
+            {
+                "selector": "import",
+                "format": [
+                    "camelCase",
+                    "PascalCase"
+                ]
+            }
+        ],
+        "@typescript-eslint/semi": "warn",
+        "typescript-eslint/explicit-member-accessibility": "off",
+        "curly": "warn",
+        "eqeqeq": "warn",
+        "no-throw-literal": "warn",
+        "semi": "off"
+    },
+    "overrides": [
+        {
+            "files": [
+                "*.ts",
+                "*.mts",
+                "*.cts",
+                "*.tsx"
+            ],
+            "rules": {
+                "@typescript-eslint/explicit-member-accessibility": "error"
+            }
+        }
+    ],
+    "ignorePatterns": [
+        "out",
+        "dist",
+        "**/*.d.ts"
+    ]
+}

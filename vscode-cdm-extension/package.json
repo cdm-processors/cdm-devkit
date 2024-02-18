@@ -2,15 +2,17 @@
     "name": "vscode-cdm-extension",
     "displayName": "CdM Processors",
     "description": "Tools for CdM Processors",
-    "version": "1.0.0",
+    "version": "0.2.0",
     "engines": {
-        "vscode": "^1.0.0"
+        "vscode": "^1.76.0"
     },
     "categories": [
+        "Debuggers",
         "Programming Languages",
         "Snippets"
     ],
-    "icon": "icon.png",
+    "main": "./out/extension.js",
+    "icon": "images/extension.png",
     "publisher": "cdm-processors",
     "homepage": "https://github.com/cdm-processors/cdm-devkit",
     "bugs": "https://github.com/cdm-processors/cdm-devkit/issues",
@@ -29,6 +31,17 @@
         "cdm8e"
     ],
     "contributes": {
+        "breakpoints": [
+            {
+                "language": "cdm8-assembly"
+            },
+            {
+                "language": "cdm8e-assembly"
+            },
+            {
+                "language": "cdm16-assembly"
+            }
+        ],
         "languages": [
             {
                 "id": "cdm8-assembly",
@@ -37,7 +50,7 @@
                     "cdm8-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
@@ -48,7 +61,7 @@
                     "cdm8e-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
@@ -59,7 +72,7 @@
                     "cdm16-assembly"
                 ],
                 "extensions": [
-                    ".asm .h"
+                    ".asm"
                 ],
                 "configuration": "./languages/assembly-language-configuration.json"
             },
@@ -110,9 +123,233 @@
                 "language": "cdm16-assembly",
                 "path": "./snippets/cdm-assembly-snippets.json"
             }
+        ],
+        "commands": [
+            {
+                "command": "cdm.debug.showMemory",
+                "title": "Open a memory view",
+                "icon": "$(file-binary)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.debug.setViewOffset",
+                "title": "Set Offset",
+                "icon": "$(export)",
+                "enablement": "inDebugMode && debugType == 'cdm'"
+            }
+        ],
+        "menus": {
+            "debug/toolBar": [
+                {
+                    "when": "inDebugMode && debugType == 'cdm'",
+                    "command": "cdm.debug.showMemory"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "inDebugMode && debugType == 'cdm' && resourceExtname == '.hex'",
+                    "command": "cdm.debug.setViewOffset",
+                    "group": "navigation@1"
+                }
+            ]
+        },
+        "debuggers": [
+            {
+                "label": "CdM Debugger",
+                "type": "cdm",
+                "languages": [
+                    "cdm8-assembly",
+                    "cdm8e-assembly",
+                    "cdm16-assembly"
+                ],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "address",
+                            "architecture",
+                            "target",
+                            "artifacts"
+                        ],
+                        "properties": {
+                            "address": {
+                                "type": "string",
+                                "description": "Websocket address of debug server."
+                            },
+                            "architecture": {
+                                "enum": [
+                                    "harvard",
+                                    "vonNeumann"
+                                ],
+                                "description": "Memory configuration, which will be passed to the debug server."
+                            },
+                            "target": {
+                                "enum": [
+                                    "cdm8",
+                                    "cdm8e",
+                                    "cdm16"
+                                ],
+                                "description": "The codename of processor from Coco-de-Mer family, which will be used for debugging."
+                            },
+                            "sources": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "uniqueItems": true
+                            },
+                            "artifacts": {
+                                "type": "object",
+                                "properties": {
+                                    "image": {
+                                        "type": "string",
+                                        "description": "The path to the file where the built image will be saved."
+                                    },
+                                    "debug": {
+                                        "type": "string",
+                                        "description": "The path to the file where the debug information about the built image will be saved."
+                                    }
+                                },
+                                "description": "The build artifacts file paths."
+                            }
+                        }
+                    }
+                },
+                "configurationSnippets": [
+                    {
+                        "label": "CdM: Debug CdM-16 with Harvard architecture",
+                        "body": {
+                            "name": "Debug CdM-16 with Harvard architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "harvard",
+                            "target": "cdm16",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    },
+                    {
+                        "label": "CdM: Debug CdM-8e with Harvard architecture",
+                        "body": {
+                            "name": "Debug CdM-8e with Harvard architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "harvard",
+                            "target": "cdm8e",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    },
+                    {
+                        "label": "CdM: Debug CdM-8 with Harvard architecture",
+                        "body": {
+                            "name": "Debug CdM-8 with Harvard architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "harvard",
+                            "target": "cdm8",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    },
+                    {
+                        "label": "CdM: Debug CdM-16 with Von Neumann architecture",
+                        "body": {
+                            "name": "Debug CdM-16 with Von Neumann architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "vonNeumann",
+                            "target": "cdm16",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    },
+                    {
+                        "label": "CdM: Debug CdM-8e with Von Neumann architecture",
+                        "body": {
+                            "name": "Debug CdM-8e with Von Neumann architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "vonNeumann",
+                            "target": "cdm8e",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    },
+                    {
+                        "label": "CdM: Debug CdM-8 with Von Neumann architecture",
+                        "body": {
+                            "name": "Debug CdM-8 with Von Neumann architecture",
+                            "type": "cdm",
+                            "request": "launch",
+                            "address": "ws://localhost:7001",
+                            "architecture": "vonNeumann",
+                            "target": "cdm8",
+                            "artifacts": {
+                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+        "taskDefinitions": [
+            {
+                "type": "cdm"
+            }
         ]
+    },
+    "activationEvents": [
+        "onDebug"
+    ],
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.3",
+        "@types/node": "18.x",
+        "@types/vscode": "1.76.0",
+        "@types/ws": "^8.5.9",
+        "@typescript-eslint/eslint-plugin": "^6.9.0",
+        "@typescript-eslint/parser": "^6.9.0",
+        "@vscode/test-electron": "^2.3.6",
+        "@vscode/vsce": "^2.22.0",
+        "eslint": "^8.52.0",
+        "glob": "^10.3.10",
+        "mocha": "^10.2.0",
+        "typescript": "^5.3.0"
     },
     "__metadata": {
         "publisherDisplayName": "CdM Processors"
-    }
+    },
+    "dependencies": {
+        "@vscode/debugadapter": "^1.64.0",
+        "@vscode/debugprotocol": "^1.64.0",
+        "async-mutex": "^0.4.1",
+        "ws": "^8.14.2"
+    },
+    "extensionDependencies": [
+        "ms-vscode.hexeditor"
+    ]
 }
