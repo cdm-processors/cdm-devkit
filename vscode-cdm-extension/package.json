@@ -227,7 +227,7 @@
                             "target": "cdm16",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     },
@@ -242,7 +242,7 @@
                             "target": "cdm8e",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     },
@@ -257,7 +257,7 @@
                             "target": "cdm8",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     },
@@ -272,7 +272,7 @@
                             "target": "cdm16",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     },
@@ -287,7 +287,7 @@
                             "target": "cdm8e",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     },
@@ -302,7 +302,7 @@
                             "target": "cdm8",
                             "artifacts": {
                                 "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg\""
+                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
                             }
                         }
                     }

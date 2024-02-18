@@ -80,7 +80,7 @@ export class CdmConfigurationProvider implements vscode.DebugConfigurationProvid
         }
 
         if (!debugConfig.artifacts?.debug) {
-            debugConfig.artifacts.debug = pathlib.join(tempDirectory, "out.dbg");
+            debugConfig.artifacts.debug = pathlib.join(tempDirectory, "out.dbg.json");
         } else {
             if (!await mkdirparent(debugConfig.artifacts.debug)) {
                 return undefined;
