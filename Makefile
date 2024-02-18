@@ -19,7 +19,7 @@ BUILD_FOLDER_EXIST = $(wildcard $(BUILD_FOLDER))
 
 
 # Enabled Java projects
-JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator
+JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator logisim-debugger
 
 # Enables processors
 PROCESSORS = cdm8 cdm8e cdm16

@@ -302,7 +302,7 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
     <comp lib="2" loc="(450,370)" name="Decoder">
       <a name="disabled" val="0"/>
     </comp>
-    <comp lib="7" loc="(380,410)" name="CdM_8_mark5"/>
+    <comp lib="7" loc="(380,410)" name="CdM_8e"/>
     <comp lib="1" loc="(400,450)" name="Controlled Buffer">
       <a name="facing" val="west"/>
       <a name="width" val="8"/>
