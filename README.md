@@ -74,46 +74,45 @@ You can report a bug with GitHub Issues.
 
 ## Setting up development environment
 
-- **Python-based projects** use `Poetry` as build system
+### Python-based projects
 
-    - [Install](https://python-poetry.org/docs/#installation) `Poetry`
+- Install [**Poetry**](https://python-poetry.org/docs/#installation);
+- Run `poetry install` at the project root:
+  - Note that `cocas` uses [**ANTLR**](https://www.antlr.org) to parse assembly language, so the runtime dependencies include `antlr4-python3-runtime`; however, if you want to fiddle with grammar files and generate new parser you would need `antlr4-tools` from the development dependencies, which will be installed by default.
 
-    - Run `poetry install` to download dependencies
+### Java-based projects
 
-    > `cocas` uses `ANTLR` to parse assembly language
-    >
-    >    - `antlr4-python3-runtime` is needed to run `cocas` and is installed with other dependencies
-    >
-    >   - However, if you want to fiddle with grammar files and generate new parser you would need to install `antlr4-tools`, this package is installed with development dependencies ([Read more](https://www.antlr.org))
+- Install **JDK**;
+- **Gradle** build system should be downloaded by `gradlew` script automatically on first run.
 
-- **Java-based projects** use `Gradle` as build system
+### Visual Studio Code extension
 
-    - Install `JDK`
-
-    - `gradlew` script should download `Gradle` automatically on first run
-
-- **VS Code Extension** uses [official tools](https://code.visualstudio.com/api)
+- Install [**Node.js**](https://nodejs.org/en):
+  - You will need a package manager, so it's recommended to get a provided **npm** instance from **Node.js** installer;
+  - However, if you really understand what are you doing, you can use your favorite package manager such as **pnpm**, **Yarn** or (if you are on the cutting edge of progress) even **Bun**;
+- Navigate to `vscode-cdm-extension`;
+- Run `npm install`.
 
 ## Building
 
 ### Building individual projects
 
-- **Python-based projects:**
+#### Python-based projects
 
-    - Run `poetry build`
+- Run `poetry build`
 
-- **Java-based projects:**
-    
-    - Navigate to project folder
+#### Java-based projects
 
-    - Run `./gradlew jar` (on Unix)
-    - Run `.\gradlew.bat jar` (on Windows)
+- Navigate to project folder
+- For UNIX-like systems:
+  - Run `./gradlew jar`
+- For Windows:
+  - Run `.\gradlew.bat jar`
 
-- **VS Code extension:**
+#### Visual Studio Code extension
 
-    - Navigate to `vscode-cdm-extension/`
-
-    - Run `vsce package`
+- Navigate to `vscode-cdm-extension`
+- Run `npx @vscode/vsce package`
 
 ### Building all projects at once
 
