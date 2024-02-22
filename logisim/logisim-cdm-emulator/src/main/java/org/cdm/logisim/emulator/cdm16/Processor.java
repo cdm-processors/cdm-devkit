@@ -539,6 +539,28 @@ public class Processor {
                 waitLatch.getValue();
     }
 
+    // Debugger support
+    public boolean exceptionHappened() {
+        return ecuSignals.exc_triggered();
+    }
+
+    public int exceptionNumber(InstanceState state) {
+        int instruction = FetchUnit.fetchInstruction(
+                busD.getValue(),
+                state.getPort(Ports.INT_NUMBER).toIntValue(),
+                internalExceptionVectorRegister.getValue(),
+                externalExceptionVectorRegister.getValue(),
+                state.getPort(Ports.EXC_NUMBER).toIntValue(),
+                ecuSignals.latch_double_fault(),
+                toBoolean(state.getPort(Ports.EXC)),
+                ecuSignals.exc_triggered(),
+                ecuSignals.latch_int(),
+                startupLatch.getValue()
+        );
+
+        return instruction & 0b111111;
+    }
+
     public static class ALU_InstructionGroups {
         public static final int ALU_3 = 1;
         public static final int ALU_2 = 1 << 1;

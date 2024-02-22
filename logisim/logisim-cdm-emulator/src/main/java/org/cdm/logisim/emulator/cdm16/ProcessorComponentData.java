@@ -1,6 +1,7 @@
 package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.instance.InstanceData;
+import com.cburch.logisim.instance.InstanceState;
 
 public class ProcessorComponentData implements InstanceData {
 
@@ -18,6 +19,15 @@ public class ProcessorComponentData implements InstanceData {
 
     public ProcessorClockState getProcessorClockState() {
         return processorClockState;
+    }
+
+    // Debugger support
+    public boolean exceptionHappened() {
+        return getProcessor().exceptionHappened();
+    }
+
+    public int exceptionNumber(InstanceState state) {
+        return getProcessor().exceptionNumber(state);
     }
 
     @Override
