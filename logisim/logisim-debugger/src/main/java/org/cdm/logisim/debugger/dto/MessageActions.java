@@ -14,4 +14,5 @@ public class MessageActions {
     public static final String GET_MEMORY = "getMemory";
     public static final String SET_MEMORY = "setMemory";
     public static final String GET_TUNNEL = "getTunnel";
+    public static final String GET_EXCEPTION_METADATA = "getExceptionMetadata";
 }

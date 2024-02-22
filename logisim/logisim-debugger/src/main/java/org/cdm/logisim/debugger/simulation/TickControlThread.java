@@ -17,6 +17,7 @@ import org.cdm.logisim.debugger.dto.DebugEvent;
 import org.cdm.logisim.debugger.dto.DebuggerMessage;
 import org.cdm.logisim.debugger.dto.DebuggerResponse;
 import org.cdm.logisim.debugger.dto.FailResponse;
+import org.cdm.logisim.debugger.dto.GetExceptionMetadataResponse;
 import org.cdm.logisim.debugger.dto.GetMemoryMessage;
 import org.cdm.logisim.debugger.dto.GetMemoryResponse;
 import org.cdm.logisim.debugger.dto.GetRegistersResponse;
@@ -248,6 +249,9 @@ public class TickControlThread extends Thread {
                 handleGetTunnelMessage(
                         new Gson().fromJson(message.data, GetTunnelMessage.class)
                 );
+                break;
+            case MessageActions.GET_EXCEPTION_METADATA:
+                handleGetExceptionMetadataMessage();
                 break;
             default:
                 sendFailResponse("Unknown action: " + message.action);
@@ -512,5 +516,16 @@ public class TickControlThread extends Thread {
         }
 
         sendResponse(new GetTunnelResponse(tunnelValue));
+    }
+
+    private void handleGetExceptionMetadataMessage() {
+        System.out.println("Get exception metadata");
+
+        if (lastProcessorState == null) {
+            sendFailResponse("No active processor state");
+            return;
+        }
+
+        sendResponse(new GetExceptionMetadataResponse(lastProcessorState.getExceptionNumber()));
     }
 }
