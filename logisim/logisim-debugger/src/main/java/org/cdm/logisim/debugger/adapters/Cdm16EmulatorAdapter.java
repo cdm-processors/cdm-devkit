@@ -2,17 +2,16 @@ package org.cdm.logisim.debugger.adapters;
 
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
-import com.cburch.logisim.circuit.SubcircuitFactory;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.instance.InstanceData;
 import com.cburch.logisim.instance.InstanceState;
 import org.cdm.logisim.debugger.DebuggerComponent;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.cdm.logisim.debugger.logisim.TunnelAdapter.getTunnelValue;
 
 public class Cdm16EmulatorAdapter implements ProcessorAdapter {
 
@@ -40,7 +39,7 @@ public class Cdm16EmulatorAdapter implements ProcessorAdapter {
 
     @Override
     public boolean supportsExceptions() {
-        return false;
+        return true;
     }
 
     @Override
@@ -78,28 +77,28 @@ public class Cdm16EmulatorAdapter implements ProcessorAdapter {
                 .map(Value::toIntValue)
                 .collect(Collectors.toList());
 
-//        Circuit processorSubcircuit =
-//                ((SubcircuitFactory) processorComponent.getFactory()).getSubcircuit();
-//
-//        CircuitState processorSubcircuitState =
-//                processorSubcircuit.getSubcircuitFactory().getSubstate(circuitState, processorComponent);
-//
-//        Integer exceptionTriggeredTunnel =
-//                getTunnelValue("exc_triggered", processorSubcircuit, processorSubcircuitState);
-//
-//        Integer fetchedInstructionTunnel =
-//                getTunnelValue("fetched_instruction", processorSubcircuit, processorSubcircuitState);
-//
-//        boolean exceptionHappened;
-//        int exceptionNumber;
-//
-//        if (exceptionTriggeredTunnel == null || fetchedInstructionTunnel == null) {
-//            exceptionHappened = false;
-//            exceptionNumber = 0;
-//        } else {
-//            exceptionHappened = exceptionTriggeredTunnel != 0;
-//            exceptionNumber = fetchedInstructionTunnel & 0b111111;
-//        }
+        InstanceData processorData = processorState.getData();
+
+        boolean exceptionHappened;
+        int exceptionNumber;
+
+        try {
+            Method exceptionHappenedMethod =
+                    processorData.getClass().getMethod("exceptionHappened");
+
+            exceptionHappened = (boolean) exceptionHappenedMethod.invoke(processorData);
+
+            Method exceptionNumberMethod =
+                    processorData.getClass().getMethod("exceptionNumber", InstanceState.class);
+
+            exceptionNumber = (int) exceptionNumberMethod.invoke(processorData, processorState);
+        } catch (Exception e) {
+            exceptionHappened = false;
+            exceptionNumber = 0;
+        }
+
+        boolean finalExceptionHappened = exceptionHappened;
+        int finalExceptionNumber = exceptionNumber;
 
         return new ProcessorState() {
             @Override
@@ -122,6 +121,16 @@ public class Cdm16EmulatorAdapter implements ProcessorAdapter {
             @Override
             public List<Integer> getRegisters() {
                 return registerValues;
+            }
+
+            @Override
+            public boolean exceptionHappened() {
+                return finalExceptionHappened;
+            }
+
+            @Override
+            public int getExceptionNumber() {
+                return finalExceptionNumber;
             }
         };
     }
