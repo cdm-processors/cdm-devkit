@@ -3,7 +3,7 @@ name = "cdm-devkit"
 version = "0.2.0"
 description = "Developer tools for CdM processors"
 authors = [
-    "CdM Processors <t.me/cdm_updates>",
+    "CdM Processors",
     "Nikolay Repin <n.repin@g.nsu.ru>",
     "Timofey Khrapovitskiy <vuki03@mail.ru>",
     "Ilya Merzlyakov <ilyamerzlakov@gmail.com>",
