@@ -16,7 +16,7 @@ from cocas.object_module import ObjectModule
 
 def main():
     colorama.init()
-    available_targets = list_assembler_targets() & list_object_targets() & list_linker_targets()
+    available_targets = sorted(list_assembler_targets() & list_object_targets() & list_linker_targets())
 
     parser = argparse.ArgumentParser('cocas')
     parser.add_argument('sources', type=Path, nargs='*', help='source files')
