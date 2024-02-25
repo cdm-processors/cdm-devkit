@@ -1,77 +1,37 @@
 import argparse
-import codecs
-import importlib
-import json
-import os
-import pathlib
-import pkgutil
-from dataclasses import asdict
+import itertools
+from pathlib import Path
+from sys import stderr
 from typing import Union
 
-import antlr4
 import colorama
 
-from cocas.assembler import assemble
-from cocas.ast_builder import build_ast
-from cocas.error import CdmException, CdmExceptionTag, CdmLinkException, log_error
-from cocas.linker import link
-from cocas.macro_processor import process_macros, read_mlb
-from cocas.object_file import import_object
-from cocas.object_module import export_objects
-
-
-def write_image(filename: str, arr: bytearray):
-    """
-    Write the contents or array into file in logisim-compatible format
-
-    :param filename: Path to output file
-    :param arr: Bytearray to be written
-    """
-    f = open(filename, mode='wb')
-    f.write(bytes("v2.0 raw\n", 'UTF-8'))
-    zeroes = 0
-    for i, byte in enumerate(arr):
-        if byte == 0:
-            zeroes += 1
-        else:
-            if zeroes != 0:
-                if zeroes > 4:
-                    f.write(bytes(f'{zeroes}*00\n', 'UTF-8'))
-                    f.write(bytes(f'# {i:#2x}\n', 'UTF-8'))
-                else:
-                    for _ in range(zeroes):
-                        f.write(bytes('00\n', 'UTF-8'))
-                zeroes = 0
-            f.write(bytes(f'{byte:02x}\n', 'UTF-8'))
-    f.close()
-
-
-def handle_os_error(e: OSError):
-    message = e.strerror
-    if e.filename is not None:
-        message += f': {colorama.Style.BRIGHT}{e.filename}{colorama.Style.NORMAL}'
-    log_error("MAIN", message)
-    exit(1)
+from cocas import exception_handlers as handlers
+from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets
+from cocas.exception_handlers import log_error
+from cocas.linker import LinkerException, list_linker_targets, target_link, write_debug_export, write_image
+from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
+from cocas.object_module import ObjectModule
 
 
 def main():
     colorama.init()
-    targets_dir = os.path.join(os.path.dirname(__file__), "targets")
-    available_targets = list(map(lambda i: i.name, pkgutil.iter_modules([targets_dir])))
+    available_targets = list_assembler_targets() & list_object_targets() & list_linker_targets()
 
     parser = argparse.ArgumentParser('cocas')
-    parser.add_argument('sources', type=pathlib.Path, nargs='*', help='source files')
-    parser.add_argument('-t', '--target', type=str, default='cdm-16', help='target processor, CdM-16 is default')
+    parser.add_argument('sources', type=Path, nargs='*', help='source files')
+    parser.add_argument('-t', '--target', type=str, default='cdm-16',
+                        help='target processor, CdM-16 is default. May omit "cdm"')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
     parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
-    parser.add_argument('-o', '--output', type=str, help='specify output file name')
+    parser.add_argument('-o', '--output', type=Path, help='specify output file name')
     debug_group = parser.add_argument_group('debug')
-    debug_group.add_argument('--debug', type=str, nargs='?', const='out.dbg.json', help='export debug information')
+    debug_group.add_argument('--debug', type=Path, nargs='?', const=True, help='export debug information')
     debug_path_group = debug_group.add_mutually_exclusive_group()
-    debug_path_group.add_argument('--relative-path', type=pathlib.Path,
+    debug_path_group.add_argument('--relative-path', type=Path,
                                   help='convert source files paths to relative in debug info and object files')
-    debug_path_group.add_argument('--absolute-path', type=pathlib.Path,
+    debug_path_group.add_argument('--absolute-path', type=Path,
                                   help='convert all debug paths to absolute, concatenating with given path')
     debug_group.add_argument('--realpath', action='store_true',
                              help='canonicalize paths by following symlinks and resolving . and ..')
@@ -80,187 +40,95 @@ def main():
         print('Available targets: ' + ', '.join(available_targets))
         return
     target: str = args.target.replace('-', '').lower()
+    if target[:1].isdecimal():
+        target = 'cdm' + target
 
     if target not in available_targets:
-        print('Error: unknown target ' + target)
-        print('Available targets: ' + ', '.join(available_targets))
+        log_error("Main", 'Unknown target ' + target)
+        print('Available targets: ' + ', '.join(available_targets), file=stderr)
         return 2
     if len(args.sources) == 0:
-        print('Error: no source files provided')
+        log_error("Main", 'No source files provided')
         return 2
     if args.compile and args.merge:
-        print('Error: cannot use --compile and --merge options at same time')
+        log_error("Main", 'Cannot use --compile and --merge options at same time')
         return 2
-
-    target_instructions = importlib.import_module(f'cocas.targets.{target}.target_instructions',
-                                                  'cocas').TargetInstructions
-    code_segments = importlib.import_module(f'cocas.targets.{target}.code_segments', 'cocas').CodeSegments
-    target_params = importlib.import_module(f'cocas.targets.{target}.target_params', 'cocas').TargetParams
-
-    library_macros = read_mlb(str(pathlib.Path(__file__).parent.joinpath(f'targets/{target}/standard.mlb').absolute()))
-    objects = []
 
     realpath = bool(args.realpath)
     if args.relative_path:
-        relative_path: Union[pathlib.Path, None] = args.relative_path.absolute()
+        relative_path: Union[Path, None] = args.relative_path.absolute()
         if realpath:
             relative_path = relative_path.resolve()
     else:
         relative_path = None
     if args.absolute_path:
-        absolute_path: Union[pathlib.Path, None] = args.absolute_path.absolute()
+        absolute_path: Union[Path, None] = args.absolute_path.absolute()
         if realpath:
             absolute_path = absolute_path.resolve()
     else:
         absolute_path = None
 
-    filepath: pathlib.Path
+    asm_files = []
+    obj_files = []
+    filepath: Path
     for filepath in args.sources:
-        try:
-            with filepath.open('rb') as file:
-                data = file.read()
-        except OSError as e:
-            handle_os_error(e)
-        data = codecs.decode(data, 'utf8', 'strict')
-        if not data.endswith('\n'):
-            data += '\n'
-
-        try:
-            filetype = filepath.suffix
-            if not filetype:
-                if args.merge:
-                    filetype = '.obj'
-                else:
-                    filetype = '.asm'
-
-            if filetype in ['.obj', '.lib', ]:
-                if args.compile:
-                    print("Error: object files should not be provided with --compile option")
-                    return 2
-                input_stream = antlr4.InputStream(data)
-                for obj in import_object(input_stream, str(filepath), target_params):
-                    if realpath:
-                        dip = obj.debug_info_path
-                        obj.debug_info_path = obj.debug_info_path.resolve()
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = pathlib.Path(j.file)
-                                if f == dip:
-                                    j.file = obj.debug_info_path.as_posix()
-                                else:
-                                    j.file = pathlib.Path(j.file).resolve().as_posix()
-                    if relative_path:
-                        dip = obj.debug_info_path
-                        if obj.debug_info_path.is_absolute():
-                            try:
-                                obj.debug_info_path = obj.debug_info_path.absolute().relative_to(relative_path)
-                            except ValueError as e:
-                                print('Error:', e)
-                                return 2
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = pathlib.Path(j.file)
-                                if f == dip:
-                                    j.file = obj.debug_info_path.as_posix()
-                                else:
-                                    if f.is_absolute():
-                                        try:
-                                            j.file = f.absolute().relative_to(relative_path).as_posix()
-                                        except ValueError as e:
-                                            print('Error:', e)
-                                            return 2
-                    elif absolute_path:
-                        obj.debug_info_path = absolute_path / obj.debug_info_path
-                        if realpath:
-                            obj.debug_info_path = obj.debug_info_path.resolve()
-                        for i in obj.asects + obj.rsects:
-                            for j in i.code_locations.values():
-                                f = absolute_path / pathlib.Path(j.file)
-                                j.file = f.as_posix()
-                    objects.append((filepath, obj))
-            else:  # filetype == '.asm'
-                if args.merge:
-                    print("Error: source files should not be provided with --merge option")
-                    return 2
-                if args.debug:
-                    debug_info_path = filepath.expanduser().absolute()
-                    if realpath:
-                        debug_info_path = debug_info_path.resolve()
-                    if relative_path:
-                        try:
-                            debug_info_path = debug_info_path.relative_to(relative_path)
-                        except ValueError as e:
-                            print('Error:', e)
-                            return 2
-                else:
-                    debug_info_path = None
-                input_stream = antlr4.InputStream(data)
-                macro_expanded_input_stream = process_macros(input_stream, library_macros, str(filepath))
-                r = build_ast(macro_expanded_input_stream, str(filepath))
-                obj = assemble(r, target_instructions, code_segments, debug_info_path)
-                if debug_info_path:
-                    fp = filepath.as_posix()
-                    dip = debug_info_path.as_posix()
-                    for i in obj.asects + obj.rsects:
-                        for j in i.code_locations.values():
-                            if j.file == fp:
-                                j.file = dip
-                            else:
-                                try:
-                                    f = pathlib.Path(j.file).absolute()
-                                    if realpath:
-                                        f = f.resolve()
-                                    j.file = f.relative_to(relative_path).as_posix()
-                                except ValueError as e:
-                                    print('Error:', e)
-                                    return 2
-                objects.append((filepath, obj))
-        except CdmException as e:
-            e.log()
-            return 1
-
-    if args.merge or args.compile and args.output:
-        if args.output:
-            obj_path = pathlib.Path(args.output)
+        filetype = filepath.suffix or args.merge and '.obj' or '.asm'
+        if filetype in ['.obj', '.lib', ]:
+            obj_files.append(filepath)
         else:
-            obj_path = pathlib.Path('merged.obj')
-        lines = export_objects([tup[1] for tup in objects], target_params, (args.debug or args.merge))
-        try:
-            with obj_path.open('w') as file:
-                file.writelines(lines)
-        except OSError as e:
-            handle_os_error(e)
-    elif args.compile:
-        for path, obj in objects:
-            obj_path = path.with_suffix('.obj').name
-            lines = export_objects([obj], target_params, args.debug)
-            try:
-                with open(obj_path, 'w') as file:
-                    file.writelines(lines)
-            except OSError as e:
-                handle_os_error(e)
-    else:
-        try:
-            data, code_locations = link(objects, target_params)
-        except CdmLinkException as e:
-            log_error(CdmExceptionTag.LINK.value, e.message)
-            return 1
-        try:
+            asm_files.append(filepath)
+    if asm_files and args.merge:
+        log_error("Main", 'Source files should not be provided with --merge option')
+        return 2
+    if obj_files and args.compile:
+        log_error("Main", 'Object files should not be provided with --compile option')
+        return 2
+    objects: list[tuple[Path, ObjectModule]]
+    try:
+        objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
+            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath),
+            read_object_files(target, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
+        ))
+    except AssemblerException as e:
+        handlers.log_asm_exception(e)
+        return 1
+    except ObjectFileException as e:
+        handlers.log_object_file_exception(e)
+        return 1
+    except OSError as e:
+        handlers.log_os_error(e)
+        return 3
+
+    try:
+        if args.merge:
+            write_object_file('merged.obj', [tup[1] for tup in objects], target, (args.debug or args.merge))
+        elif args.compile and args.output:
+            write_object_file(args.output, [tup[1] for tup in objects], target, args.debug)
+        elif args.compile:
+            for path, obj in objects:
+                write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
+        else:
+            # data, code_locations = link(objects)
+            data, code_locations = target_link(objects, target)
             if args.output:
                 write_image(args.output, data)
             else:
                 write_image("out.img", data)
-        except OSError as e:
-            handle_os_error(e)
-
-        if args.debug:
-            code_locations = {key: asdict(loc) for key, loc in code_locations.items()}
-            json_locations = json.dumps(code_locations, indent=4, sort_keys=True)
-            try:
-                with open(args.debug, 'w') as f:
-                    f.write(json_locations)
-            except OSError as e:
-                handle_os_error(e)
+            if args.debug:
+                if args.debug is True:
+                    if args.output:
+                        filename = Path(args.output).with_suffix('.dbg.json')
+                    else:
+                        filename = Path('out.dbg.json')
+                else:
+                    filename = args.debug
+                write_debug_export(filename, code_locations)
+    except LinkerException as e:
+        handlers.log_link_exception(e)
+        return 1
+    except OSError as e:
+        handlers.log_os_error(e)
+        return 3
 
 
 if __name__ == '__main__':

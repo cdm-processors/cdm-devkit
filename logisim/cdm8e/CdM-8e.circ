@@ -85,7 +85,7 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="valign" val="base"/>
     </tool>
   </lib>
-  <main name="CdM_8_mark5"/>
+  <main name="CdM_8e"/>
   <options>
     <a name="gateUndefined" val="ignore"/>
     <a name="simlimit" val="1000"/>
@@ -118,8 +118,8 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
     <tool lib="1" name="AND Gate"/>
     <tool lib="1" name="OR Gate"/>
   </toolbar>
-  <circuit name="CdM_8_mark5">
-    <a name="circuit" val="CdM_8_mark5"/>
+  <circuit name="CdM_8e">
+    <a name="circuit" val="CdM_8e"/>
     <a name="clabel" val=""/>
     <a name="clabelup" val="east"/>
     <a name="clabelfont" val="SansSerif plain 12"/>
@@ -5004,7 +5004,7 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="trigger" val="falling"/>
     </comp>
     <comp loc="(1160,300)" name="arbiter"/>
-    <comp loc="(200,340)" name="CdM_8_mark5"/>
+    <comp loc="(200,340)" name="CdM_8e"/>
     <comp lib="1" loc="(260,370)" name="Controlled Buffer">
       <a name="width" val="8"/>
       <a name="control" val="left"/>
@@ -5681,7 +5681,7 @@ a8 d6 9d cf d9 d1 f1 f2
       <a name="label" val="IOdat"/>
       <a name="labelfont" val="SansSerif plain 9"/>
     </comp>
-    <comp loc="(200,340)" name="CdM_8_mark5"/>
+    <comp loc="(200,340)" name="CdM_8e"/>
     <comp lib="0" loc="(1220,270)" name="Splitter">
       <a name="appear" val="center"/>
     </comp>
@@ -6049,6 +6049,6 @@ d9 d3 10 d0 f2 3a a e1
       <a name="radix" val="16"/>
     </comp>
     <comp lib="4" loc="(770,110)" name="RAM"/>
-    <comp loc="(480,260)" name="CdM_8_mark5"/>
+    <comp loc="(480,260)" name="CdM_8e"/>
   </circuit>
 </project>

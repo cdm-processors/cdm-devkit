@@ -19,7 +19,7 @@ BUILD_FOLDER_EXIST = $(wildcard $(BUILD_FOLDER))
 
 
 # Enabled Java projects
-JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator
+JAVA_PROJECTS = logisim-banked-memory logisim-cdm-emulator logisim-debugger
 
 # Enables processors
 PROCESSORS = cdm8 cdm8e cdm16
@@ -30,6 +30,7 @@ ARCHIVE_FILES = *.circ jar examples
 # System-independent commands
 POETRY = poetry
 VSCE = vsce
+NPM = npm
 CD = cd
 MKDIR = mkdir
 SYNTHM = synthm
@@ -165,6 +166,8 @@ vscode:
 	@echo --------------------------
 	@echo Building VS Code Extension
 	@echo --------------------------
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(VSCODE_EXTENSION_FOLDER) && $(NPM) install
 
 	$(CD) $(CURRENT_DIR)$(SLASH)$(VSCODE_EXTENSION_FOLDER) && $(VSCE) package $(VERSION)
 

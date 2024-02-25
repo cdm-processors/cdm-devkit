@@ -1,2 +1,10 @@
 # VS Code extension binaries
-.vsix
+*.vsix
+
+# Node.js dependencies
+node_modules
+
+# Build artifacts
+out
+dist
+.vscode-test/
