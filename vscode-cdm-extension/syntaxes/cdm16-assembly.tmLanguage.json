@@ -60,12 +60,7 @@
         "comments": {
 			"patterns": [{
 				"name": "comment.line",
-				"match": "(//|#).*$"
-			},
-            {
-				"name": "comment.block",
-				"begin": "/\\*",
-                "end": "\\*/"
+				"match": "(#).*$"
 			}]
 		},
 		"macros": {
