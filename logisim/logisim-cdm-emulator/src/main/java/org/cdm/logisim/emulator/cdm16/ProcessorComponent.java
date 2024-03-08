@@ -139,6 +139,16 @@ public class ProcessorComponent extends InstanceFactory {
         );
 
         GraphicsUtil.drawText(g, "CdM-16", bds.getX() + 65, bds.getY() + 85, 0, -1);
+
+        g.setFont(
+                increaseFontSize(
+                        g.getFont(),
+                        -7
+                )
+        );
+
+        GraphicsUtil.drawText(g, "Emulator", bds.getX() + 65, bds.getY() + 99, 0, -1);
+
     }
 
     @Override
