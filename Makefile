@@ -171,18 +171,38 @@ vscode:
 
 	$(CD) $(CURRENT_DIR)$(SLASH)$(VSCODE_EXTENSION_FOLDER) && $(VSCE) package $(VERSION)
 
-# Compile microcode from CdM-16
-microcode:
+# Compile microcode for all processors
+microcode: cdm16_microcode cdm16e_microcode
+
+# Compile microcode for CdM-16
+cdm16_microcode:
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode && \
 		$(SYNTHM) -i cdm16_decoder.def $(NEW_LINE)
 
 	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode && \
 		$(SYNTHM) -i cdm16_decoder_exc.def --fill 0x8000400 $(NEW_LINE)
 
+# Compile microcode for CdM-16e
+cdm16e_microcode:
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16e_decoder.def $(NEW_LINE)
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16e_decoder_exc.def --fill 0x8000400 $(NEW_LINE)
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16e_extension.def $(NEW_LINE)
+
+	$(CD) $(CURRENT_DIR)$(SLASH)$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode && \
+		$(SYNTHM) -i cdm16e_extension_exc.def $(NEW_LINE)
+
 # Prepare resources for logisim-cdm-emulator
 emulator_resources: microcode
 	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder*.img \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16
+
+	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_*.img \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e
 
 clean: clean_microcode clean_emulator_resources
 	$(RM) $(BUILD_FOLDER)
@@ -196,7 +216,9 @@ clean: clean_microcode clean_emulator_resources
 
 	$(RM_FILE) $(VSCODE_EXTENSION_FOLDER)$(SLASH)vscode-cdm-extension-*.*.*.vsix
 
-clean_microcode:
+clean_microcode: clean_microcode_cdm16 clean_microcode_cdm16e
+
+clean_microcode_cdm16:
 	$(RM_FILE) \
 		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder.circ \
 		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder.img
@@ -205,9 +227,29 @@ clean_microcode:
 		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder_exc.circ \
 		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder_exc.img
 
+clean_microcode_cdm16e:
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_decoder.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_decoder.img
+
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_decoder_exc.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_decoder_exc.img
+
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_extension.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_extension.img
+
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_extension_exc.circ \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_extension_exc.img
+
 clean_emulator_resources:
 	$(RM_FILE) \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)*.img
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16$(SLASH)*.img
+
+	$(RM_FILE) \
+		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e$(SLASH)*.img
 
 # Tests
 
