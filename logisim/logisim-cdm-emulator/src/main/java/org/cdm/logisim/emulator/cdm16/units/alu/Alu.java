@@ -1,6 +1,6 @@
 package org.cdm.logisim.emulator.cdm16.units.alu;
 
-import org.cdm.logisim.emulator.cdm16.Processor;
+import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
 
 import org.cdm.logisim.emulator.cdm16.Arithmetic;
 
@@ -27,93 +27,93 @@ public class Alu {
         int ZN;
 
         switch (parameters.alu_op_type()) {
-            case Processor.ALU_InstructionGroups.ALU_3:
+            case Cdm16Processor.ALU_InstructionGroups.ALU_3:
                 switch (parameters.alu_func()) {
-                    case Processor.ALU_3op.AND:
+                    case Cdm16Processor.ALU_3op.AND:
                         rd = rs0 & rs1;
                         break;
-                    case Processor.ALU_3op.OR:
+                    case Cdm16Processor.ALU_3op.OR:
                         rd = rs0 | rs1;
                         break;
-                    case Processor.ALU_3op.XOR:
+                    case Cdm16Processor.ALU_3op.XOR:
                         rd = rs0 ^ rs1;
                         break;
-                    case Processor.ALU_3op.BIC:
+                    case Cdm16Processor.ALU_3op.BIC:
                         rd = rs0 & (~rs1);
                         break;
-                    case Processor.ALU_3op.ADD:
+                    case Cdm16Processor.ALU_3op.ADD:
                         rd = rs0 + rs1;
                         cOut = checkC(rd);
                         vOut = checkV(normalize(rd), rs0, rs1);
                         break;
-                    case Processor.ALU_3op.ADC:
+                    case Cdm16Processor.ALU_3op.ADC:
                         rd = rs0 + rs1 + cIn;
                         cOut = checkC(rd);
                         vOut = checkV(normalize(rd), rs0, rs1 + cIn);
                         break;
-                    case Processor.ALU_3op.SUB:
+                    case Cdm16Processor.ALU_3op.SUB:
                         rd = rs0 + (rs1 ^ 0xFFFF) + 1;
                         cOut = checkC(rd);
                         vOut = checkV(normalize(rd), rs0, (rs1 ^ 0xFFFF) + 1);
                         break;
-                    case Processor.ALU_3op.SBC:
+                    case Cdm16Processor.ALU_3op.SBC:
                         rd = rs0 + (rs1 ^ 0xFFFF) + cIn;
                         cOut = checkC(rd);
                         vOut = checkV(normalize(rd), rs0, (rs1 ^ 0xFFFF) + cIn);
                         break;
                 }
                 break;
-            case Processor.ALU_InstructionGroups.ALU_2:
+            case Cdm16Processor.ALU_InstructionGroups.ALU_2:
                 switch (parameters.alu_func()) {
-                    case Processor.ALU_2op.NEG:
+                    case Cdm16Processor.ALU_2op.NEG:
                         rd = (rs0 ^ 0xFFFF) + 1;
                         cOut = checkC(rd);
                         vOut = toInteger(rs0 == 0x8000);
                         break;
-                    case Processor.ALU_2op.NOT:
+                    case Cdm16Processor.ALU_2op.NOT:
                         rd = ~rs0;
                         break;
-                    case Processor.ALU_2op.SXT:
+                    case Cdm16Processor.ALU_2op.SXT:
                         rd = Arithmetic.signExtend(rs0);
                         break;
-                    case Processor.ALU_2op.SCL:
+                    case Cdm16Processor.ALU_2op.SCL:
                         rd = rs0 & 0x00FF;
                         break;
                 }
                 break;
-            case Processor.ALU_InstructionGroups.SHIFTS:
+            case Cdm16Processor.ALU_InstructionGroups.SHIFTS:
                 int shiftCount = parameters.shift_count_d();
 
                 shiftCount++;
 
                 switch (parameters.alu_func()) {
-                    case Processor.ALU_Shifts.SHL:
+                    case Cdm16Processor.ALU_Shifts.SHL:
                         rd = rs0 << shiftCount;
                         cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
-                    case Processor.ALU_Shifts.SHR:
+                    case Cdm16Processor.ALU_Shifts.SHR:
                         rd = rs0 >>> shiftCount;
                         cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
-                    case Processor.ALU_Shifts.SHRA:
+                    case Cdm16Processor.ALU_Shifts.SHRA:
                         int sign = checkN(rs0);
                         int mask = toBoolean(sign) ? -1 : 0;
                         rd = (rs0 >> shiftCount) | (mask << 16 - shiftCount);
                         cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
-                    case Processor.ALU_Shifts.ROL:
+                    case Cdm16Processor.ALU_Shifts.ROL:
                         rd = (rs0 << shiftCount) | (rs0 >> (16 - shiftCount));
                         cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
-                    case Processor.ALU_Shifts.ROR:
+                    case Cdm16Processor.ALU_Shifts.ROR:
                         rd = (rs0 >> shiftCount) | (rs0 << (16 - shiftCount));
                         cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;
-                    case Processor.ALU_Shifts.RCL:
+                    case Cdm16Processor.ALU_Shifts.RCL:
                         rd = (rs0 << shiftCount) | (cIn << shiftCount - 1) | (rs0 >> (16 - shiftCount + 1));
                         cOut = toInteger(testBit(rs0, 16 - shiftCount));
                         break;
-                    case Processor.ALU_Shifts.RCR:
+                    case Cdm16Processor.ALU_Shifts.RCR:
                         rd = (rs0 >> shiftCount) | (cIn << (16 - shiftCount)) | (rs0 << (16 - shiftCount + 1));
                         cOut = toInteger(testBit(rs0, shiftCount - 1));
                         break;

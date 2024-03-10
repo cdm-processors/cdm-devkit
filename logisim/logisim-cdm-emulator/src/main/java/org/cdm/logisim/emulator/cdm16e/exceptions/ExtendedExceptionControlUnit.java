@@ -1,25 +1,30 @@
-package org.cdm.logisim.emulator.cdm16.units.exceptions;
+package org.cdm.logisim.emulator.cdm16e.exceptions;
 
-import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
+import org.cdm.logisim.emulator.cdm16.Cdm16Processor.ExceptionNumbers;
+import org.cdm.logisim.emulator.cdm16.units.exceptions.ExceptionControlUnitOutputParameters;
+import org.cdm.logisim.emulator.cdm16e.Cdm16eProcessor.ExtendedExceptionNumbers;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExceptionControlUnit {
-    public static ExceptionControlUnitOutputParameters compute(ExceptionControlUnitInputParameters parameters) {
+public class ExtendedExceptionControlUnit {
+    public static ExceptionControlUnitOutputParameters compute(ExtendedExceptionControlUnitInputParameters parameters) {
         List<Integer> triggeredExceptions = new ArrayList<>();
 
         if (parameters.exc_trig_sp()) {
-            triggeredExceptions.add(Cdm16Processor.ExceptionNumbers.UNALIGNED_SP);
+            triggeredExceptions.add(ExceptionNumbers.UNALIGNED_SP);
         }
         if (parameters.exc_trig_pc()) {
-            triggeredExceptions.add(Cdm16Processor.ExceptionNumbers.UNALIGNED_PC);
+            triggeredExceptions.add(ExceptionNumbers.UNALIGNED_PC);
         }
         if (parameters.exc_trig_invalid_inst()) {
-            triggeredExceptions.add(Cdm16Processor.ExceptionNumbers.INVALID_INST);
+            triggeredExceptions.add(ExceptionNumbers.INVALID_INST);
+        }
+        if (parameters.exc_trig_privilege_violation()) {
+            triggeredExceptions.add(ExtendedExceptionNumbers.PRIVILEGE_VIOLATION);
         }
         if (parameters.exc_trig_ext()) {
-            triggeredExceptions.add(Cdm16Processor.ExceptionNumbers.EXTERNAL_EXC);
+            triggeredExceptions.add(ExceptionNumbers.EXTERNAL_EXC);
         }
 
         boolean gotException = true;
@@ -36,7 +41,10 @@ public class ExceptionControlUnit {
         boolean unrecoverableInstruction = parameters.rtiInstruction() || parameters.intInstruction();
 
         boolean internalExceptionHappened =
-                parameters.exc_trig_sp() || parameters.exc_trig_pc() || parameters.exc_trig_invalid_inst();
+                parameters.exc_trig_sp()
+                        || parameters.exc_trig_pc()
+                        || parameters.exc_trig_invalid_inst()
+                        || parameters.exc_trig_privilege_violation();
 
         boolean multipleInstructionsOnSamePhase =
                 internalExceptionHappened && parameters.exc_trig_ext();
@@ -46,13 +54,13 @@ public class ExceptionControlUnit {
 
         boolean latch_double_fault =
                 unrecoverableInstruction
-                || multipleInstructionsOnSamePhase
-                || multipleInstructionsAcrossPhases;
+                        || multipleInstructionsOnSamePhase
+                        || multipleInstructionsAcrossPhases;
 
         int exc_internal_vec_reg_output;
 
         if (latch_double_fault) {
-            exc_internal_vec_reg_output = Cdm16Processor.ExceptionNumbers.DOUBLE_FAULT;
+            exc_internal_vec_reg_output = ExceptionNumbers.DOUBLE_FAULT;
         } else {
             exc_internal_vec_reg_output = excNumber;
         }

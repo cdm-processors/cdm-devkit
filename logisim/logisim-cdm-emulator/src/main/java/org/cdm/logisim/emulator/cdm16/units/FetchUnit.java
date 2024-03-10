@@ -1,6 +1,6 @@
 package org.cdm.logisim.emulator.cdm16.units;
 
-import org.cdm.logisim.emulator.cdm16.Processor;
+import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
 
 public class FetchUnit {
     public static int fetchInstruction(
@@ -24,12 +24,12 @@ public class FetchUnit {
                 if (exc_triggered) {
                     if (exc_trig_ext) {
                         if (latch_double_fault) {
-                            instruction = Processor.ExceptionNumbers.DOUBLE_FAULT;
+                            instruction = Cdm16Processor.ExceptionNumbers.DOUBLE_FAULT;
                         } else {
                             instruction = direct_exc_vec;
                         }
                     } else {
-                        if (exc_internal_vec == Processor.ExceptionNumbers.EXTERNAL_EXC) {
+                        if (exc_internal_vec == Cdm16Processor.ExceptionNumbers.EXTERNAL_EXC) {
                             instruction = exc_vec;
                         } else {
                             instruction = exc_internal_vec;

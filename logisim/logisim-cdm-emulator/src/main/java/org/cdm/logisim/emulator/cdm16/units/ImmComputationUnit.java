@@ -1,6 +1,6 @@
 package org.cdm.logisim.emulator.cdm16.units;
 
-import org.cdm.logisim.emulator.cdm16.Processor;
+import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
 
 public class ImmComputationUnit {
     public static int computeImmediate(
@@ -12,8 +12,8 @@ public class ImmComputationUnit {
     ) {
         int imm = imm_d;
 
-        if (Processor.MicrocodeSignals.check(microcommand, Processor.MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
-            if (imm_type == Processor.IMM_Type.IMM_6) {
+        if (Cdm16Processor.MicrocodeSignals.check(microcommand, Cdm16Processor.MicrocodeSignals.IMM_EXTEND_NEGATIVE)) {
+            if (imm_type == Cdm16Processor.IMM_Type.IMM_6) {
                 imm |= 0b1111111111000000;
             } else {
                 imm |= 0b1111111000000000;
@@ -27,7 +27,7 @@ public class ImmComputationUnit {
                 imm |= 2;
             }
         } else {
-            if (Processor.MicrocodeSignals.check(microcommand, Processor.MicrocodeSignals.IMM_SHIFT)) {
+            if (Cdm16Processor.MicrocodeSignals.check(microcommand, Cdm16Processor.MicrocodeSignals.IMM_SHIFT)) {
                 imm <<= 1;
             }
         }

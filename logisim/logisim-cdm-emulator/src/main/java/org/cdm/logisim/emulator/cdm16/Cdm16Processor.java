@@ -26,69 +26,78 @@ import static org.cdm.logisim.emulator.cdm16.Arithmetic.toBoolean;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Processor {
+public class Cdm16Processor {
 
     public static int MAX_PHASE = 7;
     public static int DELAY = 1;
 
-    private final int[] mainMicrocode;
-    private final int[] exceptionMicrocode;
+    private static final String MAIN_MICROCODE = "/cdm16/cdm16_decoder.img";
+    private static final String EXC_MICROCODE = "/cdm16/cdm16_decoder_exc.img";
 
-    private int microcommand;
-    private int microcommandAddress;
+    protected int[] mainMicrocode;
+    protected int[] exceptionMicrocode;
 
-    private final RegisterFile registerFile = new RegisterFile();
+    protected int microcommand;
 
-    private final Register fp = registerFile.getFramePointer();
-    private final RegisterCounter pc = new RegisterCounter("pc");
-    private final RegisterCounter sp = new RegisterCounter("sp");
-    private final StatusRegister ps = new StatusRegister("ps");
+    protected int microcommandAddress;
 
-    private final Register ir = new Register("ir");
+    protected final RegisterFile registerFile = new RegisterFile();
 
-    private boolean fetch = true;
+    protected final Register fp = registerFile.getFramePointer();
+    protected final RegisterCounter pc = new RegisterCounter("pc");
+    protected final StatusRegister ps = new StatusRegister("ps");
 
-    private int status = Status.RUNNING;
+    protected RegisterCounter sp = new RegisterCounter("sp");
 
-    private int phase = 0;
+    protected final Register ir = new Register("ir");
 
-    private final Bus bus0 = new Bus("bus0");
-    private final Bus bus1 = new Bus("bus1");
-    private final Bus busA = new Bus("busA");
-    private final Bus busD = new Bus("busD");
+    protected boolean fetch = true;
 
-    private final Bus[] buses = new Bus[] {
+    protected int status = Status.RUNNING;
+
+    protected int phase = 0;
+
+    protected final Bus bus0 = new Bus("bus0");
+    protected final Bus bus1 = new Bus("bus1");
+    protected final Bus busA = new Bus("busA");
+    protected final Bus busD = new Bus("busD");
+
+    protected final Bus[] buses = new Bus[] {
             bus0,
             bus1,
             busD,
             busA
     };
 
-    private final Latch holdLatch = new Latch();
-    private final Latch waitLatch = new Latch();
-    private final Latch haltLatch = new Latch();
-    private final Latch faultLatch = new Latch();
+    protected final Latch holdLatch = new Latch();
+    protected final Latch waitLatch = new Latch();
+    protected final Latch haltLatch = new Latch();
+    protected final Latch faultLatch = new Latch();
 
-    private final Register externalExceptionVectorRegister = new Register("exc_vec_reg");
+    protected final Register externalExceptionVectorRegister = new Register("exc_vec_reg");
 
-    private final Register internalExceptionVectorRegister = new Register("exc_internal_vec_reg");
-    private final Latch exceptionLatch = new Latch();
-    private final Latch startupLatch = new Latch();
+    protected final Register internalExceptionVectorRegister = new Register("exc_internal_vec_reg");
+    protected final Latch exceptionLatch = new Latch();
+    protected final Latch startupLatch = new Latch();
 
-    private final Latch virtualInstructionLatch = new Latch();
+    protected final Latch virtualInstructionLatch = new Latch();
 
-    private final BusController busController = new BusController();
+    protected final BusController busController = new BusController();
 
-    private InstructionDecoderOutputParameters decoderSignals;
-    private AluOutputParameters aluSignals;
-    private ExceptionControlUnitOutputParameters ecuSignals;
-    private BusControllerOutputParameters busControllerSignals;
+    protected InstructionDecoderOutputParameters decoderSignals;
+    protected AluOutputParameters aluSignals;
+    protected ExceptionControlUnitOutputParameters ecuSignals;
+    protected BusControllerOutputParameters busControllerSignals;
 
-    public Processor() {
-        mainMicrocode = MicrocodeLoader.loadFromResources(MicrocodeLoader.MAIN_MICROCODE);
-        exceptionMicrocode = MicrocodeLoader.loadFromResources(MicrocodeLoader.EXC_MICROCODE);
+    public Cdm16Processor() {
+        loadMicrocode();
 
         initialize();
+    }
+
+    protected void loadMicrocode() {
+        mainMicrocode = MicrocodeLoader.loadFromResources(MAIN_MICROCODE);
+        exceptionMicrocode = MicrocodeLoader.loadFromResources(EXC_MICROCODE);
     }
 
     public void externalInterrupt(InstanceState state, int interruptNumber) {}
@@ -188,7 +197,7 @@ public class Processor {
         updateExternal(state);
     }
 
-    private void initialize() {
+    protected void initialize() {
         fetch = true;
 
         decoderSignals = InstructionDecoder.getFetchSignals();
@@ -197,7 +206,7 @@ public class Processor {
         startupLatch.set();
     }
 
-    private void updateProcessorState(InstanceState state) {
+    protected void updateProcessorState(InstanceState state) {
         if (!toBoolean(state.getPort(Ports.CLK))) {
             holdLatch.setValue(toBoolean(state.getPort(Ports.HOLD)));
         }
@@ -258,7 +267,7 @@ public class Processor {
         updateDatapath();
     }
 
-    private void updateRegisters() {
+    protected void updateRegisters() {
         if (MicrocodeSignals.check(microcommand, MicrocodeSignals.PC_LATCH)) {
             pc.setValue(busD.getValue());
         }
@@ -306,7 +315,7 @@ public class Processor {
         }
     }
 
-    private void updateDatapath() {
+    protected void updateDatapath() {
         int imm = ImmComputationUnit.computeImmediate(
                 decoderSignals.imm_d(),
                 microcommand,
@@ -392,7 +401,7 @@ public class Processor {
         }
     }
 
-    private int readDataBus(InstanceState state) {
+    protected int readDataBus(InstanceState state) {
         if (state.getPort(Ports.DATA_IN).isFullyDefined()) {
             return state.getPort(Ports.DATA_IN).toIntValue();
         } else {
@@ -400,7 +409,7 @@ public class Processor {
         }
     }
 
-    private void updateExternal(InstanceState state) {
+    protected void updateExternal(InstanceState state) {
         for (int i = 0; i < registerFile.getRegisterCount(); ++i) {
             state.setPort(
                     Ports.R0 + i,
@@ -465,7 +474,7 @@ public class Processor {
         );
     }
 
-    private void updateExceptionLatches(InstanceState state) {
+    protected void updateExceptionLatches(InstanceState state) {
         if (toBoolean(state.getPort(Ports.EXC))) {
             externalExceptionVectorRegister.setValue(state.getPort(Ports.EXC_NUMBER).toIntValue());
         }
@@ -484,7 +493,7 @@ public class Processor {
         }
     }
 
-    private void updateClockControlLatches(
+    protected void updateClockControlLatches(
             boolean halt,
             boolean wait,
             boolean irq,
@@ -503,13 +512,13 @@ public class Processor {
         }
     }
 
-    private void updateWaitLatch(boolean irq) {
+    protected void updateWaitLatch(boolean irq) {
         if (waitLatch.getValue() && irq) {
             waitLatch.reset();
         }
     }
 
-    private void updateStatus() {
+    protected void updateStatus() {
         List<Integer> enabledLatches = new ArrayList<>();
         enabledLatches.add(Status.RUNNING);
 
@@ -532,7 +541,7 @@ public class Processor {
     }
 
 
-    private boolean clockSuspended() {
+    protected boolean clockSuspended() {
         return haltLatch.getValue() ||
                 faultLatch.getValue() ||
                 holdLatch.getValue() ||
