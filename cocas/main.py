@@ -102,12 +102,12 @@ def main():
     try:
         if args.merge:
             write_object_file((args.output or 'merged.obj'), [tup[1] for tup in objects],
-                              target, (args.debug or args.merge))
+                              target, bool(args.debug or args.merge))
         elif args.compile and args.output:
-            write_object_file(args.output, [tup[1] for tup in objects], target, args.debug)
+            write_object_file(args.output, [tup[1] for tup in objects], target, bool(args.debug))
         elif args.compile:
             for path, obj in objects:
-                write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
+                write_object_file(path.with_suffix('.obj').name, [obj], target, bool(args.debug))
         else:
             data, code_locations = target_link(objects, target)
             if args.output:
