@@ -8,14 +8,15 @@ import antlr4
 from cocas.object_module import ObjectModule
 
 from .ast_builder import build_ast
-from .macro_processor import ExpandMacrosVisitor, process_macros, read_mlb
+from .exceptions import AssemblerException, AssemblerExceptionTag
+from .macro_processor import MacroDefinition, process_macros, read_mlb
 from .object_generator import generate_object_module
-from .targets import TargetInstructions, import_target, mlb_path
+from .targets import TargetInstructions, import_target, standard_mlb
 
 
 def assemble_module(input_stream: antlr4.InputStream,
                     target_instructions: TargetInstructions,
-                    macros_library: ExpandMacrosVisitor,
+                    macros_library: dict[str, dict[int, MacroDefinition]],
                     filepath: Path) -> ObjectModule:
     """
     Convert lines of an assembler file to object code
@@ -50,7 +51,9 @@ def assemble_files(target: str,
                    debug: bool,
                    relative_path: Optional[Path],
                    absolute_path: Optional[Path],
-                   realpath: bool) -> list[tuple[Path, ObjectModule]]:
+                   realpath: bool,
+                   macro_libraries: list[dict[str, dict[int, MacroDefinition]]] = None
+                   ) -> list[tuple[Path, ObjectModule]]:
     """
     Open and assemble multiple files into object modules
 
@@ -60,11 +63,22 @@ def assemble_files(target: str,
     :param relative_path: if debug paths should be relative to some path
     :param absolute_path: if relative paths should be converted to absolute
     :param realpath: if paths should be converted to canonical
+    :param macro_libraries: user's .mlb files, different from standard .mlb
     :return: list of pairs [source file path, object module]
     """
     _ = absolute_path
     target_instructions = import_target(target)
-    macros_library = read_mlb(mlb_path(target))
+    macros = read_mlb(standard_mlb(target))
+    if macro_libraries:
+        for lib in macro_libraries:
+            for name in lib.keys():
+                for i in lib[name].keys() & macros.get(name, {}).keys():
+                    if lib[name][i] != macros[name][i]:
+                        raise AssemblerException(AssemblerExceptionTag.MACRO,
+                                                 lib[name][i].location.file, lib[name][i].location.line,
+                                                 description=f"Macros {name}/{i} was declared before with another body")
+            macros |= lib
+
     objects = []
 
     for filepath in files:
@@ -74,15 +88,15 @@ def assemble_files(target: str,
         if not data.endswith('\n'):
             data += '\n'
         input_stream = antlr4.InputStream(data)
-        obj = assemble_module(input_stream, target_instructions, macros_library, filepath)
+        obj = assemble_module(input_stream, target_instructions, macros, filepath)
 
         debug_info_path = get_debug_info_path(filepath, debug, relative_path, realpath)
         if debug_info_path:
             obj.source_file_path = debug_info_path
             fp = filepath.absolute().as_posix()
             dip = debug_info_path.as_posix()
-            for i in chain(obj.asects, obj.rsects):
-                for j in i.code_locations.values():
+            for lib in chain(obj.asects, obj.rsects):
+                for j in lib.code_locations.values():
                     if j.file == fp:
                         j.file = dip
                     else:

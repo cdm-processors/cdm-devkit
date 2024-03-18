@@ -72,6 +72,9 @@ class MacroDefinition:
     lines: list[MacroLine]
     location: CodeLocation
 
+    def __eq__(self, other):
+        return self.name == other.name and self.arity == other.arity and self.lines == other.lines
+
 
 def substitute_piece(piece, params: list[str], nonce: str, variables: dict[str, str]):
     if isinstance(piece, MacroParameter):
@@ -290,7 +293,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             return MacroNonce()
 
 
-def read_mlb(filepath: Path):
+def read_mlb(filepath: Path) -> dict[str, dict[int, MacroDefinition]]:
     str_path = filepath.absolute().as_posix()
     input_stream = FileStream(str_path)
     lexer = MacroLexer(input_stream)

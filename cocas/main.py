@@ -7,7 +7,7 @@ from typing import Union
 import colorama
 
 from cocas import exception_handlers as handlers
-from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets
+from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets, read_mlb
 from cocas.exception_handlers import log_error
 from cocas.linker import LinkerException, list_linker_targets, target_link, write_debug_export, write_image
 from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
@@ -19,7 +19,7 @@ def main():
     available_targets = sorted(list_assembler_targets() & list_object_targets() & list_linker_targets())
 
     parser = argparse.ArgumentParser('cocas')
-    parser.add_argument('sources', type=Path, nargs='*', help='source files')
+    parser.add_argument('sources', type=Path, nargs='*', help='source files, object files and macro libraries')
     parser.add_argument('-t', '--target', type=str, default='cdm-16',
                         help='target processor, CdM-16 is default. May omit "cdm"')
     parser.add_argument('-T', '--list-targets', action='count', help='list available targets and exit')
@@ -70,11 +70,14 @@ def main():
 
     asm_files = []
     obj_files = []
+    mlb_files = []
     filepath: Path
     for filepath in args.sources:
         filetype = filepath.suffix or args.merge and '.obj' or '.asm'
         if filetype in ['.obj', '.lib', ]:
             obj_files.append(filepath)
+        elif filetype == '.mlb':
+            mlb_files.append(filepath)
         else:
             asm_files.append(filepath)
     if asm_files and args.merge:
@@ -85,8 +88,10 @@ def main():
         return 2
     objects: list[tuple[Path, ObjectModule]]
     try:
+        macro_libraries = [read_mlb(mlb) for mlb in mlb_files]
         objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
-            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath),
+            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath,
+                           macro_libraries=macro_libraries),
             read_object_files(target, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
         ))
     except AssemblerException as e:
@@ -108,7 +113,6 @@ def main():
             for path, obj in objects:
                 write_object_file(path.with_suffix('.obj').name, [obj], target, args.debug)
         else:
-            # data, code_locations = link(objects)
             data, code_locations = target_link(objects, target)
             if args.output:
                 write_image(args.output, data)
