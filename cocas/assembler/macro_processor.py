@@ -1,10 +1,12 @@
+import codecs
+import itertools
 import re
 from base64 import b64encode
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
-from antlr4 import CommonTokenStream, FileStream, InputStream
+from antlr4 import CommonTokenStream, InputStream
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 
 from cocas.object_module import CodeLocation
@@ -58,11 +60,30 @@ class MacroVariable:
     name_pieces: list
 
 
+def not_ws(x):
+    return not isinstance(x, str) or not x.isspace()
+
+
+def iter_eq(a, b):
+    if isinstance(a, str) or isinstance(b, str) or not isinstance(a, Iterable) or not isinstance(b, Iterable):
+        return a == b
+    else:
+        return all(iter_eq(x, y) for x, y in itertools.zip_longest(a, b))
+
+
 @dataclass
 class MacroLine:
     label_pieces: list
     instruction_pieces: list
     parameter_pieces: list[list]
+
+    def __eq__(self, other):
+        return (iter_eq(filter(not_ws, self.label_pieces), filter(not_ws, other.label_pieces)) and
+                iter_eq(filter(not_ws, self.instruction_pieces), filter(not_ws, other.instruction_pieces)) and
+                iter_eq(
+                    map(lambda x: filter(not_ws, x), self.parameter_pieces),
+                    map(lambda x: filter(not_ws, x), other.parameter_pieces)
+                ))
 
 
 @dataclass
@@ -231,7 +252,7 @@ class ExpandMacrosVisitor(MacroVisitor):
             return []
 
         lines = []
-        for child in ctx.children:
+        for child in ctx.line():
             lines.append(self.visitMacroLine(child))
         return lines
 
@@ -295,7 +316,12 @@ class ExpandMacrosVisitor(MacroVisitor):
 
 def read_mlb(filepath: Path) -> dict[str, dict[int, MacroDefinition]]:
     str_path = filepath.absolute().as_posix()
-    input_stream = FileStream(str_path)
+    with filepath.open('rb') as file:
+        data = file.read()
+    data = codecs.decode(data, 'utf8', 'strict')
+    if not data.endswith('\n'):
+        data += '\n'
+    input_stream = InputStream(data)
     lexer = MacroLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = MacroParser(token_stream)

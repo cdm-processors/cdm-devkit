@@ -76,7 +76,7 @@ def assemble_files(target: str,
                     if lib[name][i] != macros[name][i]:
                         raise AssemblerException(AssemblerExceptionTag.MACRO,
                                                  lib[name][i].location.file, lib[name][i].location.line,
-                                                 description=f"Macros {name}/{i} was declared before with another body")
+                                                 description=f"Redefinition of macro {name}/{i} with different body")
             macros |= lib
 
     objects = []
