@@ -15,6 +15,7 @@ from .ast_nodes import (
     LabelDeclarationNode,
     LabelNode,
     LocatableNode,
+    Node,
     ProgramNode,
     RegisterNode,
     RelocatableExpressionNode,
@@ -164,8 +165,9 @@ class BuildAstVisitor(AsmParserVisitor):
         ret = []
         for c in ctx.children:
             nodes = []
-            if isinstance(c, AsmParser.StandaloneLabelContext):
-                nodes.append(self.visitStandaloneLabel(c))
+            if isinstance(c, AsmParser.StandaloneLabelsContext):
+                for i in self.visitStandaloneLabels(c):
+                    nodes.append(i)
             elif isinstance(c, AsmParser.InstructionLineContext):
                 nodes += self.visitInstructionLine(c)
             elif isinstance(c, AsmParser.ConditionalContext):
@@ -214,17 +216,21 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
-    def visitStandaloneLabel(self, ctx: AsmParser.StandaloneLabelContext) -> LabelDeclarationNode:
-        label_decl = self.visitLabel_declaration(ctx.label_declaration())
-        label_decl.external = ctx.Ext() is not None
-        if label_decl.entry and label_decl.external:
-            raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                                     f'Label {label_decl.label.name} cannot be both external and entry')
+    def visitStandaloneLabels(self, ctx: AsmParser.StandaloneLabelsContext) -> list[LabelDeclarationNode]:
+        label_decl = self.visitLabels_declaration(ctx.labels_declaration())
+        for i in label_decl:
+            i.external = ctx.Ext() is not None
+            if i.entry and i.external:
+                raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                                         f'Label {i.label.name} cannot be both external and entry')
         return label_decl
 
-    def visitLabel_declaration(self, ctx: AsmParser.Label_declarationContext) -> LabelDeclarationNode:
+    def visitLabels_declaration(self, ctx: AsmParser.Labels_declarationContext) -> list[LabelDeclarationNode]:
         is_entry = ctx.ANGLE_BRACKET() is not None
-        return LabelDeclarationNode(self.visitLabel(ctx.label()), is_entry, False)
+        return [LabelDeclarationNode(i, is_entry, False) for i in self.visitLabels(ctx.labels())]
+
+    def visitLabels(self, ctx: AsmParser.LabelsContext):
+        return [self.visitLabel(i) for i in ctx.label()]
 
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
         return LabelNode(ctx.getText())
@@ -240,10 +246,10 @@ class BuildAstVisitor(AsmParserVisitor):
         field_name = ctx.name()[1].getText()
         return TemplateFieldNode(template_name, field_name)
 
-    def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list:
+    def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list[Node]:
         ret = []
-        if ctx.label_declaration() is not None:
-            ret.append(self.visitLabel_declaration(ctx.label_declaration()))
+        if ctx.labels_declaration() is not None:
+            ret += self.visitLabels_declaration(ctx.labels_declaration())
         op = ctx.instruction().getText()
         args = self.visitArguments(ctx.arguments()) if ctx.arguments() is not None else []
         ret.append(InstructionNode(op, args))

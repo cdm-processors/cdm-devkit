@@ -12,9 +12,9 @@ from base64 import b64decode
     self.current_offset = 0
 }
 
-program_nomacros : NEWLINE* section* End ;
+program_nomacros : NEWLINE* /*shared_externals*/ section* End ;
 
-program : NEWLINE* line_mark+ section* End ;
+program : NEWLINE* line_mark+ /*shared_externals*/ section* End ;
 
 section
     :  asect_header section_body # absoluteSection
@@ -57,11 +57,13 @@ break_statement : Break NEWLINE+ ;
 continue_statement : Continue NEWLINE+ ;
 
 line
-    : label_declaration Ext? NEWLINE+                    # standaloneLabel
-    | label_declaration? instruction arguments? NEWLINE+ # instructionLine
+    : labels_declaration Ext? NEWLINE+                    # standaloneLabels
+    | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-label_declaration: label (COLON | ANGLE_BRACKET) ;
+//shared_externals: (labels_declaration Ext NEWLINE+)* ;
+labels_declaration: labels (COLON | ANGLE_BRACKET) ;
+labels: label (COMMA label)*;
 arguments : argument (COMMA argument)* ;
 
 conditional : If NEWLINE+ conditions code_block else_clause? Fi NEWLINE+ ;

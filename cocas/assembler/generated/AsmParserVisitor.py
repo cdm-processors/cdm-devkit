@@ -87,8 +87,8 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#standaloneLabel.
-    def visitStandaloneLabel(self, ctx:AsmParser.StandaloneLabelContext):
+    # Visit a parse tree produced by AsmParser#standaloneLabels.
+    def visitStandaloneLabels(self, ctx:AsmParser.StandaloneLabelsContext):
         return self.visitChildren(ctx)
 
 
@@ -97,8 +97,18 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#label_declaration.
-    def visitLabel_declaration(self, ctx:AsmParser.Label_declarationContext):
+    # Visit a parse tree produced by AsmParser#shared_externals.
+    def visitShared_externals(self, ctx:AsmParser.Shared_externalsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#labels_declaration.
+    def visitLabels_declaration(self, ctx:AsmParser.Labels_declarationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#labels.
+    def visitLabels(self, ctx:AsmParser.LabelsContext):
         return self.visitChildren(ctx)
 
 
