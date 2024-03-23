@@ -147,7 +147,8 @@ class ExpandMacrosVisitor(MacroVisitor):
         if macro.name not in self.macros:
             self.macros[macro.name] = dict()
         if macro.arity in self.macros[macro.name]:
-            raise CdmTempException(f'Multiple definitions of macro {macro.name}')
+            if self.macros[macro.name][macro.arity] != macro:
+                raise CdmTempException(f"Redefinition of macro {macro.name}/{macro.arity} with different body")
         self.macros[macro.name][macro.arity] = macro
 
     # Returns a None for things as asect or empty line.
