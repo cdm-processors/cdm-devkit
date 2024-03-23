@@ -12,9 +12,9 @@ from base64 import b64decode
     self.current_offset = 0
 }
 
-program_nomacros : NEWLINE* /*shared_externals*/ section* End ;
+program_nomacros : NEWLINE* shared_externals* section* End ;
 
-program : NEWLINE* line_mark+ /*shared_externals*/ section* End ;
+program : NEWLINE* line_mark+ shared_externals* section* End ;
 
 section
     :  asect_header section_body # absoluteSection
@@ -61,7 +61,7 @@ line
     | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-//shared_externals: (labels_declaration Ext NEWLINE+)* ;
+shared_externals: labels COLON Ext NEWLINE+ ;
 labels_declaration: labels (COLON | ANGLE_BRACKET) ;
 labels: label (COMMA label)*;
 arguments : argument (COMMA argument)* ;

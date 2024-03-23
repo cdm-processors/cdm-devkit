@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from cocas.object_module import CodeLocation
@@ -119,3 +119,4 @@ class ProgramNode(Node):
     template_sections: list[TemplateSectionNode]
     relocatable_sections: list[RelocatableSectionNode]
     absolute_sections: list[AbsoluteSectionNode]
+    shared_externals: list[LabelNode] = field(default_factory=list)

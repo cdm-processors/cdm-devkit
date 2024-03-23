@@ -57,7 +57,12 @@ class BuildAstVisitor(AsmParserVisitor):
                 ret.template_sections.append(self.visitTemplateSection(child))
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
+            elif isinstance(child, AsmParser.Shared_externalsContext):
+                ret.shared_externals += self.visitShared_externals(child)
         return ret
+
+    def visitShared_externals(self, ctx: AsmParser.Shared_externalsContext):
+        return self.visitLabels(ctx.labels())
 
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
