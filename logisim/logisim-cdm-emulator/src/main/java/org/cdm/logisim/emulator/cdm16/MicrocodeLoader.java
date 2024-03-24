@@ -8,9 +8,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class MicrocodeLoader {
-    public static final String MAIN_MICROCODE = "/cdm16_decoder.img";
-    public static final String EXC_MICROCODE = "/cdm16_decoder_exc.img";
-
     private static final int MICROCODE_LENGTH = 1024;
 
     public static int[] loadFromFile(String filename) {

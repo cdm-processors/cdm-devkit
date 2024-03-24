@@ -1,6 +1,6 @@
 package org.cdm.logisim.emulator.cdm16.units.decoder;
 
-import org.cdm.logisim.emulator.cdm16.Processor;
+import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
 
 import static org.cdm.logisim.emulator.cdm16.units.BranchUnit.checkFlags;
 
@@ -42,9 +42,9 @@ public class InstructionDecoder {
         int rs1 = rs1_d;
         int rd = rd_d;
 
-        int alu_op_type = Processor.ALU_InstructionGroups.ALU_3;
+        int alu_op_type = Cdm16Processor.ALU_InstructionGroups.ALU_3;
 
-        int imm_type = Processor.IMM_Type.IMM_9;
+        int imm_type = Cdm16Processor.IMM_Type.IMM_9;
 
         boolean br_rel_nop = false;
 
@@ -66,24 +66,24 @@ public class InstructionDecoder {
         switch (inst_group) {
             case 0b000:
                 if (X) {
-                    microcode_address = Processor.Instructions.SHIFTS;
-                    alu_op_type = Processor.ALU_InstructionGroups.SHIFTS;
+                    microcode_address = Cdm16Processor.Instructions.SHIFTS;
+                    alu_op_type = Cdm16Processor.ALU_InstructionGroups.SHIFTS;
                     switch_alu_func0 = true;
                 } else {
                     if (Y) {
                         if (checkFlags(br_abs_flags_d, parameters.psFlags())) {
-                            microcode_address = Processor.Instructions.BR_ABS;
+                            microcode_address = Cdm16Processor.Instructions.BR_ABS;
                         } else {
-                            microcode_address = Processor.Instructions.BR_ABS_NOP;
+                            microcode_address = Cdm16Processor.Instructions.BR_ABS_NOP;
                         }
                     } else {
-                        microcode_address = Processor.InstructionGroups.ZERO_OP + op_type_d0;
+                        microcode_address = Cdm16Processor.InstructionGroups.ZERO_OP + op_type_d0;
                     }
                 }
                 break;
 
             case 0b001:
-                microcode_address = Processor.InstructionGroups.ONE_OP + op_type_d1;
+                microcode_address = Cdm16Processor.InstructionGroups.ONE_OP + op_type_d1;
                 rs1 = rd_d;
 
                 break;
@@ -91,59 +91,59 @@ public class InstructionDecoder {
             case 0b010:
                 if (X) {
                     if (Y) {
-                        microcode_address = Processor.Instructions.ALU_2;
-                        alu_op_type = Processor.ALU_InstructionGroups.ALU_2;
+                        microcode_address = Cdm16Processor.Instructions.ALU_2;
+                        alu_op_type = Cdm16Processor.ALU_InstructionGroups.ALU_2;
                         switch_alu_func1 = true;
                     } else {
-                        microcode_address = Processor.InstructionGroups.MEM_2 + op_type_d2;
+                        microcode_address = Cdm16Processor.InstructionGroups.MEM_2 + op_type_d2;
                     }
                 } else {
                     if (Y) {
-                        microcode_address = Processor.Instructions.ALU_3_IND;
-                        alu_op_type = Processor.ALU_InstructionGroups.ALU_3;
+                        microcode_address = Cdm16Processor.Instructions.ALU_3_IND;
+                        alu_op_type = Cdm16Processor.ALU_InstructionGroups.ALU_3;
                         rs1 = rd_d;
                         switch_alu_func1 = true;
                     } else {
-                        microcode_address = Processor.InstructionGroups.TWO_OP + op_type_d2;
+                        microcode_address = Cdm16Processor.InstructionGroups.TWO_OP + op_type_d2;
                     }
                 }
                 break;
 
             case 0b011:
-                microcode_address = Processor.InstructionGroups.IMM_6 + op_type_d3;
+                microcode_address = Cdm16Processor.InstructionGroups.IMM_6 + op_type_d3;
                 rs0 = rd_d;
-                imm_type = Processor.IMM_Type.IMM_6;
+                imm_type = Cdm16Processor.IMM_Type.IMM_6;
 
                 break;
 
             case 0b100:
-                microcode_address = Processor.InstructionGroups.IMM_9 + op_type_d3;
+                microcode_address = Cdm16Processor.InstructionGroups.IMM_9 + op_type_d3;
                 break;
 
             case 0b101:
                 if (X) {
-                    microcode_address = Processor.Instructions.ALU_3;
-                    alu_op_type = Processor.ALU_InstructionGroups.ALU_3;
+                    microcode_address = Cdm16Processor.Instructions.ALU_3;
+                    alu_op_type = Cdm16Processor.ALU_InstructionGroups.ALU_3;
                     switch_alu_func0 = true;
                 } else {
-                    microcode_address = Processor.InstructionGroups.MEM_3 + op_type_d3;
+                    microcode_address = Cdm16Processor.InstructionGroups.MEM_3 + op_type_d3;
                 }
                 break;
 
             case 0b110:
                 if (checkFlags(br_rel_flags_d, parameters.psFlags())) {
-                    microcode_address = Processor.Instructions.BR_REL_N;
+                    microcode_address = Cdm16Processor.Instructions.BR_REL_N;
                 } else {
-                    microcode_address = Processor.Instructions.BR_REL_NOP;
+                    microcode_address = Cdm16Processor.Instructions.BR_REL_NOP;
                     br_rel_nop = true;
                 }
                 break;
 
             case 0b111:
                 if (checkFlags(br_rel_flags_d, parameters.psFlags())) {
-                    microcode_address = Processor.Instructions.BR_REL_P;
+                    microcode_address = Cdm16Processor.Instructions.BR_REL_P;
                 } else {
-                    microcode_address = Processor.Instructions.BR_REL_NOP;
+                    microcode_address = Cdm16Processor.Instructions.BR_REL_NOP;
                     br_rel_nop = true;
                 }
                 break;
@@ -158,21 +158,21 @@ public class InstructionDecoder {
                 alu_func = alu_op_d1;
             }
         } else {
-            if ((microcode_address & 0b1110000) == Processor.InstructionGroups.IMM_6 && op_type_d3 >= 0b1110) {
-                alu_func = Processor.ALU_3op.SUB;
+            if ((microcode_address & 0b1110000) == Cdm16Processor.InstructionGroups.IMM_6 && op_type_d3 >= 0b1110) {
+                alu_func = Cdm16Processor.ALU_3op.SUB;
             } else {
-                alu_func = Processor.ALU_3op.ADC;
+                alu_func = Cdm16Processor.ALU_3op.ADC;
             }
         }
 
-        if (imm_type == Processor.IMM_Type.IMM_6) {
+        if (imm_type == Cdm16Processor.IMM_Type.IMM_6) {
             imm_d = imm6_d;
         } else {
             imm_d = imm9_d;
         }
 
-        if (microcode_address == Processor.InstructionGroups.IMM_9
-                || microcode_address == Processor.InstructionGroups.IMM_9 + 1) {
+        if (microcode_address == Cdm16Processor.InstructionGroups.IMM_9
+                || microcode_address == Cdm16Processor.InstructionGroups.IMM_9 + 1) {
             intInstruction = true;
         }
 
@@ -223,16 +223,16 @@ public class InstructionDecoder {
 
     public static InstructionDecoderOutputParameters getFetchSignals() {
         return new InstructionDecoderOutputParameters(
-                Processor.Instructions.FETCH,
+                Cdm16Processor.Instructions.FETCH,
                 0,
                 0,
                 0,
                 0,
-                Processor.ALU_InstructionGroups.ALU_3,
+                Cdm16Processor.ALU_InstructionGroups.ALU_3,
                 false,
                 false,
-                Processor.ALU_3op.ADC,
-                Processor.IMM_Type.IMM_6,
+                Cdm16Processor.ALU_3op.ADC,
+                Cdm16Processor.IMM_Type.IMM_6,
                 0,
                 false,
                 false,

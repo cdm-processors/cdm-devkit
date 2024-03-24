@@ -4,15 +4,15 @@ import com.cburch.logisim.instance.InstanceData;
 
 public class ProcessorComponentData implements InstanceData {
 
-    private final Processor processor;
+    private final Cdm16Processor processor;
     private final ProcessorClockState processorClockState;
 
-    public ProcessorComponentData() {
-        this.processor = new Processor();
+    public ProcessorComponentData(Cdm16Processor processor) {
+        this.processor = processor;
         this.processorClockState = new ProcessorClockState();
     }
 
-    public Processor getProcessor() {
+    public Cdm16Processor getProcessor() {
         return processor;
     }
 
