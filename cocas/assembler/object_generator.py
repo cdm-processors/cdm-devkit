@@ -1,3 +1,4 @@
+import itertools
 from dataclasses import dataclass
 
 from cocas.object_module import CodeLocation, ObjectModule
@@ -88,6 +89,9 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
 
     asects = [Section(asect, target_instructions) for asect in pn.absolute_sections]
     rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]
+    shared_externals = set(map(lambda x: x.name, pn.shared_externals))
+    for i in itertools.chain(asects, rsects):
+        i.exts |= shared_externals
     asects.sort(key=lambda s: s.address)
 
     update_varying_length(asects, {}, template_fields)

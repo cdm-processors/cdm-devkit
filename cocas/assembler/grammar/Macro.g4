@@ -8,7 +8,7 @@ program : (macro | line)* EOF ;
 macro : macro_header macro_body MACRO_FOOTER ;
 macro_header : WS? Macro WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
 
-macro_body : line*? ;
+macro_body : ((WS? NEWLINE) | line)*? ;
 line: labels (instruction first_param)? (COMMA param)* NEWLINE;
 labels : label* WS? ;
 first_param : WS param | ;

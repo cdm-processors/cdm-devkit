@@ -20,5 +20,5 @@ def import_target(target: str) -> TargetInstructions:
         raise TypeError("Module is not a valid target")
 
 
-def mlb_path(target: str) -> Path:
+def standard_mlb(target: str) -> Path:
     return Path(__file__).parent / target / "standard.mlb"
