@@ -75,6 +75,8 @@ def find_sect_by_ent(sects: list[ObjectSectionRecord]):
     sect_by_ent = dict()
     for sect in sects:
         for ent_name in sect.entries:
+            if ent_name in sect_by_ent:
+                raise LinkerException(f"Entry {ent_name} is declared in multiple sections")
             sect_by_ent[ent_name] = sect.name
     return sect_by_ent
 
