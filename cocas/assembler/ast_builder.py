@@ -31,6 +31,8 @@ from .generated import AsmLexer, AsmParser, AsmParserVisitor
 
 # noinspection PyPep8Naming
 class BuildAstVisitor(AsmParserVisitor):
+    allowed_top_instructions = []
+
     def __init__(self, filepath: str):
         super().__init__()
         self.line_offset = 0
@@ -57,12 +59,41 @@ class BuildAstVisitor(AsmParserVisitor):
                 ret.template_sections.append(self.visitTemplateSection(child))
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
-            elif isinstance(child, AsmParser.Shared_externalsContext):
-                ret.shared_externals += self.visitShared_externals(child)
+            elif isinstance(child, AsmParser.Top_lineContext):
+                ret.shared_externals, ret.top_instructions = self.visitTop_line(child)
         return ret
 
-    def visitShared_externals(self, ctx: AsmParser.Shared_externalsContext):
-        return self.visitLabels(ctx.labels())
+    def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
+        shared_externals = []
+        top_instructions = []
+        for child in ctx.children:
+            if isinstance(child, AsmParser.InstructionLineContext):
+                nodes = self.visitInstructionLine(child)
+                loc = self._ctx_location(ctx)
+                for i in nodes:
+                    if isinstance(i, InstructionNode):
+                        if i.mnemonic not in self.allowed_top_instructions:
+                            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                                     f"Instruction {i.mnemonic} not allowed at the top of a file")
+                        else:
+                            top_instructions.append(i)
+                    elif isinstance(i, LabelDeclarationNode):
+                        self.check_label_is_ext(i)
+                        shared_externals.append(i.label)
+                    else:
+                        raise Exception(f"Unexpected node from top line: {i}")
+            elif isinstance(child, AsmParser.StandaloneLabelsContext):
+                labels = self.visitStandaloneLabels(child)
+                for i in labels:
+                    self.check_label_is_ext(i)
+                    shared_externals.append(i.label)
+        return shared_externals, top_instructions
+
+    @staticmethod
+    def check_label_is_ext(label: LabelDeclarationNode):
+        if not label.external:
+            raise AssemblerException(AssemblerExceptionTag.ASM, label.location.file, label.location.line,
+                                     "Only external labels are allowed at the top of a file")
 
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()

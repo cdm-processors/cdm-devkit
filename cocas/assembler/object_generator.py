@@ -94,6 +94,9 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
         i.exts |= shared_externals
     asects.sort(key=lambda s: s.address)
 
+    for _ in pn.top_instructions:
+        pass  # do something
+
     update_varying_length(asects, {}, template_fields)
     asects_labels = gather_local_labels(asects)
     for rsect in rsects:

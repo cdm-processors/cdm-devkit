@@ -3,6 +3,7 @@ from math import inf
 from typing import Any, Optional
 
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects
+
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
 

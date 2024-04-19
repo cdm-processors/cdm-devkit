@@ -1,17 +1,18 @@
 from copy import copy
 from math import lcm
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
-from cocas.object_module import ObjectSectionRecord
+if TYPE_CHECKING:
+    from cocas.object_module import ObjectSectionRecord
 
 
-def concat_rsects(rsects: Iterable[ObjectSectionRecord]) -> list[ObjectSectionRecord]:
+def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectionRecord"]:
     """
     Concatenate rsects that have same name, put one right after another with proper alignment
     :param rsects: rsects with possibly different names, unsorted
     :throws: ValueError if sections with same name declare same entry (label)
     """
-    grouped: dict[str, list[ObjectSectionRecord]] = {}
+    grouped: dict[str, list["ObjectSectionRecord"]] = {}
     for rsect in rsects:
         grouped.setdefault(rsect.name, []).append(rsect)
     ret = []
