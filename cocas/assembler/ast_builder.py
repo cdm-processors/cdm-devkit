@@ -1,3 +1,5 @@
+import codecs
+import warnings
 from base64 import b64decode
 from pathlib import Path
 
@@ -133,12 +135,6 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitNumber(self, ctx: AsmParser.NumberContext) -> int:
         return int(ctx.getText(), base=0)
 
-    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> int:
-        if ctx.getText()[1] == '\\':
-            return ord(ctx.getText()[2])
-        else:
-            return ord(ctx.getText()[1])
-
     def visitSection_body(self, ctx: AsmParser.Section_bodyContext) -> list:
         return self.visitCode_block(ctx.code_block(), return_locations=False)
 
@@ -272,7 +268,35 @@ class BuildAstVisitor(AsmParserVisitor):
         return LabelNode(ctx.getText())
 
     def visitString(self, ctx: AsmParser.StringContext):
-        return ctx.getText()[1:-1]
+        s = ctx.getText()[1:-1]
+        if '\\' in s:
+            return self.handle_esc_seq(s, self._ctx_location(ctx))
+        else:
+            return s
+
+    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
+        loc = self._ctx_location(ctx)
+        s = self.handle_esc_seq(ctx.getText()[1:-1], loc)
+        if len(s) < 1:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Empty character constant")
+        elif len(s) > 1:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Multi-character character constant")
+        return s
+
+    @staticmethod
+    def handle_esc_seq(s: str, loc: CodeLocation):
+        x: str
+        warnings.filterwarnings("error")
+        try:
+            x = codecs.unicode_escape_decode(s)[0]
+        except DeprecationWarning as e:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
+        except UnicodeDecodeError as e:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
+        warnings.resetwarnings()
+        return x
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
