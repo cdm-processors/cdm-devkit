@@ -55,7 +55,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         for block in ctx.rsect_block():
             name, rsect = self.visitRsect_block(block)
             if name in rsects:
-                raise ObjectFileException(self.file, block.start.line, f'Repeating section: {name}')
+                raise ObjectFileException(self.file, block.start.line, f'Repeating section in same file: {name}')
             rsects[name] = rsect
 
         xtrn: ObjectFileParser.Xtrn_recordContext
