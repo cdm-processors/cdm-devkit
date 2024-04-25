@@ -8,9 +8,9 @@ from .ast_nodes import (
     BreakStatementNode,
     ConditionalStatementNode,
     ContinueStatementNode,
+    ExportLocationNode,
     InstructionNode,
     LabelDeclarationNode,
-    LocatableNode,
     Node,
     RelocatableSectionNode,
     SectionNode,
@@ -63,7 +63,7 @@ class CodeBlock:
             ContinueStatementNode: self.assemble_continue_statement,
         }
         for line in lines:
-            if isinstance(line, LocatableNode):
+            if isinstance(line, ExportLocationNode):
                 self.code_locations[self.size] = line.location
             ast_node_handlers[type(line)](line, temp_storage)
 

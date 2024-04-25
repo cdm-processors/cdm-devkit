@@ -26,6 +26,12 @@ class LocatableNode(Node):
 
 
 @dataclass
+class ExportLocationNode(LocatableNode):
+    def __post_init__(self):
+        self.location: CodeLocation = CodeLocation()
+
+
+@dataclass
 class TemplateFieldNode(LocatableNode):
     template_name: str
     field_name: str
@@ -47,7 +53,7 @@ class LabelDeclarationNode(LocatableNode):
 
 
 @dataclass
-class InstructionNode(LocatableNode):
+class InstructionNode(ExportLocationNode):
     mnemonic: str
     arguments: list
 
@@ -85,12 +91,12 @@ class UntilLoopNode(Node):
 
 
 @dataclass
-class BreakStatementNode(LocatableNode):
+class BreakStatementNode(ExportLocationNode):
     pass
 
 
 @dataclass
-class ContinueStatementNode(LocatableNode):
+class ContinueStatementNode(ExportLocationNode):
     pass
 
 
