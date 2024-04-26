@@ -93,10 +93,9 @@ byte_expr : byte_specifier OPEN_PAREN addr_expr CLOSE_PAREN ;
 addr_expr : first_term add_term* ;
 first_term : (PLUS | MINUS)? term ;
 add_term : (PLUS | MINUS) term ;
-term : number | template_field | label ;
+term : number | label ;
 byte_specifier : name;
 
-template_field : name DOT name ;
 label : name ;
 instruction : WORD ;
 string : STRING ;
@@ -128,4 +127,5 @@ name
     | Wend
     | While
     | WORD
+    | WORD_WITH_DOTS
     ;

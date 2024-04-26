@@ -9,21 +9,6 @@ else:
 
 class MacroVisitor(ParseTreeVisitor):
 
-    # Visit a parse tree produced by MacroParser#mlb.
-    def visitMlb(self, ctx:MacroParser.MlbContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MacroParser#mlb_macro.
-    def visitMlb_macro(self, ctx:MacroParser.Mlb_macroContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MacroParser#mlb_header.
-    def visitMlb_header(self, ctx:MacroParser.Mlb_headerContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by MacroParser#program.
     def visitProgram(self, ctx:MacroParser.ProgramContext):
         return self.visitChildren(ctx)
@@ -36,6 +21,21 @@ class MacroVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by MacroParser#macro_header.
     def visitMacro_header(self, ctx:MacroParser.Macro_headerContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by MacroParser#mlb.
+    def visitMlb(self, ctx:MacroParser.MlbContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by MacroParser#mlb_macro.
+    def visitMlb_macro(self, ctx:MacroParser.Mlb_macroContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by MacroParser#mlb_header.
+    def visitMlb_header(self, ctx:MacroParser.Mlb_headerContext):
         return self.visitChildren(ctx)
 
 

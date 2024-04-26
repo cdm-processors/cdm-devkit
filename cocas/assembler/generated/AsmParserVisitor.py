@@ -202,11 +202,6 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#template_field.
-    def visitTemplate_field(self, ctx:AsmParser.Template_fieldContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by AsmParser#label.
     def visitLabel(self, ctx:AsmParser.LabelContext):
         return self.visitChildren(ctx)

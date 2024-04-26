@@ -39,11 +39,11 @@ QUESTION_MARK : '?' ;
 STRING: '"' (~[\\"]+ | '\\' .)* '"' ;
 CHAR : '\'' (~[\\']+ | '\\' .)* '\'' ;
 
-NAME : [_a-zA-Z][_a-zA-Z0-9]* ;
+NAME : [_a-zA-Z][_a-zA-Z0-9.]* ;
 DIGIT : [0-9] ;
 SLASH : '/' ;
 
 APOSTROPHE : '\'' ;
 DOLLAR_SIGN : '$' ;
 
-OTHER : [-+.()]+ ;
+OTHER : [-+()]+ ;

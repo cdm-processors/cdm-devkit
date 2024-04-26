@@ -22,7 +22,6 @@ from .ast_nodes import (
     RegisterNode,
     RelocatableExpressionNode,
     RelocatableSectionNode,
-    TemplateFieldNode,
     TemplateSectionNode,
     UntilLoopNode,
     WhileLoopNode,
@@ -300,11 +299,6 @@ class BuildAstVisitor(AsmParserVisitor):
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
-
-    def visitTemplate_field(self, ctx: AsmParser.Template_fieldContext):
-        template_name = ctx.name()[0].getText()
-        field_name = ctx.name()[1].getText()
-        return TemplateFieldNode(template_name, field_name)
 
     def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list[Node]:
         ret = []

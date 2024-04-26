@@ -1,9 +1,19 @@
 import itertools
 from dataclasses import dataclass
+from typing import Any, Union
 
 from cocas.object_module import CodeLocation, ObjectModule
 
-from .ast_nodes import InstructionNode, LabelDeclarationNode, ProgramNode, TemplateSectionNode
+from .ast_nodes import (
+    InstructionNode,
+    LabelDeclarationNode,
+    LabelNode,
+    Node,
+    ProgramNode,
+    RelocatableExpressionNode,
+    TemplateFieldNode,
+    TemplateSectionNode,
+)
 from .code_block import Section
 from .exceptions import AssemblerException, AssemblerExceptionTag
 from .targets import IVaryingLengthSegment, TargetInstructions
@@ -83,9 +93,39 @@ def update_varying_length(sections: list[Section], known_labels: dict[str, int],
                 changed = True
 
 
+def label_or_template(label: Union[LabelNode, Any], template_fields: dict[str, dict[str, int]]) -> Node:
+    if not isinstance(label, LabelNode):
+        return label
+    split = label.name.split('.')
+    if len(split) > 1 and split[0] in template_fields:
+        return TemplateFieldNode(split[0], '.'.join(split[1:]))
+    return label
+
+
 def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
+
+    # LabelDeclarationNode
+    # InstructionNode
+    # ConditionalStatementNode
+    # WhileLoopNode
+    # UntilLoopNode
+    # BreakStatementNode
+    # ContinueStatementNode
+    for i in pn.absolute_sections + pn.relocatable_sections:
+        for line in i.lines:
+            if isinstance(line, LabelDeclarationNode):
+                if '.' in line.label.name:
+                    prefix = line.label.name.split('.')[0]
+                    if prefix in template_fields:
+                        raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                                 f"Label {line.label.name} conflicts with template {prefix}")
+            elif isinstance(line, InstructionNode):
+                for arg in line.arguments:
+                    if isinstance(arg, RelocatableExpressionNode):
+                        arg.add_terms = list(
+                            map(lambda x: label_or_template(x, template_fields), arg.add_terms))
 
     asects = [Section(asect, target_instructions) for asect in pn.absolute_sections]
     rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]

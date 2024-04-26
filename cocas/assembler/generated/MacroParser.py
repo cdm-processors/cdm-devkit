@@ -13,10 +13,10 @@ def serializedATN():
         4,1,17,242,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,1,0,
-        5,0,42,8,0,10,0,12,0,45,9,0,1,0,5,0,48,8,0,10,0,12,0,51,9,0,1,0,
-        1,0,1,1,1,1,1,1,1,2,3,2,59,8,2,1,2,1,2,3,2,63,8,2,1,2,1,2,3,2,67,
-        8,2,1,2,1,2,3,2,71,8,2,1,2,1,2,3,2,75,8,2,1,2,1,2,1,3,1,3,5,3,81,
-        8,3,10,3,12,3,84,9,3,1,3,1,3,1,4,1,4,1,4,1,4,1,5,3,5,93,8,5,1,5,
+        1,0,5,0,43,8,0,10,0,12,0,46,9,0,1,0,1,0,1,1,1,1,1,1,1,1,1,2,3,2,
+        55,8,2,1,2,1,2,3,2,59,8,2,1,2,1,2,3,2,63,8,2,1,2,1,2,3,2,67,8,2,
+        1,2,1,2,3,2,71,8,2,1,2,1,2,1,3,5,3,76,8,3,10,3,12,3,79,9,3,1,3,5,
+        3,82,8,3,10,3,12,3,85,9,3,1,3,1,3,1,4,1,4,1,4,1,5,3,5,93,8,5,1,5,
         1,5,3,5,97,8,5,1,5,1,5,3,5,101,8,5,1,5,1,5,3,5,105,8,5,1,5,1,5,3,
         5,109,8,5,1,5,1,5,1,6,3,6,114,8,6,1,6,1,6,5,6,118,8,6,10,6,12,6,
         121,9,6,1,7,1,7,1,7,1,7,3,7,127,8,7,1,7,1,7,5,7,131,8,7,10,7,12,
@@ -32,25 +32,25 @@ def serializedATN():
         15,1,16,1,16,4,16,231,8,16,11,16,12,16,232,1,17,1,17,1,18,1,18,1,
         18,1,19,1,19,1,19,1,119,0,20,0,2,4,6,8,10,12,14,16,18,20,22,24,26,
         28,30,32,34,36,38,0,3,3,0,3,3,7,7,17,17,2,0,3,3,17,17,2,0,1,1,10,
-        13,263,0,43,1,0,0,0,2,54,1,0,0,0,4,58,1,0,0,0,6,82,1,0,0,0,8,87,
+        13,263,0,44,1,0,0,0,2,49,1,0,0,0,4,54,1,0,0,0,6,77,1,0,0,0,8,88,
         1,0,0,0,10,92,1,0,0,0,12,119,1,0,0,0,14,122,1,0,0,0,16,140,1,0,0,
         0,18,149,1,0,0,0,20,162,1,0,0,0,22,184,1,0,0,0,24,217,1,0,0,0,26,
         219,1,0,0,0,28,221,1,0,0,0,30,226,1,0,0,0,32,228,1,0,0,0,34,234,
-        1,0,0,0,36,236,1,0,0,0,38,239,1,0,0,0,40,42,5,4,0,0,41,40,1,0,0,
-        0,42,45,1,0,0,0,43,41,1,0,0,0,43,44,1,0,0,0,44,49,1,0,0,0,45,43,
-        1,0,0,0,46,48,3,2,1,0,47,46,1,0,0,0,48,51,1,0,0,0,49,47,1,0,0,0,
-        49,50,1,0,0,0,50,52,1,0,0,0,51,49,1,0,0,0,52,53,5,0,0,1,53,1,1,0,
-        0,0,54,55,3,4,2,0,55,56,3,12,6,0,56,3,1,0,0,0,57,59,5,3,0,0,58,57,
-        1,0,0,0,58,59,1,0,0,0,59,60,1,0,0,0,60,62,5,6,0,0,61,63,5,3,0,0,
-        62,61,1,0,0,0,62,63,1,0,0,0,63,64,1,0,0,0,64,66,5,12,0,0,65,67,5,
-        3,0,0,66,65,1,0,0,0,66,67,1,0,0,0,67,68,1,0,0,0,68,70,5,14,0,0,69,
-        71,5,3,0,0,70,69,1,0,0,0,70,71,1,0,0,0,71,72,1,0,0,0,72,74,5,13,
-        0,0,73,75,5,3,0,0,74,73,1,0,0,0,74,75,1,0,0,0,75,76,1,0,0,0,76,77,
-        5,4,0,0,77,5,1,0,0,0,78,81,3,8,4,0,79,81,3,14,7,0,80,78,1,0,0,0,
-        80,79,1,0,0,0,81,84,1,0,0,0,82,80,1,0,0,0,82,83,1,0,0,0,83,85,1,
-        0,0,0,84,82,1,0,0,0,85,86,5,0,0,1,86,7,1,0,0,0,87,88,3,10,5,0,88,
-        89,3,12,6,0,89,90,5,2,0,0,90,9,1,0,0,0,91,93,5,3,0,0,92,91,1,0,0,
-        0,92,93,1,0,0,0,93,94,1,0,0,0,94,96,5,1,0,0,95,97,5,3,0,0,96,95,
+        1,0,0,0,36,236,1,0,0,0,38,239,1,0,0,0,40,43,3,2,1,0,41,43,3,14,7,
+        0,42,40,1,0,0,0,42,41,1,0,0,0,43,46,1,0,0,0,44,42,1,0,0,0,44,45,
+        1,0,0,0,45,47,1,0,0,0,46,44,1,0,0,0,47,48,5,0,0,1,48,1,1,0,0,0,49,
+        50,3,4,2,0,50,51,3,12,6,0,51,52,5,2,0,0,52,3,1,0,0,0,53,55,5,3,0,
+        0,54,53,1,0,0,0,54,55,1,0,0,0,55,56,1,0,0,0,56,58,5,1,0,0,57,59,
+        5,3,0,0,58,57,1,0,0,0,58,59,1,0,0,0,59,60,1,0,0,0,60,62,5,12,0,0,
+        61,63,5,3,0,0,62,61,1,0,0,0,62,63,1,0,0,0,63,64,1,0,0,0,64,66,5,
+        14,0,0,65,67,5,3,0,0,66,65,1,0,0,0,66,67,1,0,0,0,67,68,1,0,0,0,68,
+        70,5,13,0,0,69,71,5,3,0,0,70,69,1,0,0,0,70,71,1,0,0,0,71,72,1,0,
+        0,0,72,73,5,4,0,0,73,5,1,0,0,0,74,76,5,4,0,0,75,74,1,0,0,0,76,79,
+        1,0,0,0,77,75,1,0,0,0,77,78,1,0,0,0,78,83,1,0,0,0,79,77,1,0,0,0,
+        80,82,3,8,4,0,81,80,1,0,0,0,82,85,1,0,0,0,83,81,1,0,0,0,83,84,1,
+        0,0,0,84,86,1,0,0,0,85,83,1,0,0,0,86,87,5,0,0,1,87,7,1,0,0,0,88,
+        89,3,10,5,0,89,90,3,12,6,0,90,9,1,0,0,0,91,93,5,3,0,0,92,91,1,0,
+        0,0,92,93,1,0,0,0,93,94,1,0,0,0,94,96,5,6,0,0,95,97,5,3,0,0,96,95,
         1,0,0,0,96,97,1,0,0,0,97,98,1,0,0,0,98,100,5,12,0,0,99,101,5,3,0,
         0,100,99,1,0,0,0,100,101,1,0,0,0,101,102,1,0,0,0,102,104,5,14,0,
         0,103,105,5,3,0,0,104,103,1,0,0,0,104,105,1,0,0,0,105,106,1,0,0,
@@ -95,7 +95,7 @@ def serializedATN():
         3,30,15,0,230,229,1,0,0,0,231,232,1,0,0,0,232,230,1,0,0,0,232,233,
         1,0,0,0,233,33,1,0,0,0,234,235,7,2,0,0,235,35,1,0,0,0,236,237,5,
         16,0,0,237,238,5,13,0,0,238,37,1,0,0,0,239,240,5,15,0,0,240,39,1,
-        0,0,0,38,43,49,58,62,66,70,74,80,82,92,96,100,104,108,113,117,119,
+        0,0,0,38,42,44,54,58,62,66,70,77,83,92,96,100,104,108,113,117,119,
         126,132,140,144,149,155,160,162,168,177,182,184,190,197,202,204,
         209,215,217,226,232
     ]
@@ -120,12 +120,12 @@ class MacroParser ( Parser ):
                       "STRING", "CHAR", "NAME", "DIGIT", "SLASH", "APOSTROPHE", 
                       "DOLLAR_SIGN", "OTHER" ]
 
-    RULE_mlb = 0
-    RULE_mlb_macro = 1
-    RULE_mlb_header = 2
-    RULE_program = 3
-    RULE_macro = 4
-    RULE_macro_header = 5
+    RULE_program = 0
+    RULE_macro = 1
+    RULE_macro_header = 2
+    RULE_mlb = 3
+    RULE_mlb_macro = 4
+    RULE_mlb_header = 5
     RULE_macro_body = 6
     RULE_line = 7
     RULE_labels = 8
@@ -141,8 +141,8 @@ class MacroParser ( Parser ):
     RULE_macro_param = 18
     RULE_macro_nonce = 19
 
-    ruleNames =  [ "mlb", "mlb_macro", "mlb_header", "program", "macro", 
-                   "macro_header", "macro_body", "line", "labels", "first_param", 
+    ruleNames =  [ "program", "macro", "macro_header", "mlb", "mlb_macro", 
+                   "mlb_header", "macro_body", "line", "labels", "first_param", 
                    "label", "param", "instruction", "l_sep", "p_sep", "macro_piece", 
                    "macro_variable", "macro_text", "macro_param", "macro_nonce" ]
 
@@ -172,231 +172,6 @@ class MacroParser ( Parser ):
         self._predicates = None
 
 
-
-
-    class MlbContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def EOF(self):
-            return self.getToken(MacroParser.EOF, 0)
-
-        def NEWLINE(self, i:int=None):
-            if i is None:
-                return self.getTokens(MacroParser.NEWLINE)
-            else:
-                return self.getToken(MacroParser.NEWLINE, i)
-
-        def mlb_macro(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(MacroParser.Mlb_macroContext)
-            else:
-                return self.getTypedRuleContext(MacroParser.Mlb_macroContext,i)
-
-
-        def getRuleIndex(self):
-            return MacroParser.RULE_mlb
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitMlb" ):
-                return visitor.visitMlb(self)
-            else:
-                return visitor.visitChildren(self)
-
-
-
-
-    def mlb(self):
-
-        localctx = MacroParser.MlbContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 0, self.RULE_mlb)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 43
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==4:
-                self.state = 40
-                self.match(MacroParser.NEWLINE)
-                self.state = 45
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-
-            self.state = 49
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==3 or _la==6:
-                self.state = 46
-                self.mlb_macro()
-                self.state = 51
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-
-            self.state = 52
-            self.match(MacroParser.EOF)
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class Mlb_macroContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def mlb_header(self):
-            return self.getTypedRuleContext(MacroParser.Mlb_headerContext,0)
-
-
-        def macro_body(self):
-            return self.getTypedRuleContext(MacroParser.Macro_bodyContext,0)
-
-
-        def getRuleIndex(self):
-            return MacroParser.RULE_mlb_macro
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitMlb_macro" ):
-                return visitor.visitMlb_macro(self)
-            else:
-                return visitor.visitChildren(self)
-
-
-
-
-    def mlb_macro(self):
-
-        localctx = MacroParser.Mlb_macroContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 2, self.RULE_mlb_macro)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 54
-            self.mlb_header()
-            self.state = 55
-            self.macro_body()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class Mlb_headerContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def ASTERISK(self):
-            return self.getToken(MacroParser.ASTERISK, 0)
-
-        def NAME(self):
-            return self.getToken(MacroParser.NAME, 0)
-
-        def SLASH(self):
-            return self.getToken(MacroParser.SLASH, 0)
-
-        def DIGIT(self):
-            return self.getToken(MacroParser.DIGIT, 0)
-
-        def NEWLINE(self):
-            return self.getToken(MacroParser.NEWLINE, 0)
-
-        def WS(self, i:int=None):
-            if i is None:
-                return self.getTokens(MacroParser.WS)
-            else:
-                return self.getToken(MacroParser.WS, i)
-
-        def getRuleIndex(self):
-            return MacroParser.RULE_mlb_header
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitMlb_header" ):
-                return visitor.visitMlb_header(self)
-            else:
-                return visitor.visitChildren(self)
-
-
-
-
-    def mlb_header(self):
-
-        localctx = MacroParser.Mlb_headerContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_mlb_header)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 58
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==3:
-                self.state = 57
-                self.match(MacroParser.WS)
-
-
-            self.state = 60
-            self.match(MacroParser.ASTERISK)
-            self.state = 62
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==3:
-                self.state = 61
-                self.match(MacroParser.WS)
-
-
-            self.state = 64
-            self.match(MacroParser.NAME)
-            self.state = 66
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==3:
-                self.state = 65
-                self.match(MacroParser.WS)
-
-
-            self.state = 68
-            self.match(MacroParser.SLASH)
-            self.state = 70
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==3:
-                self.state = 69
-                self.match(MacroParser.WS)
-
-
-            self.state = 72
-            self.match(MacroParser.DIGIT)
-            self.state = 74
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==3:
-                self.state = 73
-                self.match(MacroParser.WS)
-
-
-            self.state = 76
-            self.match(MacroParser.NEWLINE)
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
 
 
     class ProgramContext(ParserRuleContext):
@@ -438,33 +213,33 @@ class MacroParser ( Parser ):
     def program(self):
 
         localctx = MacroParser.ProgramContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_program)
+        self.enterRule(localctx, 0, self.RULE_program)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 82
+            self.state = 44
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while (((_la) & ~0x3f) == 0 and ((1 << _la) & 245658) != 0):
-                self.state = 80
+                self.state = 42
                 self._errHandler.sync(self)
-                la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
+                la_ = self._interp.adaptivePredict(self._input,0,self._ctx)
                 if la_ == 1:
-                    self.state = 78
+                    self.state = 40
                     self.macro()
                     pass
 
                 elif la_ == 2:
-                    self.state = 79
+                    self.state = 41
                     self.line()
                     pass
 
 
-                self.state = 84
+                self.state = 46
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 85
+            self.state = 47
             self.match(MacroParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -508,14 +283,14 @@ class MacroParser ( Parser ):
     def macro(self):
 
         localctx = MacroParser.MacroContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_macro)
+        self.enterRule(localctx, 2, self.RULE_macro)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 87
+            self.state = 49
             self.macro_header()
-            self.state = 88
+            self.state = 50
             self.macro_body()
-            self.state = 89
+            self.state = 51
             self.match(MacroParser.MACRO_FOOTER)
         except RecognitionException as re:
             localctx.exception = re
@@ -569,7 +344,232 @@ class MacroParser ( Parser ):
     def macro_header(self):
 
         localctx = MacroParser.Macro_headerContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_macro_header)
+        self.enterRule(localctx, 4, self.RULE_macro_header)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 54
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 53
+                self.match(MacroParser.WS)
+
+
+            self.state = 56
+            self.match(MacroParser.Macro)
+            self.state = 58
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 57
+                self.match(MacroParser.WS)
+
+
+            self.state = 60
+            self.match(MacroParser.NAME)
+            self.state = 62
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 61
+                self.match(MacroParser.WS)
+
+
+            self.state = 64
+            self.match(MacroParser.SLASH)
+            self.state = 66
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 65
+                self.match(MacroParser.WS)
+
+
+            self.state = 68
+            self.match(MacroParser.DIGIT)
+            self.state = 70
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 69
+                self.match(MacroParser.WS)
+
+
+            self.state = 72
+            self.match(MacroParser.NEWLINE)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class MlbContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def EOF(self):
+            return self.getToken(MacroParser.EOF, 0)
+
+        def NEWLINE(self, i:int=None):
+            if i is None:
+                return self.getTokens(MacroParser.NEWLINE)
+            else:
+                return self.getToken(MacroParser.NEWLINE, i)
+
+        def mlb_macro(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(MacroParser.Mlb_macroContext)
+            else:
+                return self.getTypedRuleContext(MacroParser.Mlb_macroContext,i)
+
+
+        def getRuleIndex(self):
+            return MacroParser.RULE_mlb
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitMlb" ):
+                return visitor.visitMlb(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def mlb(self):
+
+        localctx = MacroParser.MlbContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 6, self.RULE_mlb)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 77
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==4:
+                self.state = 74
+                self.match(MacroParser.NEWLINE)
+                self.state = 79
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 83
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==3 or _la==6:
+                self.state = 80
+                self.mlb_macro()
+                self.state = 85
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 86
+            self.match(MacroParser.EOF)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class Mlb_macroContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def mlb_header(self):
+            return self.getTypedRuleContext(MacroParser.Mlb_headerContext,0)
+
+
+        def macro_body(self):
+            return self.getTypedRuleContext(MacroParser.Macro_bodyContext,0)
+
+
+        def getRuleIndex(self):
+            return MacroParser.RULE_mlb_macro
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitMlb_macro" ):
+                return visitor.visitMlb_macro(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def mlb_macro(self):
+
+        localctx = MacroParser.Mlb_macroContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 8, self.RULE_mlb_macro)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 88
+            self.mlb_header()
+            self.state = 89
+            self.macro_body()
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class Mlb_headerContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def ASTERISK(self):
+            return self.getToken(MacroParser.ASTERISK, 0)
+
+        def NAME(self):
+            return self.getToken(MacroParser.NAME, 0)
+
+        def SLASH(self):
+            return self.getToken(MacroParser.SLASH, 0)
+
+        def DIGIT(self):
+            return self.getToken(MacroParser.DIGIT, 0)
+
+        def NEWLINE(self):
+            return self.getToken(MacroParser.NEWLINE, 0)
+
+        def WS(self, i:int=None):
+            if i is None:
+                return self.getTokens(MacroParser.WS)
+            else:
+                return self.getToken(MacroParser.WS, i)
+
+        def getRuleIndex(self):
+            return MacroParser.RULE_mlb_header
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitMlb_header" ):
+                return visitor.visitMlb_header(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def mlb_header(self):
+
+        localctx = MacroParser.Mlb_headerContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 10, self.RULE_mlb_header)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
@@ -582,7 +582,7 @@ class MacroParser ( Parser ):
 
 
             self.state = 94
-            self.match(MacroParser.Macro)
+            self.match(MacroParser.ASTERISK)
             self.state = 96
             self._errHandler.sync(self)
             _la = self._input.LA(1)
