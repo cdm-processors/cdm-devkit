@@ -12,11 +12,13 @@ REL : 'REL';
 XTRN: 'XTRN';
 
 WORD: [a-zA-Z_0-9]+;
+WORD_WITH_DOTS : [a-zA-Z_][a-zA-Z_0-9]* DOT [a-zA-Z_0-9.]* [a-zA-Z_0-9];
 ABS_SECTION: '$abs';
 
 COLON: ':';
 MINUS: '-';
 PLUS: '+';
+DOT: '.';
 NEWLINE: ('\r'? '\n')+ ;
 WS : (' ' | '\t')+ -> skip ;
 
