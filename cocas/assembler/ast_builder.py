@@ -1,3 +1,5 @@
+import codecs
+import warnings
 from base64 import b64decode
 from pathlib import Path
 
@@ -15,11 +17,11 @@ from .ast_nodes import (
     LabelDeclarationNode,
     LabelNode,
     LocatableNode,
+    Node,
     ProgramNode,
     RegisterNode,
     RelocatableExpressionNode,
     RelocatableSectionNode,
-    TemplateFieldNode,
     TemplateSectionNode,
     UntilLoopNode,
     WhileLoopNode,
@@ -30,6 +32,8 @@ from .generated import AsmLexer, AsmParser, AsmParserVisitor
 
 # noinspection PyPep8Naming
 class BuildAstVisitor(AsmParserVisitor):
+    allowed_top_instructions = []
+
     def __init__(self, filepath: str):
         super().__init__()
         self.line_offset = 0
@@ -56,7 +60,41 @@ class BuildAstVisitor(AsmParserVisitor):
                 ret.template_sections.append(self.visitTemplateSection(child))
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
+            elif isinstance(child, AsmParser.Top_lineContext):
+                ret.shared_externals, ret.top_instructions = self.visitTop_line(child)
         return ret
+
+    def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
+        shared_externals = []
+        top_instructions = []
+        for child in ctx.children:
+            if isinstance(child, AsmParser.InstructionLineContext):
+                nodes = self.visitInstructionLine(child)
+                loc = self._ctx_location(ctx)
+                for i in nodes:
+                    if isinstance(i, InstructionNode):
+                        if i.mnemonic not in self.allowed_top_instructions:
+                            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                                     f"Instruction {i.mnemonic} not allowed at the top of a file")
+                        else:
+                            top_instructions.append(i)
+                    elif isinstance(i, LabelDeclarationNode):
+                        self.check_label_is_ext(i)
+                        shared_externals.append(i.label)
+                    else:
+                        raise Exception(f"Unexpected node from top line: {i}")
+            elif isinstance(child, AsmParser.StandaloneLabelsContext):
+                labels = self.visitStandaloneLabels(child)
+                for i in labels:
+                    self.check_label_is_ext(i)
+                    shared_externals.append(i.label)
+        return shared_externals, top_instructions
+
+    @staticmethod
+    def check_label_is_ext(label: LabelDeclarationNode):
+        if not label.external:
+            raise AssemblerException(AssemblerExceptionTag.ASM, label.location.file, label.location.line,
+                                     "Only external labels are allowed at the top of a file")
 
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
@@ -95,12 +133,6 @@ class BuildAstVisitor(AsmParserVisitor):
 
     def visitNumber(self, ctx: AsmParser.NumberContext) -> int:
         return int(ctx.getText(), base=0)
-
-    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> int:
-        if ctx.getText()[1] == '\\':
-            return ord(ctx.getText()[2])
-        else:
-            return ord(ctx.getText()[1])
 
     def visitSection_body(self, ctx: AsmParser.Section_bodyContext) -> list:
         return self.visitCode_block(ctx.code_block(), return_locations=False)
@@ -164,8 +196,9 @@ class BuildAstVisitor(AsmParserVisitor):
         ret = []
         for c in ctx.children:
             nodes = []
-            if isinstance(c, AsmParser.StandaloneLabelContext):
-                nodes.append(self.visitStandaloneLabel(c))
+            if isinstance(c, AsmParser.StandaloneLabelsContext):
+                for i in self.visitStandaloneLabels(c):
+                    nodes.append(i)
             elif isinstance(c, AsmParser.InstructionLineContext):
                 nodes += self.visitInstructionLine(c)
             elif isinstance(c, AsmParser.ConditionalContext):
@@ -214,36 +247,63 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
-    def visitStandaloneLabel(self, ctx: AsmParser.StandaloneLabelContext) -> LabelDeclarationNode:
-        label_decl = self.visitLabel_declaration(ctx.label_declaration())
-        label_decl.external = ctx.Ext() is not None
-        if label_decl.entry and label_decl.external:
-            raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
-                                     f'Label {label_decl.label.name} cannot be both external and entry')
+    def visitStandaloneLabels(self, ctx: AsmParser.StandaloneLabelsContext) -> list[LabelDeclarationNode]:
+        label_decl = self.visitLabels_declaration(ctx.labels_declaration())
+        for i in label_decl:
+            i.external = ctx.Ext() is not None
+            if i.entry and i.external:
+                raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                                         f'Label {i.label.name} cannot be both external and entry')
         return label_decl
 
-    def visitLabel_declaration(self, ctx: AsmParser.Label_declarationContext) -> LabelDeclarationNode:
+    def visitLabels_declaration(self, ctx: AsmParser.Labels_declarationContext) -> list[LabelDeclarationNode]:
         is_entry = ctx.ANGLE_BRACKET() is not None
-        return LabelDeclarationNode(self.visitLabel(ctx.label()), is_entry, False)
+        return [LabelDeclarationNode(i, is_entry, False) for i in self.visitLabels(ctx.labels())]
+
+    def visitLabels(self, ctx: AsmParser.LabelsContext):
+        return [self.visitLabel(i) for i in ctx.label()]
 
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
         return LabelNode(ctx.getText())
 
     def visitString(self, ctx: AsmParser.StringContext):
-        return ctx.getText()[1:-1]
+        s = ctx.getText()[1:-1]
+        if '\\' in s:
+            return self.handle_esc_seq(s, self._ctx_location(ctx))
+        else:
+            return s
+
+    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
+        loc = self._ctx_location(ctx)
+        s = self.handle_esc_seq(ctx.getText()[1:-1], loc)
+        if len(s) < 1:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Empty character constant")
+        elif len(s) > 1:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Multi-character character constant")
+        return s
+
+    @staticmethod
+    def handle_esc_seq(s: str, loc: CodeLocation):
+        x: str
+        warnings.filterwarnings("error")
+        try:
+            x = codecs.unicode_escape_decode(s)[0]
+        except DeprecationWarning as e:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
+        except UnicodeDecodeError as e:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
+        warnings.resetwarnings()
+        return x
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
 
-    def visitTemplate_field(self, ctx: AsmParser.Template_fieldContext):
-        template_name = ctx.name()[0].getText()
-        field_name = ctx.name()[1].getText()
-        return TemplateFieldNode(template_name, field_name)
-
-    def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list:
+    def visitInstructionLine(self, ctx: AsmParser.InstructionLineContext) -> list[Node]:
         ret = []
-        if ctx.label_declaration() is not None:
-            ret.append(self.visitLabel_declaration(ctx.label_declaration()))
+        if ctx.labels_declaration() is not None:
+            ret += self.visitLabels_declaration(ctx.labels_declaration())
         op = ctx.instruction().getText()
         args = self.visitArguments(ctx.arguments()) if ctx.arguments() is not None else []
         ret.append(InstructionNode(op, args))

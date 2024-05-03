@@ -139,10 +139,5 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ObjectFileParser#plus.
-    def visitPlus(self, ctx:ObjectFileParser.PlusContext):
-        return self.visitChildren(ctx)
-
-
 
 del ObjectFileParser

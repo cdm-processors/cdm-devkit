@@ -313,9 +313,18 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
             elif term.name in labels:
                 result.asect[term.name] = result.asect.get(term.name, 0) + sign
             else:
-                _error(segment, f'Label "{term.name}" not found')
+                split = term.name.split(".")
+                if len(split) == 1:
+                    _error(segment, f'Label "{term.name}" not found')
+                else:
+                    _error(segment, f'Template "{split[0]}" not found')
         elif isinstance(term, TemplateFieldNode):
-            result.value += templates[term.template_name][term.field_name] * sign
+            # if term.template_name not in templates:
+            # This should not happen as it is checked when selecting between label and template field
+            try:
+                result.value += templates[term.template_name][term.field_name] * sign
+            except KeyError:
+                _error(segment, f'Template {term.template_name} does not contain field {term.field_name}')
     for label, n in result.rel_labels.items():
         result.relocate_additions += n
     result.asect = {label: n for label, n in result.asect.items() if n != 0}

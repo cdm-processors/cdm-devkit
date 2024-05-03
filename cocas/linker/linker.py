@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
@@ -76,6 +76,8 @@ def find_sect_by_ent(sects: list[ObjectSectionRecord]):
     sect_by_ent = dict()
     for sect in sects:
         for ent_name in sect.entries:
+            if ent_name in sect_by_ent:
+                raise LinkerException(f"Entry {ent_name} is declared in multiple sections")
             sect_by_ent[ent_name] = sect.name
     return sect_by_ent
 
@@ -107,7 +109,10 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
     asects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
-    rsects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
+    try:
+        rsects = concat_rsects(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
+    except ValueError as e:
+        raise LinkerException(str(e))
 
     exts_by_sect = find_exts_by_sect(asects + rsects)
     sect_by_ent = find_sect_by_ent(asects + rsects)

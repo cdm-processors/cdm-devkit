@@ -1,14 +1,14 @@
 grammar Macro;
 
-mlb : NEWLINE* mlb_macro* EOF ;
-mlb_macro : mlb_header macro_body ;
-mlb_header : WS? ASTERISK WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
-
 program : (macro | line)* EOF ;
 macro : macro_header macro_body MACRO_FOOTER ;
 macro_header : WS? Macro WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
 
-macro_body : line*? ;
+mlb : NEWLINE* mlb_macro* EOF ;
+mlb_macro : mlb_header macro_body ;
+mlb_header : WS? ASTERISK WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
+
+macro_body : ((WS? NEWLINE) | line)*? ;
 line: labels (instruction first_param)? (COMMA param)* NEWLINE;
 labels : label* WS? ;
 first_param : WS param | ;
@@ -36,14 +36,14 @@ ASTERISK : '*' ;
 COMMA : ',' ;
 LABEL_END : [:>] ;
 QUESTION_MARK : '?' ;
-STRING : '"' ~["\\\n]* (('\\'.) ~["\\\n]*)* '"' ;
-CHAR : '\'' ('\\'. | ~[\\'\n]) '\'' ;
+STRING: '"' (~[\\"]+ | '\\' .)* '"' ;
+CHAR : '\'' (~[\\']+ | '\\' .)* '\'' ;
 
-NAME : [_a-zA-Z][_a-zA-Z0-9]* ;
+NAME : [_a-zA-Z][_a-zA-Z0-9.]* ;
 DIGIT : [0-9] ;
 SLASH : '/' ;
 
 APOSTROPHE : '\'' ;
 DOLLAR_SIGN : '$' ;
 
-OTHER : [-+.()]+ ;
+OTHER : [-+()]+ ;

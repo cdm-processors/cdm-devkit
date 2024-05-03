@@ -12,9 +12,9 @@ from base64 import b64decode
     self.current_offset = 0
 }
 
-program_nomacros : NEWLINE* section* End ;
+program_nomacros : NEWLINE* top_line* section* End ;
 
-program : NEWLINE* line_mark+ section* End ;
+program : NEWLINE* line_mark+ top_line* section* End ;
 
 section
     :  asect_header section_body # absoluteSection
@@ -56,12 +56,15 @@ filepath: BASE64;
 break_statement : Break NEWLINE+ ;
 continue_statement : Continue NEWLINE+ ;
 
+top_line: line;
+
 line
-    : label_declaration Ext? NEWLINE+                    # standaloneLabel
-    | label_declaration? instruction arguments? NEWLINE+ # instructionLine
+    : labels_declaration Ext? NEWLINE+                    # standaloneLabels
+    | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-label_declaration: label (COLON | ANGLE_BRACKET) ;
+labels_declaration: labels (COLON | ANGLE_BRACKET) ;
+labels: label (COMMA label)*;
 arguments : argument (COMMA argument)* ;
 
 conditional : If NEWLINE+ conditions code_block else_clause? Fi NEWLINE+ ;
@@ -90,10 +93,9 @@ byte_expr : byte_specifier OPEN_PAREN addr_expr CLOSE_PAREN ;
 addr_expr : first_term add_term* ;
 first_term : (PLUS | MINUS)? term ;
 add_term : (PLUS | MINUS) term ;
-term : number | template_field | label ;
+term : number | label ;
 byte_specifier : name;
 
-template_field : name DOT name ;
 label : name ;
 instruction : WORD ;
 string : STRING ;
@@ -125,4 +127,5 @@ name
     | Wend
     | While
     | WORD
+    | WORD_WITH_DOTS
     ;

@@ -87,8 +87,13 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#standaloneLabel.
-    def visitStandaloneLabel(self, ctx:AsmParser.StandaloneLabelContext):
+    # Visit a parse tree produced by AsmParser#top_line.
+    def visitTop_line(self, ctx:AsmParser.Top_lineContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#standaloneLabels.
+    def visitStandaloneLabels(self, ctx:AsmParser.StandaloneLabelsContext):
         return self.visitChildren(ctx)
 
 
@@ -97,8 +102,13 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AsmParser#label_declaration.
-    def visitLabel_declaration(self, ctx:AsmParser.Label_declarationContext):
+    # Visit a parse tree produced by AsmParser#labels_declaration.
+    def visitLabels_declaration(self, ctx:AsmParser.Labels_declarationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#labels.
+    def visitLabels(self, ctx:AsmParser.LabelsContext):
         return self.visitChildren(ctx)
 
 
@@ -189,11 +199,6 @@ class AsmParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AsmParser#byte_specifier.
     def visitByte_specifier(self, ctx:AsmParser.Byte_specifierContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AsmParser#template_field.
-    def visitTemplate_field(self, ctx:AsmParser.Template_fieldContext):
         return self.visitChildren(ctx)
 
 

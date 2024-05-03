@@ -2,7 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Union
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
 
 from .targets import TargetParams, import_target
 
@@ -37,6 +37,10 @@ def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
     return res
 
 
+def asect_useful(asect: ObjectSectionRecord):
+    return asect.data or asect.external or asect.entries or asect.code_locations
+
+
 def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[str]:
     """
     Export multiple object modules in object file format
@@ -56,14 +60,18 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
         if debug and obj.source_file_path:
             result.append(f'FILE {Path(obj.source_file_path).as_posix()}\n')
 
-        for asect in obj.asects:
-            s = data_to_str(asect.data)
-            result.append(f'ABS  {asect.address:02x}: {s}\n')
-            if debug:
-                result += export_code_locations(asect.code_locations)
-        for asect in obj.asects:
-            for label, address in asect.entries.items():
-                result.append(f'NTRY {label} {address:02x}\n')
+        asects_exist = False
+        if any(map(lambda x: asect_useful(x), obj.asects)):
+            asects_exist = True
+            for asect in obj.asects:
+                if asect_useful(asect):
+                    s = data_to_str(asect.data)
+                    result.append(f'ABS  {asect.address:02x}: {s}\n')
+                    if debug:
+                        result += export_code_locations(asect.code_locations)
+            for asect in obj.asects:
+                for label, address in asect.entries.items():
+                    result.append(f'NTRY {label} {address:02x}\n')
         for rsect in obj.rsects:
             result.append(f'NAME {rsect.name}\n')
             if rsect.alignment != target_params.default_alignment:
@@ -76,7 +84,7 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
             for label, address in rsect.entries.items():
                 result.append(f'NTRY {label} {address:02x}\n')
         external = defaultdict(list)
-        for sect in obj.asects + obj.rsects:
+        for sect in (obj.asects if asects_exist else []) + obj.rsects:
             for label, entries in sect.external.items():
                 for entry in entries:
                     external[label].append((sect.name, entry))
