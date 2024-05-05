@@ -7,7 +7,8 @@ from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import ICodeSegment, IVaryingLengthSegment
-from .simple_instructions import simple_instructions
+from .branches import check_inverse_branch
+from .instruction_codes import simple_instructions
 
 TAG = AssemblerExceptionTag.ASM
 
@@ -187,8 +188,9 @@ class GotoSegment(RelocatableExpressionSegment, VaryingLengthSegment):
         if mnemonic not in simple_instructions['branch']:
             _error(self, f'Invalid branch mnemonic: {mnemonic}')
         if self.is_expanded:
+
             branch_opcode = simple_instructions['branch'][
-                f'bn{self.branch_mnemonic}']
+                f'b{check_inverse_branch(self.branch_mnemonic, inverse=True)}']
             jmp_opcode = simple_instructions['long']['jmp']
             object_record.data += bytearray([branch_opcode, 4, jmp_opcode])
             LongExpressionSegment(self.expr).fill(object_record, section, labels, templates)
