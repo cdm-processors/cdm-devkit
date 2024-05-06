@@ -2,9 +2,12 @@ from typing import Union, get_args, get_origin
 
 import bitstruct
 
+from cocas.object_module import CodeLocation
+
 from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment
+from .branches import check_inverse_branch
 from .code_segments import (
     BytesSegment,
     ConstExpressionSegment,
@@ -13,7 +16,7 @@ from .code_segments import (
     OffsetExpressionSegment,
     ShortExpressionSegment,
 )
-from .simple_instructions import simple_instructions
+from .instruction_codes import simple_instructions
 
 
 def assert_args(args, *types, single_type=False):
@@ -58,12 +61,14 @@ def finish(temp_storage: dict):
         raise CdmTempException("Expected restore statement")
 
 
-def make_branch_instruction(location, branch_mnemonic: str, label_name: str, inverse: bool) \
+def make_branch_instruction(location: CodeLocation, branch_mnemonic: str, label_name: str, inverse: bool) \
         -> list[ICodeSegment]:
     arg2 = RelocatableExpressionNode(None, [LabelNode(label_name)], [], 0)
-    if inverse:
-        branch_mnemonic = 'n' + branch_mnemonic
-    seg = GotoSegment(branch_mnemonic, arg2)
+    proper_mnemonic = check_inverse_branch(branch_mnemonic, inverse)
+    if proper_mnemonic is None:
+        raise AssemblerException(AssemblerExceptionTag.ASM, location.file, location.line,
+                                 f"Invalid branch mnemonic: {branch_mnemonic}")
+    seg = GotoSegment(proper_mnemonic, arg2)
     seg.location = location
     return [seg]
 
