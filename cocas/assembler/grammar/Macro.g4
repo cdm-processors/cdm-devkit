@@ -1,12 +1,12 @@
 grammar Macro;
 
-program : (macro | line)* EOF ;
-macro : macro_header macro_body MACRO_FOOTER ;
-macro_header : WS? Macro WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
-
 mlb : NEWLINE* mlb_macro* EOF ;
 mlb_macro : mlb_header macro_body ;
 mlb_header : WS? ASTERISK WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
+
+program : (macro | line)* EOF ;
+macro : macro_header macro_body MACRO_FOOTER ;
+macro_header : WS? Macro WS? NAME WS? SLASH WS? DIGIT WS? NEWLINE ;
 
 macro_body : ((WS? NEWLINE) | line)*? ;
 line: labels (instruction first_param)? (COMMA param)* NEWLINE;
@@ -36,8 +36,8 @@ ASTERISK : '*' ;
 COMMA : ',' ;
 LABEL_END : [:>] ;
 QUESTION_MARK : '?' ;
-STRING: '"' (~[\\"]+ | '\\' .)* '"' ;
-CHAR : '\'' (~[\\']+ | '\\' .)* '\'' ;
+STRING: '"' (~[\\"\n]+ | '\\' .)* '"' ;
+CHAR : '\'' (~[\\'\n]+ | '\\' .)* '\'' ;
 
 NAME : [_a-zA-Z][_a-zA-Z0-9.]* ;
 DIGIT : [0-9] ;
