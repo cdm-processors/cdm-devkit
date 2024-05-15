@@ -138,6 +138,16 @@
                 "enablement": "inDebugMode && debugType == 'cdm'"
             }
         ],
+        "configuration": {
+            "title": "Coco-de-Mer Processors",
+            "properties": {
+                "cdm.path.assembler": {
+                    "type": "string",
+                    "default": "cocas",
+                    "markdownDescription": "Path to the `cocas` executable. By default, will try to use the one in `PATH`."
+                }
+            }
+        },
         "menus": {
             "debug/toolBar": [
                 {
@@ -311,7 +321,50 @@
         ],
         "taskDefinitions": [
             {
-                "type": "cdm"
+                "type": "cocas",
+                "required": [
+                    "target",
+                    "sources",
+                    "artifacts"
+                ],
+                "properties": {
+                    "target": {
+                        "enum": [
+                            "cdm8",
+                            "cdm8e",
+                            "cdm16"
+                        ],
+                        "description": "The target assembler from Coco-de-Mer family."
+                    },
+                    "sources": {
+                        "type": "array",
+                        "description": "The source assembly files.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "artifacts": {
+                        "type": "object",
+                        "required": [
+                            "image"
+                        ],
+                        "properties": {
+                            "image": {
+                                "type": "string",
+                                "default": "${workspaceFolder}${/}build${/}out.img",
+                                "description": "The file, where the compiled image will be stored."
+                            },
+                            "debug": {
+                                "type": "string",
+                                "default": "${workspaceFolder}${/}build${/}out.dbg.json",
+                                "description": "The file, where the debug information will be stored."
+                            }
+                        }
+                    }
+                },
+                "when": "shellExecutionSupported"
             }
         ]
     },
