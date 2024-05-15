@@ -6,13 +6,13 @@ export const DEFINED = [
 export const IDS = DEFINED.map(arch => arch.id);
 export const NAMES = DEFINED.map(arch => arch.name);
 
-export type ArchitectureID = typeof DEFINED[number]["id"];
+export type ArchitectureId = typeof DEFINED[number]["id"];
 export type ArchitectureName = typeof DEFINED[number]["name"];
 
-export function idByName(name: string): ArchitectureID | undefined {
+export function idByName(name: string): ArchitectureId | undefined {
     return DEFINED.find(arch => arch.name === name)?.id;
 }
 
-export function nameByID(id: string): ArchitectureName | undefined {
+export function nameById(id: string): ArchitectureName | undefined {
     return DEFINED.find(arch => arch.id === id)?.name;
 }

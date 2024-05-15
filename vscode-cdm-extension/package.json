@@ -183,14 +183,16 @@
                         "properties": {
                             "address": {
                                 "type": "string",
-                                "description": "Websocket address of debug server."
+                                "description": "Websocket address of debug server.",
+                                "default": "ws://localhost:7001"
                             },
                             "architecture": {
                                 "enum": [
                                     "harvard",
                                     "vonNeumann"
                                 ],
-                                "description": "Memory configuration, which will be passed to the debug server."
+                                "description": "Memory configuration, which will be passed to the debug server.",
+                                "default": "harvard"
                             },
                             "target": {
                                 "enum": [
@@ -200,24 +202,16 @@
                                 ],
                                 "description": "The codename of processor from Coco-de-Mer family, which will be used for debugging."
                             },
-                            "sources": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "minItems": 1,
-                                "uniqueItems": true
-                            },
                             "artifacts": {
                                 "type": "object",
                                 "properties": {
                                     "image": {
                                         "type": "string",
-                                        "description": "The path to the file where the built image will be saved."
+                                        "description": "Path to the compiled image."
                                     },
                                     "debug": {
                                         "type": "string",
-                                        "description": "The path to the file where the debug information about the built image will be saved."
+                                        "description": "Path to the debug information file."
                                     }
                                 },
                                 "description": "The build artifacts file paths."
@@ -236,8 +230,8 @@
                             "architecture": "harvard",
                             "target": "cdm16",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -251,8 +245,8 @@
                             "architecture": "harvard",
                             "target": "cdm8e",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -266,8 +260,8 @@
                             "architecture": "harvard",
                             "target": "cdm8",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -281,8 +275,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm16",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -296,8 +290,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm8e",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -311,8 +305,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm8",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     }
@@ -369,7 +363,8 @@
         ]
     },
     "activationEvents": [
-        "onDebug"
+        "onDebug",
+        "workspaceContains:**/*.asm"
     ],
     "scripts": {
         "vscode:prepublish": "npm run compile",
