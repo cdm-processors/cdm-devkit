@@ -22,7 +22,7 @@ inst_decoders: dict[InstructionGroup | int, InstructionDecoder] = {
 
     InstructionGroup.UNARY_ARITH: InstructionDecoder({0: "not", 1: "neg", 2: "dec", 3: "inc"}),
 
-    InstructionGroup.SHIFTS: InstructionDecoder({0: "shr", 1: "shl", 2: "shra", 3: "rol"}),
+    InstructionGroup.SHIFTS: InstructionDecoder({0: "shr", 1: "shla", 2: "shra", 3: "rol"}),
 
     InstructionGroup.PUSH_GR: InstructionDecoder({0: "push", 1: "pop", 2: "ldsa"}),
 
