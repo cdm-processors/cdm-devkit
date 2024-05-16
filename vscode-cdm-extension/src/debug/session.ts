@@ -65,7 +65,8 @@ export class CdmDebugSession extends DebugSession {
 
         response.body = {
             supportsConfigurationDoneRequest: true,
-            supportsRestartRequest: true,
+            // TODO (kapkekes): add debug information handler support
+            supportsRestartRequest: false,
             supportsConditionalBreakpoints: undefined,
             supportsHitConditionalBreakpoints: undefined,
             exceptionBreakpointFilters: undefined,
