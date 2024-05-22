@@ -1,21 +1,9 @@
-import fsPromises from "fs/promises";
-import pathlib from "path";
-
 import vscode from "vscode";
 
 import { ARCHITECTURE_ITEMS, SOURCE_ITEMS, TARGET_ITEMS } from "./picks";
-import { TargetGeneralId, getTargetByGeneralId } from "../../protocol/targets";
+import { createTemplate, retrieveAssemblyFiles } from "./sources";
+import { getTargetByGeneralId } from "../../protocol/targets";
 import { getArchitectureById } from "../../protocol/architectures";
-
-async function createTemplate(context: vscode.ExtensionContext, targetId: TargetGeneralId): Promise<string> {
-    const template = context.asAbsolutePath(pathlib.join("resources", `${targetId}-template.asm`));
-    const folder = vscode.workspace.workspaceFolders![0];
-
-    const generated = pathlib.join(folder.uri.fsPath, "main.asm");
-    await fsPromises.copyFile(template, generated);
-
-    return generated;
-}
 
 export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
     const target = await vscode.window.showQuickPick(TARGET_ITEMS, { title: "Pick a target processor" });
@@ -55,11 +43,11 @@ export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
     let sourceSet: string[];
     switch (discoveryStrategy.id) {
         case "template": {
-            sourceSet = [await createTemplate(context, target.id)];
+            sourceSet = await createTemplate(context, target.id);
             break;
         }
         case "scan": {
-            sourceSet = [];
+            sourceSet = await retrieveAssemblyFiles();
             break;
         }
         case "nothing": {
