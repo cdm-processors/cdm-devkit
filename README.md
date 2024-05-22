@@ -2,53 +2,37 @@
 
 ## Installation
 
-1. **Download** [latest version](https://github.com/cdm-processors/cdm-devkit/releases/latest)
+### CLI Programs
 
-2. **Install Python package** from `.whl` file
-    - Run `pip install cdm-devkit-x.x.x.whl`
+Published on [PyPI](https://pypi.org/project/cdm-devkit/).
 
-    <br>
+Can be installed using `pip` (or your favorite package management tool):
 
-    > Package will be published to PyPI soon 
+```bash
+pip install cdm-devkit
+```
 
-3. **Install VS Code extension** from `.vsix` file
-    
-    > Remove all other extensions that add support for CdM processors
+### Visual Studio Code Extension
 
-    - Open Command Palette `Ctrl+Shift+P`
-    - Type `vsix`
-    - Select `Install from VSIX`
-    - Select `vscode-cdm-extension-x.x.x.vsix`
-    - [Read more](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix)
-    
-    <br>
+Published on [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=cdm-processors.vscode-cdm-extension).
 
-    > Extension will be published to VS Code Marketplace soon 
+Can be installed directly in [Visual Studio Code](vscode:extension/cdm-processors.vscode-cdm-extension).
 
 ## Development kit contents
 
-After installation you get several components:
+### CLI Programs
 
-- **CLI Programs**
-    
-    - `cocas` - assembler for CdM processors
-    - `cocodump` - disassembler for CdM processors
-    - `synthm` - secondary decoder synthesis utility
-    - *(coming soon)*
+- `cocas` - assembler for CdM processors;
+- `cocodump` - disassembler for CdM processors;
+- `synthm` - secondary decoder synthesis utility.
 
-- **VS Code Extension**
+### Visual Studio Code Extension
 
-    - Assembler language support for all CdM processors (syntax highlighting and code snippets)
-    - Debug support *(coming soon)*
-
-- **cdm-devkit-misc** archive
-
-    - Processor implementations (`./`)
-    - Logisim libraries (`jar/`)
-        
-        - `logisim-banked-memory` - banked memory for `cdm16`
-        - `logisim-cdm-emulator` - emulated CdM processors
-    - Code and scheme examples (`examples/`)
+- Coco-de-Mer family assembly languages support (including microcode);
+  - syntax highlighting;
+  - code snippets;
+- Debug adapter for Logisim debugger;
+- Task provider for `cocas`;
 
 ## Getting started
 
@@ -56,113 +40,87 @@ Check out our [Getting Stated](/docs/getting-started.md) guide.
 
 ## Documentation
 
-We are working on documentation, it will be available soon.
-
-However, some docs are available in `docs/` directory.
+We are still actively working on documentation, but some documents are already available in `docs` directory!
 
 ## Report a bug
 
-You can report a bug with GitHub Issues.
+If you encountered a one, we recommend to report it using GitHub Issues:
 
-- Open new issue [here](https://github.com/cdm-processors/cdm-devkit/issues)
-
-- Use a template
-
-- Provide a proper name and description of a problem
-
-- Provide information on how to reproduce a bug
+- Open a new issue using [this template](https://github.com/cdm-processors/cdm-devkit/issues/new?template=bug_report.md);
+- Provide a proper name and description;
+- Provide the information on how to reproduce the bug.
 
 ## Setting up development environment
 
-- **Python-based projects** use `Poetry` as build system
+### Python-based projects
 
-    - [Install](https://python-poetry.org/docs/#installation) `Poetry`
+- Install [**Poetry**](https://python-poetry.org/docs/#installation);
+- Run `poetry install` at the project root.
 
-    - Run `poetry install` to download dependencies
+### Java-based projects
 
-    > `cocas` uses `ANTLR` to parse assembly language
-    >
-    >    - `antlr4-python3-runtime` is needed to run `cocas` and is installed with other dependencies
-    >
-    >   - However, if you want to fiddle with grammar files and generate new parser you would need to install `antlr4-tools`, this package is installed with development dependencies ([Read more](https://www.antlr.org))
+- Install **JDK**;
+- **Gradle** build system should be downloaded by `gradlew` script automatically on first run.
 
-- **Java-based projects** use `Gradle` as build system
+### Visual Studio Code extension
 
-    - Install `JDK`
-
-    - `gradlew` script should download `Gradle` automatically on first run
-
-- **VS Code Extension** uses [official tools](https://code.visualstudio.com/api)
+- Install [**Node.js**](https://nodejs.org/en):
+  - You will need a package manager, so it's recommended to get a provided **npm** binary from **Node.js** installer;
+  - However, if you really understand what are you doing, you can use your favorite package manager such as **pnpm**, **Yarn** or (if you are on the cutting edge of progress) even **Bun**;
+- Navigate to `vscode-cdm-extension`;
+- Run `npm install`.
 
 ## Building
 
 ### Building individual projects
 
-- **Python-based projects:**
+#### Python-based projects
 
-    - Run `poetry build`
+- Run `poetry build`.
 
-- **Java-based projects:**
-    
-    - Navigate to project folder
+#### Java-based projects
 
-    - Run `./gradlew jar` (on Unix)
-    - Run `.\gradlew.bat jar` (on Windows)
+- Navigate to project folder;
+- For UNIX-like systems:
+  - Run `./gradlew jar`.
+- For Windows:
+  - Run `.\gradlew.bat jar`.
 
-- **VS Code extension:**
+#### Visual Studio Code extension
 
-    - Navigate to `vscode-cdm-extension/`
-
-    - Run `vsce package`
+- Navigate to `vscode-cdm-extension`;
+- Run `npx @vscode/vsce package`.
 
 ### Building all projects at once
 
-There is a `Makefile` that will build all projects and prepare files for distribution
+There is a handy `Makefile` that will build all projects and prepare artifacts for distribution: just run `make` to build all projects.
 
-- Run `make` to build all projects
-
-<br>
-
-Set `VERSION` variable if you want to specify project version
-- Example: `make VERSION=1.2.3`
-- `VERSION` should be valid SemVer version
-
-<br>
-
-> You can get `make` on Windows from GnuWin32 project.
-> - For Windows 10 and above: 
->   - Run `winget install GnuWin32.Make`
->   - Maybe you would need to add `bin/` directory of make to your `PATH`
-> - Using `Chocolatey`:
->   - Run `choco install make` 
-> - You can read about other installation methods [here](https://gnuwin32.sourceforge.net/packages/make.htm)
+> [!TIP]
+> You can set a `VERSION` variable if you want to specify the project version; note that it should be a valid [SemVer](https://semver.org/) version.
 
 ## Contributing
 
-- All contributions should be done via **pull requests**.
+If you want to participate in the development of the project, we are open to your **pull requests**!
 
-- Commit messages should be written according to [these guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53)
+> [!IMPORTANT]
+> We expect all commit messages to comply [these guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) and use **scope identifier(s)** - the name of the subproject enclosed in square brackets. However, if the commit applies to the entire repository, **scope identifier** must be ommited.
 
-- Commit messages should start with a **scope identifier** - project name surrounded by square brackets. That will help to determine which project commit belongs to.
+An example message: `[cocas] Add new target`
 
-**Example:** `[cocas] Add new feature`
+### Scope identifiers
 
-> Commits related to whole repository shouldn't use scope identifier
+#### General
 
-**Possible scope identifiers are:**
+- `docs`;
+- `ci/cd`;
+- `examples`;
+- `tests`.
 
-- **General:**
-    
-    - `docs`
-    - `ci/cd`
-    - `examples`
-    - `tests`
+#### Processor implementations
 
-- **Processor implementations:**
+- `cdm*`.
 
-    - `cdm*`
-
-- **Projects:**
+#### Projects
 
     - `cocas`
     - `cocoemu`
@@ -176,10 +134,10 @@ Set `VERSION` variable if you want to specify project version
 
 ## Contact us
 
-- If you have a proposal or a suggestion you are free to open a GitHub Issue [here](https://github.com/cdm-processors/cdm-devkit/issues).
+If you have a proposal or a suggestion, you are free to open a GitHub Issue [here](https://github.com/cdm-processors/cdm-devkit/issues/new?template=feature_request.md).
 
-- For other questions contact:
-    - Email: n.repin@g.nsu.ru
-    - Telegram: [@cdm_updates](https://t.me/cdm_updates)
+For other questions, use these contacts:
 
-        *(channel with updates, linked chat for support)*
+- Email: [n.repin@g.nsu.ru](mailto:n.repin@g.nsu.ru)
+- Telegram: [@cdm_updates](https://t.me/cdm_updates)
+  - *(channel with updates, linked chat for support)*
