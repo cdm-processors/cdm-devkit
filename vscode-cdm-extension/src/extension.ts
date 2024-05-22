@@ -1,21 +1,25 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 
-import { CdmConfigurationProvider } from "./debug/configurations";
-import { CdmDebugAdapterFactory } from "./debug/factory";
-import { showMemory, setViewOffset } from "./debug/commands";
+import { installCommands } from "./commands";
+import { installDebugAdapterFactories } from "./debug";
+import { installTaskProviders } from "./tasks";
+import { tmpdir } from "./stdlib";
 
 export async function activate(context: vscode.ExtensionContext) {
-	context.subscriptions.push(
-		vscode.commands.registerCommand("cdm.debug.showMemory", showMemory),
-		vscode.commands.registerCommand("cdm.debug.setViewOffset", setViewOffset),
-	);
+	let temporaryDirectory;
+	try {
+		temporaryDirectory = await tmpdir(context.extension.id);
+	} catch (error) {
+		return vscode.window.showErrorMessage(`Failed to create a directory for temporary files. ${error}`);
+	}
 
-	context.subscriptions.push(
-		vscode.debug.registerDebugAdapterDescriptorFactory("cdm", new CdmDebugAdapterFactory()),
-		vscode.debug.registerDebugConfigurationProvider("cdm", new CdmConfigurationProvider()),
-	);
+	context.subscriptions.push(temporaryDirectory);
 
-	console.log("'CdM Processors' extension successfully started");
+	installCommands(context);
+	installDebugAdapterFactories(context, temporaryDirectory.path);
+	installTaskProviders(context);
+
+	console.info("'CdM Processors' extension successfully started");
 }
 
 export function deactivate() {}

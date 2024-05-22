@@ -1,19 +1,55 @@
-const DEFINED = [
-    { name: "CdM-8",    id: "cdm8"  },
-    { name: "CdM-8e",   id: "cdm8e" },
-    { name: "CdM-16",   id: "cdm16" },
+export const DEFINED = [
+    {
+        name: "CdM-8",
+        generalId: "cdm8",
+        extensionId: "cdm8-assembly",
+        description: "an original simple 8-bit processor",
+    },
+    {
+        name: "CdM-8e",
+        generalId: "cdm8e",
+        extensionId: "cdm8e-assembly",
+        description: "an extented 8-bit processor with 16-bit address bus"
+    },
+    {
+        name: "CdM-16",
+        generalId: "cdm16",
+        extensionId: "cdm16-assembly",
+        description: "a superpowered 16-bit processor", 
+    },
 ] as const;
 
-export const IDS = DEFINED.map(target => target.id);
-export const NAMES = DEFINED.map(target => target.name);
+const NAMES = DEFINED.map(target => target.name);
+const GENERAL_IDS = DEFINED.map(target => target.generalId);
+const EXTENSION_IDS = DEFINED.map(target => target.extensionId);
 
-export type TargetID = typeof DEFINED[number]["id"];
-export type TargetName = typeof DEFINED[number]["name"];
+export type Target = typeof DEFINED[number];
+export type TargetName = Target["name"];
+export type TargetGeneralId = Target["generalId"];
+export type TargetExtensionId = Target["extensionId"];
 
-export function idByName(name: string): TargetID | undefined {
-    return DEFINED.find(target => target.name === name)?.id;
+
+export function isTargetName(name?: string): name is TargetName {
+    return NAMES.includes(name as any);
 }
 
-export function nameByID(id: string): TargetName | undefined {
-    return DEFINED.find(target => target.id === id)?.name;
+export function isTargetGeneralId(generalId?: string): generalId is TargetGeneralId {
+    return GENERAL_IDS.includes(generalId as any);
+}
+
+export function isTargetExtensionId(extensionId?: string): extensionId is TargetExtensionId {
+    return EXTENSION_IDS.includes(extensionId as any);
+}
+
+
+export function getTargetByName(name?: string): Target | undefined {
+    return DEFINED.find(target => target.name === name);
+}
+
+export function getTargetByGeneralId(generalId?: string): Target | undefined {
+    return DEFINED.find(target => target.generalId === generalId);
+}
+
+export function getTargetByExtensionId(extensionId?: string): Target | undefined {
+    return DEFINED.find(target => target.extensionId === extensionId);
 }

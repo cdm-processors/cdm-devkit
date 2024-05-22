@@ -126,23 +126,38 @@
         ],
         "commands": [
             {
-                "command": "cdm.debug.showMemory",
-                "title": "Open a memory view",
+                "command": "cdm.debug.openMemoryView",
+                "title": "CdM: Open a memory view",
                 "icon": "$(file-binary)",
                 "enablement": "inDebugMode && debugType == 'cdm'"
             },
             {
                 "command": "cdm.debug.setViewOffset",
-                "title": "Set Offset",
+                "title": "CdM: Set an offset",
                 "icon": "$(export)",
                 "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.environment.bootstrap",
+                "title": "CdM: Create a VS Code configuration",
+                "enablement": "workbenchState != 'empty' && workspaceFolderCount >= 1"
             }
         ],
+        "configuration": {
+            "title": "CdM Processors",
+            "properties": {
+                "cdm.path.assembler": {
+                    "type": "string",
+                    "default": "cocas",
+                    "markdownDescription": "Path to the `cocas` executable. By default, will try to use the one in `PATH`."
+                }
+            }
+        },
         "menus": {
             "debug/toolBar": [
                 {
                     "when": "inDebugMode && debugType == 'cdm'",
-                    "command": "cdm.debug.showMemory"
+                    "command": "cdm.debug.openMemoryView"
                 }
             ],
             "editor/title": [
@@ -173,7 +188,8 @@
                         "properties": {
                             "address": {
                                 "type": "string",
-                                "description": "Websocket address of debug server."
+                                "description": "Websocket address of debug server.",
+                                "default": "ws://localhost:7001"
                             },
                             "architecture": {
                                 "enum": [
@@ -190,24 +206,16 @@
                                 ],
                                 "description": "The codename of processor from Coco-de-Mer family, which will be used for debugging."
                             },
-                            "sources": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "minItems": 1,
-                                "uniqueItems": true
-                            },
                             "artifacts": {
                                 "type": "object",
                                 "properties": {
                                     "image": {
                                         "type": "string",
-                                        "description": "The path to the file where the built image will be saved."
+                                        "description": "Path to the compiled image."
                                     },
                                     "debug": {
                                         "type": "string",
-                                        "description": "The path to the file where the debug information about the built image will be saved."
+                                        "description": "Path to the debug information file."
                                     }
                                 },
                                 "description": "The build artifacts file paths."
@@ -226,8 +234,8 @@
                             "architecture": "harvard",
                             "target": "cdm16",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -241,8 +249,8 @@
                             "architecture": "harvard",
                             "target": "cdm8e",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -256,8 +264,8 @@
                             "architecture": "harvard",
                             "target": "cdm8",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -271,8 +279,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm16",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -286,8 +294,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm8e",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     },
@@ -301,8 +309,8 @@
                             "architecture": "vonNeumann",
                             "target": "cdm8",
                             "artifacts": {
-                                "image": "^\"\\${workspaceFolder}/build/out.img\"",
-                                "debug": "^\"\\${workspaceFolder}/build/out.dbg.json\""
+                                "image": "^\"\\${workspaceFolder}${/}build${/}out.img\"",
+                                "debug": "^\"\\${workspaceFolder}${/}build${/}out.dbg.json\""
                             }
                         }
                     }
@@ -311,12 +319,56 @@
         ],
         "taskDefinitions": [
             {
-                "type": "cdm"
+                "type": "cocas",
+                "required": [
+                    "target",
+                    "sources",
+                    "artifacts"
+                ],
+                "properties": {
+                    "target": {
+                        "enum": [
+                            "cdm8",
+                            "cdm8e",
+                            "cdm16"
+                        ],
+                        "description": "The target assembler from Coco-de-Mer family."
+                    },
+                    "sources": {
+                        "type": "array",
+                        "description": "The source assembly files.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "artifacts": {
+                        "type": "object",
+                        "required": [
+                            "image"
+                        ],
+                        "properties": {
+                            "image": {
+                                "type": "string",
+                                "default": "${workspaceFolder}${/}build${/}out.img",
+                                "description": "The file, where the compiled image will be stored."
+                            },
+                            "debug": {
+                                "type": "string",
+                                "default": "${workspaceFolder}${/}build${/}out.dbg.json",
+                                "description": "The file, where the debug information will be stored."
+                            }
+                        }
+                    }
+                },
+                "when": "shellExecutionSupported"
             }
         ]
     },
     "activationEvents": [
-        "onDebug"
+        "onDebug",
+        "workspaceContains:**/*.asm"
     ],
     "scripts": {
         "vscode:prepublish": "npm run compile",
