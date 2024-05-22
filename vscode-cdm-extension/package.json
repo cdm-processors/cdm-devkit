@@ -144,7 +144,7 @@
             }
         ],
         "configuration": {
-            "title": "Coco-de-Mer Processors",
+            "title": "CdM Processors",
             "properties": {
                 "cdm.path.assembler": {
                     "type": "string",
