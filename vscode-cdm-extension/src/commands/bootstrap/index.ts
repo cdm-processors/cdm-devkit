@@ -25,5 +25,5 @@ export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
         discoveryStrategy.id === "scan" ? await retrieveAssemblyFiles() : [];
 
     updateLaunchConfigurations(target.id, architecture.id);
-    updateTasksConfiguration(target.id, sourceSet);
+    await updateTasksConfiguration(target.id, sourceSet);
 }

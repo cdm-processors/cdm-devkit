@@ -1,3 +1,6 @@
+import fsPromises from "fs/promises";
+import pathlib from "path";
+
 import vscode from "vscode";
 
 import { ArchitectureId, getArchitectureById } from "../../protocol/architectures";
@@ -30,8 +33,10 @@ export function updateLaunchConfigurations(targetId: TargetGeneralId, architectu
     launch.update("configurations", launchConfigurations, false);
 }
 
-export function updateTasksConfiguration(targetId: TargetGeneralId, sourceSet: string[]) {
+export async function updateTasksConfiguration(targetId: TargetGeneralId, sourceSet: string[]) {
     const workspace = vscode.workspace.workspaceFolders![0];
+
+    await fsPromises.mkdir(pathlib.join(workspace.uri.fsPath, "build"));
 
     const target = getTargetByGeneralId(targetId)!;
 
