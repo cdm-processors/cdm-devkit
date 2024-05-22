@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+
 import { isCocasTaskDefinition } from "./definitions";
 
 export class CocasTaskProvider implements vscode.TaskProvider<vscode.Task> {

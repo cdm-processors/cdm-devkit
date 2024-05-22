@@ -126,16 +126,21 @@
         ],
         "commands": [
             {
-                "command": "cdm.debug.showMemory",
-                "title": "Open a memory view",
+                "command": "cdm.debug.openMemoryView",
+                "title": "CdM: Open a memory view",
                 "icon": "$(file-binary)",
                 "enablement": "inDebugMode && debugType == 'cdm'"
             },
             {
                 "command": "cdm.debug.setViewOffset",
-                "title": "Set Offset",
+                "title": "CdM: Set an offset",
                 "icon": "$(export)",
                 "enablement": "inDebugMode && debugType == 'cdm'"
+            },
+            {
+                "command": "cdm.environment.bootstrap",
+                "title": "CdM: Create a VS Code configuration",
+                "enablement": "workbenchState != 'empty' && workspaceFolderCount >= 1"
             }
         ],
         "configuration": {
@@ -152,7 +157,7 @@
             "debug/toolBar": [
                 {
                     "when": "inDebugMode && debugType == 'cdm'",
-                    "command": "cdm.debug.showMemory"
+                    "command": "cdm.debug.openMemoryView"
                 }
             ],
             "editor/title": [
@@ -191,8 +196,7 @@
                                     "harvard",
                                     "vonNeumann"
                                 ],
-                                "description": "Memory configuration, which will be passed to the debug server.",
-                                "default": "harvard"
+                                "description": "Memory configuration, which will be passed to the debug server."
                             },
                             "target": {
                                 "enum": [

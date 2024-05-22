@@ -1,18 +1,37 @@
 export const DEFINED = [
-    { name: "Harvard (separate storages)",  id: "harvard"       },
-    { name: "Von Neumann (shared storage)", id: "vonNeumann"    },
+    {
+        name: "Harvard",
+        id: "harvard",
+        description: "separate storages"
+    },
+    {
+        name: "Von Neumann",
+        id: "vonNeumann",
+        description: "shared storage"
+    },
 ] as const;
 
-export const IDS = DEFINED.map(arch => arch.id);
 export const NAMES = DEFINED.map(arch => arch.name);
+export const IDS = DEFINED.map(arch => arch.id);
 
-export type ArchitectureId = typeof DEFINED[number]["id"];
-export type ArchitectureName = typeof DEFINED[number]["name"];
+export type Architecture = typeof DEFINED[number];
+export type ArchitectureName = Architecture["name"];
+export type ArchitectureId = Architecture["id"];
 
-export function idByName(name: string): ArchitectureId | undefined {
-    return DEFINED.find(arch => arch.name === name)?.id;
+
+export function isArchitectureName(name?: string): name is ArchitectureName {
+    return NAMES.includes(name as any);
 }
 
-export function nameById(id: string): ArchitectureName | undefined {
-    return DEFINED.find(arch => arch.id === id)?.name;
+export function isArchitectureId(id?: string): id is ArchitectureId {
+    return NAMES.includes(id as any);
+}
+
+
+export function getArchitectureByName(name?: string): Architecture | undefined {
+    return DEFINED.find(arch => arch.name === name);
+}
+
+export function getArchitectureById(id?: string): Architecture | undefined {
+    return DEFINED.find(arch => arch.id === id);
 }

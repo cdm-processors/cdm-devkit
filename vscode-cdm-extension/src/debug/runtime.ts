@@ -3,8 +3,8 @@ import { EventEmitter } from "events";
 import { WebSocket } from "ws";
 
 import { ArchitectureId } from "../protocol/architectures";
-import { TargetGeneralId } from "../protocol/targets";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
+import { TargetGeneralId } from "../protocol/targets";
 
 export class CdmDebugRuntime extends EventEmitter {
     private ws: WebSocket;

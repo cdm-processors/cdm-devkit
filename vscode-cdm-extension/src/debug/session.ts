@@ -49,7 +49,7 @@ export class CdmDebugSession extends DebugSession {
         _args: any,
         _request?: DebugProtocol.Request,
     ): void {
-        if (command === "createMemoryView") {
+        if (command === "openMemoryView") {
             vscode.commands.executeCommand("vscode.openWith", this.memoryView, "hexEditor.hexedit", {
                 preserveFocus: true,
                 viewColumn: vscode.ViewColumn.Beside,

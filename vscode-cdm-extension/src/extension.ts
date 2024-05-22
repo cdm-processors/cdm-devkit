@@ -1,41 +1,23 @@
-import * as fs from "fs";
-import * as fsPromises from "fs/promises";
-import * as os from "os";
-import * as pathlib from "path";
-import * as vscode from "vscode";
+import vscode from "vscode";
 
-import { showMemory, setViewOffset } from "./debug/commands";
-import { CdmDebugAdapterFactory } from "./debug/factory";
-import { CocasTaskProvider } from "./tasks/providers";
+import { installCommands } from "./commands";
+import { installDebugAdapterFactories } from "./debug";
+import { installTaskProviders } from "./tasks";
+import { tmpdir } from "./stdlib";
 
 export async function activate(context: vscode.ExtensionContext) {
-	const temporaryDirectory = pathlib.join(os.tmpdir(), context.extension.id);
+	let temporaryDirectory;
 	try {
-		await fsPromises.mkdir(temporaryDirectory);
+		temporaryDirectory = await tmpdir(context.extension.id);
 	} catch (error) {
-		// @ts-ignore: ignore error, if the directory already exists
-		if (error!.code !== "EEXIST") {
-			const _ = vscode.window.showErrorMessage(`Failed to create a directory for temporary files. ${error}`);
-			return;
-		}	
+		return vscode.window.showErrorMessage(`Failed to create a directory for temporary files. ${error}`);
 	}
 
-	const removeTemporaryDirectory = () => {
-		fs.rm(temporaryDirectory, { recursive: true, force: true }, (error) => {
-			const _ = vscode.window.showWarningMessage(`Failed to remove a temporary directory at ${temporaryDirectory}. ${error}`);
-		});
-	};
+	context.subscriptions.push(temporaryDirectory);
 
-	context.subscriptions.push(
-		{ dispose: removeTemporaryDirectory },
-
-		vscode.commands.registerCommand("cdm.debug.showMemory", showMemory),
-		vscode.commands.registerCommand("cdm.debug.setViewOffset", setViewOffset),
-
-		vscode.debug.registerDebugAdapterDescriptorFactory("cdm", new CdmDebugAdapterFactory(temporaryDirectory)),
-
-		vscode.tasks.registerTaskProvider("cocas", new CocasTaskProvider())
-	);
+	installCommands(context);
+	installDebugAdapterFactories(context, temporaryDirectory.path);
+	installTaskProviders(context);
 
 	console.info("'CdM Processors' extension successfully started");
 }

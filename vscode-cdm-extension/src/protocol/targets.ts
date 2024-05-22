@@ -1,7 +1,22 @@
-const DEFINED = [
-    { name: "CdM-8",    generalId: "cdm8",  extensionId: "cdm8-assembly"  },
-    { name: "CdM-8e",   generalId: "cdm8e", extensionId: "cdm8e-assembly" },
-    { name: "CdM-16",   generalId: "cdm16", extensionId: "cdm16-assembly" },
+export const DEFINED = [
+    {
+        name: "CdM-8",
+        generalId: "cdm8",
+        extensionId: "cdm8-assembly",
+        description: "an original simple 8-bit processor",
+    },
+    {
+        name: "CdM-8e",
+        generalId: "cdm8e",
+        extensionId: "cdm8e-assembly",
+        description: "an extented 8-bit processor with 16-bit address bus"
+    },
+    {
+        name: "CdM-16",
+        generalId: "cdm16",
+        extensionId: "cdm16-assembly",
+        description: "a superpowered 16-bit processor", 
+    },
 ] as const;
 
 const NAMES = DEFINED.map(target => target.name);
