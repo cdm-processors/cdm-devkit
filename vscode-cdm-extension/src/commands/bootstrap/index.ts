@@ -1,9 +1,8 @@
 import vscode from "vscode";
 
+import { updateLaunchConfigurations, updateTasksConfiguration } from "./configurations";
 import { ARCHITECTURE_ITEMS, SOURCE_ITEMS, TARGET_ITEMS } from "./picks";
 import { createTemplate, retrieveAssemblyFiles } from "./sources";
-import { getTargetByGeneralId } from "../../protocol/targets";
-import { getArchitectureById } from "../../protocol/architectures";
 
 export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
     const target = await vscode.window.showQuickPick(TARGET_ITEMS, { title: "Pick a target processor" });
@@ -21,52 +20,10 @@ export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
         return vscode.window.showInformationMessage("Stopping the bootstrap process, because a source discovery strategy wasn't picked.");
     }
 
-    const workspace = vscode.workspace.workspaceFolders![0];
+    const sourceSet = 
+        discoveryStrategy.id === "template" ? await createTemplate(context, target.id) :
+        discoveryStrategy.id === "scan" ? await retrieveAssemblyFiles() : [];
 
-    const launch = vscode.workspace.getConfiguration("launch", workspace.uri);
-    const launchConfigurations = (launch.get("configurations") ?? []) as any[];
-    launchConfigurations.push({
-        name: `Debug ${getTargetByGeneralId(target.id)!.name} with ${getArchitectureById(architecture.id)!.name} architecture`,
-        type: "cdm",
-        request: "launch",
-        address: "ws://localhost:7001",
-        target: target.id,
-        architecture: architecture.id,
-        artifacts: {
-            image: "${workspaceFolder}${/}build${/}out.img",
-            debug: "${workspaceFolder}${/}build${/}out.dbg.json",
-        },
-        preLaunchTask: `Compile ${getTargetByGeneralId(target.id)!.name}`
-    });
-    launch.update("configurations", launchConfigurations, false);
-
-    let sourceSet: string[];
-    switch (discoveryStrategy.id) {
-        case "template": {
-            sourceSet = await createTemplate(context, target.id);
-            break;
-        }
-        case "scan": {
-            sourceSet = await retrieveAssemblyFiles();
-            break;
-        }
-        case "nothing": {
-            sourceSet = [];
-            break;
-        }
-    }
-
-    const tasks = vscode.workspace.getConfiguration("tasks", workspace.uri);
-    const tasksConfigurations = (tasks.get("tasks") ?? []) as any[];
-    tasksConfigurations.push({
-        label: `Compile ${getTargetByGeneralId(target.id)!.name}`,
-        type: "cocas",
-        target: target.id,
-        sources: sourceSet,
-        artifacts: {
-            image: "${workspaceFolder}${/}build${/}out.img",
-            debug: "${workspaceFolder}${/}build${/}out.dbg.json",
-        },
-    });
-    tasks.update("tasks", tasksConfigurations, false);
+    updateLaunchConfigurations(target.id, architecture.id);
+    updateTasksConfiguration(target.id, sourceSet);
 }
