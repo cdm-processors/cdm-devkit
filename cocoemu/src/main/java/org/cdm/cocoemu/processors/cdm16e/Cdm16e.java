@@ -41,10 +41,9 @@ public class Cdm16e extends Cdm16 {
 
     @Override
     protected void updateProcessorState() {
-// TODO:
-//        if (!toBoolean(state.getPort(Ports.CLK))) {
-//            holdLatch.setValue(toBoolean(state.getPort(Ports.HOLD)));
-//        }
+        if (!clockState) {
+            holdLatch.setValue(inputs.hold);
+        }
 
         ExtendedStatusRegisterFields extendedStatusRegisterFields =
                 decodeExtendedStatusRegister(ps.getValue());
@@ -178,6 +177,7 @@ public class Cdm16e extends Cdm16 {
     }
 
     private ExtendedStatusRegisterFields decodeExtendedStatusRegister(int value) {
+        // TODO: Get rid of object allocation
         return new ExtendedStatusRegisterFields(
                 Arithmetic.toBoolean(value & (1 << 15)),
                 Arithmetic.toBoolean(value & (1 << 14)),

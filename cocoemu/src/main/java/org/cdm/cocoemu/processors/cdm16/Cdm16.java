@@ -58,6 +58,8 @@ public class Cdm16 extends Component<Cdm16.Inputs, Cdm16.Outputs> {
 
     protected final Register ir = new Register("ir", BIT_WIDTH);
 
+    protected boolean clockState = false;
+
     protected boolean fetch = true;
 
     protected int status = Status.RUNNING;
@@ -111,6 +113,7 @@ public class Cdm16 extends Component<Cdm16.Inputs, Cdm16.Outputs> {
     }
 
     public void clockRising() {
+        clockState = true;
     }
 
     public void clockFalling() {
@@ -196,6 +199,8 @@ public class Cdm16 extends Component<Cdm16.Inputs, Cdm16.Outputs> {
         }
 
         microcommandAddress = decoderSignals.microcodeAddress() + (phase << 7);
+
+        clockState = false;
     }
 
     public void update() {
@@ -214,10 +219,9 @@ public class Cdm16 extends Component<Cdm16.Inputs, Cdm16.Outputs> {
     }
 
     protected void updateProcessorState() {
-// TODO:
-//        if (!toBoolean(state.getPort(Ports.CLK))) {
-//            holdLatch.setValue(toBoolean(state.getPort(Ports.HOLD)));
-//        }
+        if (!clockState) {
+            holdLatch.setValue(inputs.hold);
+        }
 
         microcommand = mainMicrocode[microcommandAddress];
 
