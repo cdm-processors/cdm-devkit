@@ -1,5 +1,7 @@
 package org.cdm.cocoemu.primitives;
 
+import org.cdm.cocoemu.processors.cdm16.Cdm16;
+
 public class Bus extends IntegerNamedValue {
     private boolean isSet = false;
 

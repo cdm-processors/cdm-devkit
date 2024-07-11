@@ -1,8 +1,16 @@
 package org.cdm.cocoemu;
 
 public abstract class Component<I, O> {
-    public I inputs;
-    public O outputs;
+    protected I inputs;
+    protected O outputs;
+
+    public I getInputs() {
+        return inputs;
+    }
+
+    public O getOutputs() {
+        return outputs;
+    }
 
     public abstract void clockRising();
 

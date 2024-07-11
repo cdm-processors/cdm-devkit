@@ -1,5 +1,6 @@
 package org.cdm.cocoemu.processors.cdm16e;
 
+import lombok.ToString;
 import org.cdm.cocoemu.primitives.Register;
 import org.cdm.cocoemu.primitives.RegisterCounter;
 import org.cdm.cocoemu.processors.MicrocodeLoader;
@@ -10,6 +11,22 @@ import org.cdm.cocoemu.processors.cdm16.units.bus.BusControllerInputParameters;
 import org.cdm.cocoemu.processors.cdm16e.exceptions.*;
 
 public class Cdm16e extends Cdm16 {
+
+    {
+        inputs = new Cdm16e.Inputs();
+        outputs = new Cdm16e.Outputs();
+    }
+
+    @Override
+    public Cdm16e.Inputs getInputs() {
+        return (Cdm16e.Inputs) inputs;
+    }
+
+    @Override
+    public Cdm16e.Outputs getOutputs() {
+        return (Cdm16e.Outputs) outputs;
+    }
+
     private static final String MAIN_MICROCODE = "/cdm16e/cdm16e_decoder.img";
     private static final String EXC_MICROCODE = "/cdm16e/cdm16e_decoder_exc.img";
     private static final String EXTENSION_MICROCODE = "/cdm16e/cdm16e_extension.img";
@@ -115,28 +132,17 @@ public class Cdm16e extends Cdm16 {
 
     @Override
     protected void updateExternal() {
-//        super.updateExternal(state);
-//
-//        if (ExtensionMicrocodeSignals.check(extensionMicrocommand, ExtensionMicrocodeSignals.VEC)) {
-//            state.setPort(Ports.VEC, Value.TRUE, DELAY);
-//        } else {
-//            state.setPort(Ports.VEC, Value.FALSE, DELAY);
-//        }
-//
-//        ExtendedStatusRegisterFields extendedStatusRegisterFields =
-//                decodeExtendedStatusRegister(ps.getValue());
-//
-//        if (extendedStatusRegisterFields.io_header()) {
-//            state.setPort(Ports.IO_HEADER, Value.TRUE, DELAY);
-//        } else {
-//            state.setPort(Ports.IO_HEADER, Value.FALSE, DELAY);
-//        }
-//
-//        state.setPort(
-//                Ports.CTX_NUMBER,
-//                Value.createKnown(BitWidth.create(8), extendedStatusRegisterFields.context_number()),
-//                DELAY
-//        );
+        super.updateExternal();
+
+        Cdm16e.Outputs outputs = getOutputs();
+
+        outputs.vec = ExtensionMicrocodeSignals.check(extensionMicrocommand, ExtensionMicrocodeSignals.VEC);
+
+        ExtendedStatusRegisterFields extendedStatusRegisterFields =
+                decodeExtendedStatusRegister(ps.getValue());
+
+        outputs.io_header = extendedStatusRegisterFields.io_header();
+        outputs.ctx_number = extendedStatusRegisterFields.context_number();
     }
 
     @Override
@@ -206,5 +212,16 @@ public class Cdm16e extends Cdm16 {
         public static boolean check(int value, int signal) {
             return (value & signal) > 0;
         }
+    }
+
+    @ToString(callSuper = true)
+    public static class Inputs extends Cdm16.Inputs {
+    }
+
+    @ToString(callSuper = true)
+    public static class Outputs extends Cdm16.Outputs {
+        public boolean io_header;
+        public boolean vec;
+        public int ctx_number;
     }
 }
