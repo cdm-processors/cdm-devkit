@@ -1,54 +1,26 @@
 package org.cdm.cocoemu.processors;
 
-import java.io.*;
+import org.cdm.cocoemu.image.LogisimImage;
 
 public class MicrocodeLoader {
     private static final int MICROCODE_LENGTH = 1024;
 
-    public static int[] loadFromFile(String filename) {
-
-        int[] mc = new int[MICROCODE_LENGTH];
-
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
-
-            reader.readLine();
-
-            for (int i = 0; i < MICROCODE_LENGTH; ++i) {
-                mc[i] = Integer.parseInt(reader.readLine(), 16);
-            }
-        } catch (IOException e) {
-            throw new IOError(e);
-        }
-
-
-        return mc;
-    }
-
     public static int[] loadFromResources(String filename) {
-        InputStream inputStream = MicrocodeLoader.class.getResourceAsStream(filename);
-
-        if (inputStream == null) {
-            throw new IOError(new IOException());
-        }
-
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-
-        int[] mc = new int[MICROCODE_LENGTH];
+        int[] microcode;
 
         try {
-            BufferedReader reader = new BufferedReader(inputStreamReader);
+            microcode = new LogisimImage().loadFromResources(filename).getIntegers();
 
-            reader.readLine();
-
-            for (int i = 0; i < MICROCODE_LENGTH; ++i) {
-                mc[i] = Integer.parseInt(reader.readLine(), 16);
+            if (microcode.length != MICROCODE_LENGTH) {
+                throw new RuntimeException(String.format(
+                        "Microcode file (%s) has wrong length: %d, expected: %d",
+                        filename, microcode.length, MICROCODE_LENGTH
+                ));
             }
-        } catch (IOException e) {
-            throw new IOError(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't load microcode", e);
         }
 
-
-        return mc;
+        return microcode;
     }
 }
