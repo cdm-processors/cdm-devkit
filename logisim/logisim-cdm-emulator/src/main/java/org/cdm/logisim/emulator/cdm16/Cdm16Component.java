@@ -1,4 +1,4 @@
-package org.cdm.logisim.emulator.cdm16e;
+package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
@@ -7,17 +7,17 @@ import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.StringGetter;
 import com.cburch.logisim.util.StringUtil;
-import org.cdm.cocoemu.components.processors.cdm16e.Cdm16e;
-import org.cdm.logisim.emulator.cdm16.ProcessorClockState;
-import org.cdm.logisim.emulator.cdm16.ProcessorComponentData;
+import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.logisim.emulator.ProcessorClockState;
+import org.cdm.logisim.emulator.ProcessorComponentData;
 
 import java.awt.*;
 
-public class Cdm16eProcessorComponent extends InstanceFactory {
+public class Cdm16Component extends InstanceFactory {
     private static final LocaleManager source = new LocaleManager("resources/logisim", "std");
 
-    public Cdm16eProcessorComponent() {
-        super("CdM-16e");
+    public Cdm16Component() {
+        super("CdM-16");
 
         setOffsetBounds(Bounds.create(0, 0, 120, 120));
 
@@ -49,12 +49,7 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
                 new Port(100, 0, "output", 16), //sp
                 new Port(110, 0, "output", 16), //ps
                 new Port(80, 120, "output", 1), //fetch
-                new Port(0, 50, "output", 1),   //IAck
-
-                new Port(120, 20, "output", 1), // io_header
-                new Port(120, 70, "output", 1), // vec
-                new Port(120, 90, "output", 8), // ctx_number
-        };
+                new Port(0, 50, "output", 1)}; //IAck
 
         ps[Ports.DATA_IN].setToolTip(getter("in"));
         ps[Ports.DATA_OUT].setToolTip(getter("out"));
@@ -83,9 +78,6 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
         ps[Ports.PS].setToolTip(getter("ps"));
         ps[Ports.FETCH].setToolTip(getter("fetch"));
         ps[Ports.IAck].setToolTip(getter("IAck"));
-        ps[Ports.IO_HEADER].setToolTip(getter("io_header"));
-        ps[Ports.VEC].setToolTip(getter("vec"));
-        ps[Ports.CTX_NUMBER].setToolTip(getter("context_number"));
 
         this.setPorts(ps);
     }
@@ -116,10 +108,6 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
         painter.drawPort(Ports.IAck, get("IAck"), Direction.EAST);
         painter.drawPort(Ports.STATUS, get("status"), Direction.SOUTH);
 
-        painter.drawPort(Ports.IO_HEADER, get("io_header"), Direction.WEST);
-        painter.drawPort(Ports.VEC, get("vec"), Direction.WEST);
-        painter.drawPort(Ports.CTX_NUMBER, get("ctx#"), Direction.WEST);
-
         painter.drawClock(Ports.CLK, Direction.NORTH);
 
 
@@ -149,7 +137,7 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
                 )
         );
 
-        GraphicsUtil.drawText(g, "CdM-16e", bds.getX() + 57, bds.getY() + 85, 0, -1);
+        GraphicsUtil.drawText(g, "CdM-16", bds.getX() + 65, bds.getY() + 85, 0, -1);
 
         g.setFont(
                 increaseFontSize(
@@ -158,43 +146,36 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
                 )
         );
 
-        GraphicsUtil.drawText(g, "Emulator", bds.getX() + 57, bds.getY() + 99, 0, -1);
+        GraphicsUtil.drawText(g, "Emulator", bds.getX() + 65, bds.getY() + 99, 0, -1);
 
     }
 
     @Override
     public void propagate(InstanceState state) {
-        ProcessorComponentData componentData = (ProcessorComponentData) state.getData();
+        ProcessorComponentData<Cdm16> componentData = (ProcessorComponentData<Cdm16>) state.getData();
 
         if (componentData == null) {
-            componentData = new ProcessorComponentData(new Cdm16e());
+            componentData = new ProcessorComponentData<>(new Cdm16());
             state.setData(componentData);
         }
 
         ProcessorClockState clockState = componentData.getProcessorClockState();
 
-        Object irqTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean irqTriggered = clockState.updateClock(state.getPort(Ports.IRQ), irqTriggerType, ProcessorClockState.ClockType.IRQ);
+        clockState.update(state.getPort(Ports.CLK));
 
-        Object excTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean excTriggered = clockState.updateClock(state.getPort(Ports.EXC), excTriggerType, ProcessorClockState.ClockType.EXC);
+        Cdm16 processor = componentData.getProcessorComponent();
 
-        Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
-        boolean clkTriggered = clockState.updateClock(state.getPort(Ports.CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
+        Cdm16LogisimAdapter.transferStateToProcessor(state, processor);
 
-        Cdm16e processor = (Cdm16e) componentData.getProcessor();
-
-        Cdm16eLogisimAdapter.transferStateToProcessor(state, processor);
-
-        if (clkTriggered) {
+        if (clockState.isClockRising()) {
             processor.clockRising();
-        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))) {
+        } else if (clockState.isClockFalling()) {
             processor.clockFalling();
         }
 
         processor.update();
 
-        Cdm16eLogisimAdapter.transferExtendedStateFromProcessor(processor, state);
+        Cdm16LogisimAdapter.transferStateFromProcessor(processor, state);
     }
 
     public static StringGetter getter(String key) {

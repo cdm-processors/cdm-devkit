@@ -1,20 +1,20 @@
-package org.cdm.logisim.emulator.cdm16;
+package org.cdm.logisim.emulator;
 
 import com.cburch.logisim.instance.InstanceData;
-import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.core.Component;
 
-public class ProcessorComponentData implements InstanceData {
+public class ProcessorComponentData<T extends Component> implements InstanceData {
 
-    private final Cdm16 processor;
+    private final T processorComponent;
     private final ProcessorClockState processorClockState;
 
-    public ProcessorComponentData(Cdm16 processor) {
-        this.processor = processor;
+    public ProcessorComponentData(T processorComponent) {
+        this.processorComponent = processorComponent;
         this.processorClockState = new ProcessorClockState();
     }
 
-    public Cdm16 getProcessor() {
-        return processor;
+    public T getProcessorComponent() {
+        return processorComponent;
     }
 
     public ProcessorClockState getProcessorClockState() {
@@ -24,7 +24,7 @@ public class ProcessorComponentData implements InstanceData {
     @Override
     public Object clone() {
         try {
-            return (ProcessorComponentData) super.clone();
+            return super.clone();
         } catch (CloneNotSupportedException var2) {
             return null;
         }
