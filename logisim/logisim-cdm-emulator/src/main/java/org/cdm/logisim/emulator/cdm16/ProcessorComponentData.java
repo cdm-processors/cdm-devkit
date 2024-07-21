@@ -1,18 +1,19 @@
 package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.instance.InstanceData;
+import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 
 public class ProcessorComponentData implements InstanceData {
 
-    private final Cdm16Processor processor;
+    private final Cdm16 processor;
     private final ProcessorClockState processorClockState;
 
-    public ProcessorComponentData(Cdm16Processor processor) {
+    public ProcessorComponentData(Cdm16 processor) {
         this.processor = processor;
         this.processorClockState = new ProcessorClockState();
     }
 
-    public Cdm16Processor getProcessor() {
+    public Cdm16 getProcessor() {
         return processor;
     }
 

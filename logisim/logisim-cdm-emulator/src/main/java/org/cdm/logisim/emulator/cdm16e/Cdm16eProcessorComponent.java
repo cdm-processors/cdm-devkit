@@ -2,16 +2,12 @@ package org.cdm.logisim.emulator.cdm16e;
 
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
-import com.cburch.logisim.instance.InstanceFactory;
-import com.cburch.logisim.instance.InstancePainter;
-import com.cburch.logisim.instance.InstanceState;
-import com.cburch.logisim.instance.Port;
-import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.instance.*;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.StringGetter;
 import com.cburch.logisim.util.StringUtil;
-import org.cdm.logisim.emulator.cdm16.Cdm16Processor;
+import org.cdm.cocoemu.components.processors.cdm16e.Cdm16e;
 import org.cdm.logisim.emulator.cdm16.ProcessorClockState;
 import org.cdm.logisim.emulator.cdm16.ProcessorComponentData;
 
@@ -25,7 +21,7 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
 
         setOffsetBounds(Bounds.create(0, 0, 120, 120));
 
-        Port[] ps = new Port[] {
+        Port[] ps = new Port[]{
                 new Port(120, 110, "input", 16), //in
                 new Port(120, 100, "output", 16), //out
                 new Port(120, 80, "output", 16), //addr
@@ -171,7 +167,7 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
         ProcessorComponentData componentData = (ProcessorComponentData) state.getData();
 
         if (componentData == null) {
-            componentData = new ProcessorComponentData(new Cdm16eProcessor());
+            componentData = new ProcessorComponentData(new Cdm16e());
             state.setData(componentData);
         }
 
@@ -186,22 +182,19 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
         Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
         boolean clkTriggered = clockState.updateClock(state.getPort(Ports.CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
 
-        Cdm16Processor processor = componentData.getProcessor();
+        Cdm16e processor = (Cdm16e) componentData.getProcessor();
 
-        if (irqTriggered) {
-            processor.externalInterrupt(state, state.getPort(Ports.INT_NUMBER).toIntValue());
-        }
-        if (excTriggered) {
-            processor.externalException(state, state.getPort(Ports.EXC_NUMBER).toIntValue());
-        }
+        Cdm16eLogisimAdapter.transferStateToProcessor(state, processor);
 
         if (clkTriggered) {
-            processor.clockRising(state);
-        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))){
-            processor.clockFalling(state);
+            processor.clockRising();
+        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))) {
+            processor.clockFalling();
         }
 
-        processor.update(state);
+        processor.update();
+
+        Cdm16eLogisimAdapter.transferExtendedStateFromProcessor(processor, state);
     }
 
     public static StringGetter getter(String key) {
@@ -231,7 +224,7 @@ public class Cdm16eProcessorComponent extends InstanceFactory {
     public Font makeBoldItalicFont(Font currentFont) {
         return new Font(
                 currentFont.getName(),
-                Font.BOLD+Font.ITALIC,
+                Font.BOLD + Font.ITALIC,
                 currentFont.getSize()
         );
     }

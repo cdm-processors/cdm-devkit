@@ -2,15 +2,12 @@ package org.cdm.logisim.emulator.cdm16;
 
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
-import com.cburch.logisim.instance.InstanceFactory;
-import com.cburch.logisim.instance.InstancePainter;
-import com.cburch.logisim.instance.InstanceState;
-import com.cburch.logisim.instance.Port;
-import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.instance.*;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.StringGetter;
 import com.cburch.logisim.util.StringUtil;
+import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 
 import java.awt.*;
 
@@ -156,7 +153,7 @@ public class Cdm16ProcessorComponent extends InstanceFactory {
         ProcessorComponentData componentData = (ProcessorComponentData) state.getData();
 
         if (componentData == null) {
-            componentData = new ProcessorComponentData(new Cdm16Processor());
+            componentData = new ProcessorComponentData(new Cdm16());
             state.setData(componentData);
         }
 
@@ -171,22 +168,19 @@ public class Cdm16ProcessorComponent extends InstanceFactory {
         Object clkTriggerType = state.getAttributeValue(StdAttr.TRIGGER);
         boolean clkTriggered = clockState.updateClock(state.getPort(Ports.CLK), clkTriggerType, ProcessorClockState.ClockType.CLK);
 
-        Cdm16Processor processor = componentData.getProcessor();
+        Cdm16 processor = componentData.getProcessor();
 
-        if (irqTriggered) {
-            processor.externalInterrupt(state, state.getPort(Ports.INT_NUMBER).toIntValue());
-        }
-        if (excTriggered) {
-            processor.externalException(state, state.getPort(Ports.EXC_NUMBER).toIntValue());
-        }
+        Cdm16LogisimAdapter.transferStateToProcessor(state, processor);
 
         if (clkTriggered) {
-            processor.clockRising(state);
-        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))){
-            processor.clockFalling(state);
+            processor.clockRising();
+        } else if (clockState.checkClockFalling(state.getPort(Ports.CLK))) {
+            processor.clockFalling();
         }
 
-        processor.update(state);
+        processor.update();
+
+        Cdm16LogisimAdapter.transferStateFromProcessor(processor, state);
     }
 
     public static StringGetter getter(String key) {
@@ -216,7 +210,7 @@ public class Cdm16ProcessorComponent extends InstanceFactory {
     public Font makeBoldItalicFont(Font currentFont) {
         return new Font(
                 currentFont.getName(),
-                Font.BOLD+Font.ITALIC,
+                Font.BOLD + Font.ITALIC,
                 currentFont.getSize()
         );
     }
