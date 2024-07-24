@@ -3,8 +3,8 @@ package org.cdm.logisim.emulator;
 import com.cburch.logisim.data.Value;
 
 public class ProcessorClockState {
-    private Value lastClock = Value.FALSE;
-    private Value currentClock = Value.FALSE;
+    private Value lastClock = Value.UNKNOWN;
+    private Value currentClock = Value.UNKNOWN;
 
     public void update(Value newClock) {
         lastClock = currentClock;
