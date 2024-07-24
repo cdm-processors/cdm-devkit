@@ -27,12 +27,10 @@ public class BinaryImageParser implements ImageParser {
 
     @Override
     public void save(OutputStream outputStream, List<Integer> values) throws IOException {
-        BufferedOutputStream bos = new BufferedOutputStream(outputStream);
-
-        for (Integer value : values) {
-            bos.write(value.byteValue());
+        try (BufferedOutputStream bos = new BufferedOutputStream(outputStream)) {
+            for (Integer value : values) {
+                bos.write(value.byteValue());
+            }
         }
-
-        bos.flush();
     }
 }

@@ -9,55 +9,57 @@ public class LogisimImageParser implements ImageParser {
 
     @Override
     public List<Integer> parse(InputStream inputStream) throws IOException, ImageFormatException {
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        BufferedReader reader = new BufferedReader(inputStreamReader);
+        try (
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader reader = new BufferedReader(inputStreamReader)
+        ) {
+            List<Integer> values = new ArrayList<>();
 
-        List<Integer> values = new ArrayList<>();
+            String header = reader.readLine();
 
-        String header = reader.readLine();
+            if (!header.equals(LOGISIM_HEADER)) {
+                throw new ImageFormatException("Invalid logisim header: " + header);
+            }
 
-        if (!header.equals(LOGISIM_HEADER)) {
-            throw new ImageFormatException("Invalid logisim header: " + header);
+            while (true) {
+                String line = reader.readLine();
+
+                if (line == null) {
+                    break;
+                }
+
+                if (line.startsWith("#")) {
+                    continue;
+                }
+
+                int value;
+
+                try {
+                    value = Integer.parseInt(line, 16);
+                } catch (NumberFormatException e) {
+                    throw new ImageFormatException("Invalid hex number: " + line, e);
+                }
+
+                values.add(value);
+            }
+
+            return values;
         }
-
-        while (true) {
-            String line = reader.readLine();
-
-            if (line == null) {
-                break;
-            }
-
-            if (line.startsWith("#")) {
-                continue;
-            }
-
-            int value;
-
-            try {
-                value = Integer.parseInt(line, 16);
-            } catch (NumberFormatException e) {
-                throw new ImageFormatException("Invalid hex number: " + line, e);
-            }
-
-            values.add(value);
-        }
-
-        return values;
     }
 
     @Override
     public void save(OutputStream outputStream, List<Integer> values) throws IOException {
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
-        BufferedWriter writer = new BufferedWriter(outputStreamWriter);
-
-        writer.write(LOGISIM_HEADER);
-        writer.newLine();
-
-        for (Integer value : values) {
-            writer.write(String.format("%x", value));
+        try (
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+                BufferedWriter writer = new BufferedWriter(outputStreamWriter)
+        ) {
+            writer.write(LOGISIM_HEADER);
             writer.newLine();
-        }
 
-        writer.flush();
+            for (Integer value : values) {
+                writer.write(String.format("%x", value));
+                writer.newLine();
+            }
+        }
     }
 }

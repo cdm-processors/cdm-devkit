@@ -94,28 +94,28 @@ public class Image {
     }
 
     public static Image loadFromFile(String filename, ImageParser parser) throws IOException, ImageFormatException {
-        InputStream inputStream = Files.newInputStream(Paths.get(filename));
+        try (InputStream inputStream = Files.newInputStream(Paths.get(filename))) {
+            List<Integer> values = parser.parse(inputStream);
 
-        List<Integer> values = parser.parse(inputStream);
-
-        return new Image(values);
+            return new Image(values);
+        }
     }
 
     public static Image loadFromResources(String filename, ImageParser parser) throws IOException, ImageFormatException {
-        InputStream inputStream = Image.class.getResourceAsStream(filename);
+        try (InputStream inputStream = Image.class.getResourceAsStream(filename)) {
+            if (inputStream == null) {
+                throw new IOException("Resource not found: " + filename);
+            }
 
-        if (inputStream == null) {
-            throw new IOException("Resource not found: " + filename);
+            List<Integer> values = parser.parse(inputStream);
+
+            return new Image(values);
         }
-
-        List<Integer> values = parser.parse(inputStream);
-
-        return new Image(values);
     }
 
     public void saveToFile(String filename, ImageParser parser) throws IOException {
-        OutputStream outputStream = Files.newOutputStream(Paths.get(filename));
-
-        parser.save(outputStream, values);
+        try (OutputStream outputStream = Files.newOutputStream(Paths.get(filename))) {
+            parser.save(outputStream, values);
+        }
     }
 }
