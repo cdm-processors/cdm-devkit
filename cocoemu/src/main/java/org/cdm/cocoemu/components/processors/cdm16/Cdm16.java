@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.cdm.cocoemu.components.processors.MicrocodeLoader;
+import org.cdm.cocoemu.components.processors.Processor;
 import org.cdm.cocoemu.components.processors.cdm16.units.FetchUnit;
 import org.cdm.cocoemu.components.processors.cdm16.units.ImmComputationUnit;
 import org.cdm.cocoemu.components.processors.cdm16.units.alu.Alu;
@@ -29,6 +30,7 @@ import java.util.List;
 import static org.cdm.cocoemu.components.processors.cdm16.Arithmetic.toBoolean;
 
 @ToString
+@Processor
 public class Cdm16 extends PortedComponentBase {
 
     @InputsField

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.cdm.cocoemu.components.processors.MicrocodeLoader;
+import org.cdm.cocoemu.components.processors.Processor;
 import org.cdm.cocoemu.components.processors.cdm16.Arithmetic;
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 import org.cdm.cocoemu.components.processors.cdm16.Status;
@@ -17,6 +18,7 @@ import org.cdm.cocoemu.core.primitives.Register;
 import org.cdm.cocoemu.core.primitives.RegisterCounter;
 
 @ToString(callSuper = true)
+@Processor
 public class Cdm16e extends Cdm16 {
 
     @InputsField
