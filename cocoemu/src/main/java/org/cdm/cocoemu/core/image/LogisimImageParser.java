@@ -32,19 +32,58 @@ public class LogisimImageParser implements ImageParser {
                     continue;
                 }
 
-                int value;
-
-                try {
-                    value = Integer.parseInt(line, 16);
-                } catch (NumberFormatException e) {
-                    throw new ImageFormatException("Invalid hex number: " + line, e);
+                if (line.contains("*")) {
+                    values.addAll(parseRunLengthEncodedEntry(line));
+                } else {
+                    values.add(parseEntry(line));
                 }
-
-                values.add(value);
             }
 
             return values;
         }
+    }
+
+    private List<Integer> parseRunLengthEncodedEntry(String line) throws ImageFormatException {
+        List<Integer> values = new ArrayList<>();
+
+        String[] lineParts = line.split("\\*");
+
+        if (lineParts.length != 2) {
+            throw new ImageFormatException("Invalid run-length encoded sequence: " + line);
+        }
+
+        int repetitions;
+        int value;
+
+        try {
+            repetitions = Integer.parseInt(lineParts[0]);
+        } catch (NumberFormatException e) {
+            throw new ImageFormatException("Invalid repetitions number: " + lineParts[0], e);
+        }
+
+        try {
+            value = Integer.parseInt(lineParts[1], 16);
+        } catch (NumberFormatException e) {
+            throw new ImageFormatException("Invalid hex number: " + lineParts[1], e);
+        }
+
+        for (int i = 0; i < repetitions; i++) {
+            values.add(value);
+        }
+
+        return values;
+    }
+
+    private int parseEntry(String line) throws ImageFormatException {
+        int value;
+
+        try {
+            value = Integer.parseInt(line, 16);
+        } catch (NumberFormatException e) {
+            throw new ImageFormatException("Invalid hex number: " + line, e);
+        }
+
+        return value;
     }
 
     @Override
