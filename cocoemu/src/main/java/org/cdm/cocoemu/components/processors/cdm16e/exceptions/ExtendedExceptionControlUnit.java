@@ -4,35 +4,11 @@ import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 import org.cdm.cocoemu.components.processors.cdm16.units.exceptions.ExceptionControlUnitOutputParameters;
 import org.cdm.cocoemu.components.processors.cdm16e.Cdm16e.ExtendedExceptionNumbers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ExtendedExceptionControlUnit {
     public static ExceptionControlUnitOutputParameters compute(ExtendedExceptionControlUnitInputParameters parameters) {
-        List<Integer> triggeredExceptions = new ArrayList<>();
-
-        if (parameters.exc_trig_sp()) {
-            triggeredExceptions.add(Cdm16.ExceptionNumbers.UNALIGNED_SP);
-        }
-        if (parameters.exc_trig_pc()) {
-            triggeredExceptions.add(Cdm16.ExceptionNumbers.UNALIGNED_PC);
-        }
-        if (parameters.exc_trig_invalid_inst()) {
-            triggeredExceptions.add(Cdm16.ExceptionNumbers.INVALID_INST);
-        }
-        if (parameters.exc_trig_privilege_violation()) {
-            triggeredExceptions.add(ExtendedExceptionNumbers.PRIVILEGE_VIOLATION);
-        }
-        if (parameters.exc_trig_ext()) {
-            triggeredExceptions.add(Cdm16.ExceptionNumbers.EXTERNAL_EXC);
-        }
-
         boolean gotException = true;
 
-        Integer excNumber = triggeredExceptions
-                .stream()
-                .max(Integer::compareTo)
-                .orElse(-1);
+        int excNumber = getExceptionNumber(parameters);
 
         if (excNumber == -1) {
             gotException = false;
@@ -92,5 +68,27 @@ public class ExtendedExceptionControlUnit {
                 reset_exc,
                 latch_double_fault
         );
+    }
+
+    private static int getExceptionNumber(ExtendedExceptionControlUnitInputParameters parameters) {
+        int triggeredExceptionsMask = 0;
+
+        if (parameters.exc_trig_sp()) {
+            triggeredExceptionsMask |= 1 << Cdm16.ExceptionNumbers.UNALIGNED_SP;
+        }
+        if (parameters.exc_trig_pc()) {
+            triggeredExceptionsMask |= 1 << Cdm16.ExceptionNumbers.UNALIGNED_PC;
+        }
+        if (parameters.exc_trig_invalid_inst()) {
+            triggeredExceptionsMask |= 1 << Cdm16.ExceptionNumbers.INVALID_INST;
+        }
+        if (parameters.exc_trig_privilege_violation()) {
+            triggeredExceptionsMask |= 1 << ExtendedExceptionNumbers.PRIVILEGE_VIOLATION;
+        }
+        if (parameters.exc_trig_ext()) {
+            triggeredExceptionsMask |= 1 << Cdm16.ExceptionNumbers.EXTERNAL_EXC;
+        }
+
+        return Integer.SIZE - Integer.numberOfLeadingZeros(triggeredExceptionsMask) - 1;
     }
 }
