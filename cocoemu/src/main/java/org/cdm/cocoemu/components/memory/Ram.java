@@ -9,6 +9,8 @@ import org.cdm.cocoemu.core.ports.InputsField;
 import org.cdm.cocoemu.core.ports.OutputsClass;
 import org.cdm.cocoemu.core.ports.OutputsField;
 
+import java.nio.ByteBuffer;
+
 public class Ram extends Rom {
 
     @InputsField
@@ -24,11 +26,15 @@ public class Ram extends Rom {
         super(image);
     }
 
+    public Ram(ByteBuffer buffer) {
+        super(buffer);
+    }
+
     @Override
     public void clockRising() {
         if (inputs.select) {
             if (!inputs.rw) {
-                memory[inputs.address] = inputs.data_in & 0xFF;
+                buffer.put(inputs.address, (byte) inputs.data_in);
             }
         }
     }

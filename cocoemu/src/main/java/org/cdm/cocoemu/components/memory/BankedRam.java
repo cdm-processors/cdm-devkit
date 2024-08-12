@@ -9,6 +9,8 @@ import org.cdm.cocoemu.core.ports.InputsField;
 import org.cdm.cocoemu.core.ports.OutputsClass;
 import org.cdm.cocoemu.core.ports.OutputsField;
 
+import java.nio.ByteBuffer;
+
 public class BankedRam extends BankedRom {
     @InputsField
     public BankedRam.Inputs inputs;
@@ -23,14 +25,18 @@ public class BankedRam extends BankedRom {
         super(image);
     }
 
+    public BankedRam(ByteBuffer buffer) {
+        super(buffer);
+    }
+
     @Override
     public void clockRising() {
         if (inputs.select) {
             if (!inputs.rw) {
-                memory[inputs.address] = inputs.data_in & 0xFF;
-
                 if (inputs.word && inputs.address % 2 == 0) {
-                    memory[inputs.address + 1] = (inputs.data_in >> 8) & 0xFF;
+                    buffer.putShort(inputs.address, (short) inputs.data_in);
+                } else {
+                    buffer.put(inputs.address, (byte) inputs.data_in);
                 }
             }
         }

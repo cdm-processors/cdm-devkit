@@ -9,6 +9,8 @@ import org.cdm.cocoemu.core.ports.InputsField;
 import org.cdm.cocoemu.core.ports.OutputsClass;
 import org.cdm.cocoemu.core.ports.OutputsField;
 
+import java.nio.ByteBuffer;
+
 public class Rom extends Memory {
 
     @InputsField
@@ -24,11 +26,14 @@ public class Rom extends Memory {
         super(image);
     }
 
+    public Rom(ByteBuffer buffer) {
+        super(buffer);
+    }
 
     @Override
     public void update() {
         if (inputs.select) {
-            outputs.data_out = memory[inputs.address % memory.length];
+            outputs.data_out = Byte.toUnsignedInt(buffer.get(inputs.address));
         }
     }
 

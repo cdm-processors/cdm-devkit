@@ -9,6 +9,8 @@ import org.cdm.cocoemu.core.ports.InputsField;
 import org.cdm.cocoemu.core.ports.OutputsClass;
 import org.cdm.cocoemu.core.ports.OutputsField;
 
+import java.nio.ByteBuffer;
+
 public class BankedRom extends Rom {
     @InputsField
     public BankedRom.Inputs inputs;
@@ -23,13 +25,16 @@ public class BankedRom extends Rom {
         super(image);
     }
 
+    public BankedRom(ByteBuffer buffer) {
+        super(buffer);
+    }
+
     @Override
     public void update() {
         if (inputs.select) {
             if (inputs.word) {
                 if (inputs.address % 2 == 0) {
-                    outputs.data_out = memory[inputs.address % memory.length]
-                            + (memory[(inputs.address + 1) % memory.length] << 8);
+                    outputs.data_out = Short.toUnsignedInt(buffer.getShort(inputs.address));
                 } else {
                     outputs.data_out = 0;
                 }
