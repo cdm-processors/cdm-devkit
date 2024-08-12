@@ -117,7 +117,7 @@ public class Cdm16 extends PortedComponentBase {
     public Cdm16() {
         loadMicrocode();
 
-        initialize();
+        reset();
     }
 
     protected void loadMicrocode() {
@@ -222,13 +222,23 @@ public class Cdm16 extends PortedComponentBase {
         updateExternal();
     }
 
-    protected void initialize() {
+    public void reset() {
+        status = Status.RUNNING;
+
+        phase = 0;
         fetch = true;
 
         decoderSignals = InstructionDecoder.getFetchSignals();
         microcommandAddress = decoderSignals.microcodeAddress();
 
         startupLatch.set();
+
+        holdLatch.reset();
+        waitLatch.reset();
+        haltLatch.reset();
+        faultLatch.reset();
+
+        ps.setValue(0x0000);
     }
 
     protected void updateProcessorState() {
