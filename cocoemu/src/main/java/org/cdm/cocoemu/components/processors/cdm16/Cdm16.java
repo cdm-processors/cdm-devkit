@@ -545,6 +545,28 @@ public class Cdm16 extends PortedComponentBase {
                 waitLatch.getValue();
     }
 
+    // Debugger support
+    public boolean exceptionHappened() {
+        return ecuSignals.exc_triggered();
+    }
+
+    public int exceptionNumber() {
+        int instruction = FetchUnit.fetchInstruction(
+                busD.getValue(),
+                inputs.int_number,
+                internalExceptionVectorRegister.getValue(),
+                externalExceptionVectorRegister.getValue(),
+                inputs.exc_number,
+                ecuSignals.latch_double_fault(),
+                inputs.exc,
+                ecuSignals.exc_triggered(),
+                ecuSignals.latch_int(),
+                startupLatch.getValue()
+        );
+
+        return instruction & 0b111111;
+    }
+
     public static class ALU_InstructionGroups {
         public static final int ALU_3 = 1;
         public static final int ALU_2 = 1 << 1;
