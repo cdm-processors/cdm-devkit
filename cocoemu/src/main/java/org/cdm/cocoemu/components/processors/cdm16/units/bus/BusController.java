@@ -62,4 +62,8 @@ public class BusController {
                 clk_inhibit
         );
     }
+
+    public void reset() {
+        incAddressLatch.reset();
+    }
 }

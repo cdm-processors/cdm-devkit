@@ -233,6 +233,10 @@ public class Cdm16 extends PortedComponentBase {
 
         startupLatch.set();
 
+        virtualInstructionLatch.reset();
+        exceptionLatch.reset();
+        busController.reset();
+
         holdLatch.reset();
         waitLatch.reset();
         haltLatch.reset();
