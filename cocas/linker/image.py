@@ -1,14 +1,16 @@
+from collections.abc import Callable
 from pathlib import Path
 from typing import Union
 
+WriterFn = Callable[[Path, bytearray], None]
 
-def write_image(filename: Union[Path, str], arr: bytearray):
-    """
-    Write the contents or array into file in logisim-compatible format
 
-    :param filename: path to output file
-    :param arr: bytearray to be written
-    """
+def write_binary_image(filename: Path, arr: bytearray):
+    with open(filename, mode='wb') as f:
+        f.write(arr)
+
+
+def write_logisim_image(filename: Path, arr: bytearray):
     with open(filename, mode='w') as f:
         f.write("v2.0 raw\n")
         zeroes = 0
@@ -25,3 +27,30 @@ def write_image(filename: Union[Path, str], arr: bytearray):
                             f.write('00\n')
                     zeroes = 0
                 f.write(f'{byte:02x}\n')
+
+
+DEFAULT_WRITER = write_binary_image
+
+IMAGE_WRITERS: dict[str, WriterFn] = {
+    '.bin': write_binary_image,
+    '.img': write_logisim_image,
+}
+
+
+def write_image(filename: Union[Path, str], arr: bytearray):
+    """
+    Write the contents of array into file in format
+    that is derived from extension.
+    If extension is unknown then format is defaulted
+    to binary.
+
+    :param filename: path to output file
+    :param arr: bytearray to be written
+    """
+
+    if not isinstance(filename, Path):
+        filename = Path(filename)
+
+    writer = IMAGE_WRITERS.get(filename.suffix, DEFAULT_WRITER)
+
+    writer(filename, arr)
