@@ -5,6 +5,7 @@ import vscode from "vscode";
 
 import { ArchitectureId, getArchitectureById } from "../../protocol/architectures";
 import { TargetGeneralId, getTargetByGeneralId } from "../../protocol/targets";
+import { isErrnoException } from "../../stdlib";
 
 export function updateLaunchConfigurations(targetId: TargetGeneralId, architectureId: ArchitectureId) {
     const workspace = vscode.workspace.workspaceFolders![0];
@@ -35,8 +36,15 @@ export function updateLaunchConfigurations(targetId: TargetGeneralId, architectu
 
 export async function updateTasksConfiguration(targetId: TargetGeneralId, sourceSet: string[]) {
     const workspace = vscode.workspace.workspaceFolders![0];
+    const buildDirectory = pathlib.join(workspace.uri.fsPath, "build");
 
-    await fsPromises.mkdir(pathlib.join(workspace.uri.fsPath, "build"));
+    try {
+        await fsPromises.mkdir(buildDirectory);
+    } catch (err) {
+        if (isErrnoException(err) && err?.code !== "EEXIST") {
+            return await vscode.window.showErrorMessage(`Failed to create a build directory at ${buildDirectory}. ${err}`);
+        }
+    }
 
     const target = getTargetByGeneralId(targetId)!;
 
