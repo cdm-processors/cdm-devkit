@@ -10,7 +10,11 @@ export async function createTemplate(context: vscode.ExtensionContext, targetId:
     const folder = vscode.workspace.workspaceFolders![0];
 
     const generated = pathlib.join(folder.uri.fsPath, "main.asm");
-    await fsPromises.copyFile(template, generated);
+    try {
+        await fsPromises.stat(generated);
+    } catch {
+        await fsPromises.copyFile(template, generated);
+    }
 
     return [generated];
 }
