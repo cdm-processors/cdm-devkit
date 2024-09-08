@@ -100,14 +100,10 @@ export class SymlinkManager extends FileSystemManager {
 
 export class PlainFileManager extends FileSystemManager {
     public async updateDump(memory: Writable): Promise<void> {
-        for (let tabIndex = 0; tabIndex < FileSystemManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
-            fsPromises.writeFile(this.path(tabIndex), memory);
-        }
+        await Promise.all(Array.from({ length: FileSystemManager.MEMORY_VIEWS_NUMBER }, (_, tabIndex) => fsPromises.writeFile(this.path(tabIndex), memory)));
     }
 
     protected async createFiles(): Promise<void> {
-        for (let tabIndex = 0; tabIndex < FileSystemManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
-            fsPromises.writeFile(this.path(tabIndex), "");
-        }
+        this.updateDump("");
     }
 }
