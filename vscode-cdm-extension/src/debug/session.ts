@@ -10,7 +10,7 @@ import { ReferenceController, RegisterProvider } from "./variables";
 import { ArchitectureId } from "../protocol/architectures";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
-import { MemoryViewManager, SymlinkManager } from "./memoryView";
+import { MemoryViewManager, SymlinkManager, PlainFileManager } from "./memoryView";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
@@ -40,7 +40,12 @@ export class CdmDebugSession extends DebugSession {
     public constructor(temporaryDirectory: string) {
         super();
 
-        this.memoryView = new SymlinkManager(temporaryDirectory);
+        if (process.platform === "win32") {
+            // cannot use symlinks on Windows
+            this.memoryView = new PlainFileManager(temporaryDirectory);
+        } else {
+            this.memoryView = new SymlinkManager(temporaryDirectory);
+        }
     }
 
     protected customRequest(
