@@ -11,6 +11,7 @@ import { ReferenceController, RegisterProvider } from "./variables";
 import { ArchitectureId } from "../protocol/architectures";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
+import { MemoryViewProvider } from "./memoryView";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
@@ -27,8 +28,8 @@ export class CdmDebugSession extends DebugSession {
     private static FRAME_ID = 1;
 
     private controller = new ReferenceController();
-    private memoryView: vscode.Uri;
     private isConfigured = false;
+    private memoryView: MemoryViewProvider;
 
     private registerProvider!: RegisterProvider;
     private runtime!: CdmDebugRuntime;
@@ -40,7 +41,7 @@ export class CdmDebugSession extends DebugSession {
     public constructor(temporaryDirectory: string) {
         super();
 
-        this.memoryView = vscode.Uri.file(pathlib.join(temporaryDirectory, "memory-view.hex"));
+        this.memoryView = new MemoryViewProvider(temporaryDirectory);
     }
 
     protected customRequest(
@@ -50,10 +51,7 @@ export class CdmDebugSession extends DebugSession {
         _request?: DebugProtocol.Request,
     ): void {
         if (command === "openMemoryView") {
-            vscode.commands.executeCommand("vscode.openWith", this.memoryView, "hexEditor.hexedit", {
-                preserveFocus: true,
-                viewColumn: vscode.ViewColumn.Beside,
-            });
+            this.memoryView.open();
         }
     }
 
@@ -94,7 +92,7 @@ export class CdmDebugSession extends DebugSession {
             }).then((provider) => this.registerProvider = provider as RegisterProvider);
 
         }).on("receivedMemory", (bytes) => {
-            const _ = fsPromises.writeFile(this.memoryView.fsPath, new Uint8Array(bytes));
+            this.memoryView.dump = new Uint8Array(bytes);
 
         }).on("receivedRegisters", (values) => {
             this.registerProvider.update(values);
@@ -334,18 +332,7 @@ export class CdmDebugSession extends DebugSession {
         console.info("Received a DisconnectRequest from the client");
 
         this.runtime.pause().shutdown();
-
-        // TODO (kapkekes): Use tab.input instead of tab.label
-        const memoryViewTabs: vscode.Tab[] = [];
-        for (const group of vscode.window.tabGroups.all) {
-            for (const tab of group.tabs) {
-                if (tab.label === "memory-view.hex") {
-                    memoryViewTabs.push(tab);
-                }
-            }
-        }
-
-        const _ = vscode.window.tabGroups.close(memoryViewTabs);
+        this.memoryView.close();
 
         this.sendResponse(response);
         console.info("Sent a DisconnectResponse response to the client");
