@@ -1,5 +1,4 @@
 import * as fsPromises from "fs/promises";
-import * as pathlib from "path";
 
 import * as vscode from "vscode";
 import { DebugSession, ExitedEvent, InitializedEvent, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "@vscode/debugadapter";
@@ -11,7 +10,7 @@ import { ReferenceController, RegisterProvider } from "./variables";
 import { ArchitectureId } from "../protocol/architectures";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
-import { MemoryViewProvider } from "./memoryView";
+import { MemoryViewManager, SymlinkManager } from "./memoryView";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
@@ -29,7 +28,7 @@ export class CdmDebugSession extends DebugSession {
 
     private controller = new ReferenceController();
     private isConfigured = false;
-    private memoryView: MemoryViewProvider;
+    private memoryView: MemoryViewManager;
 
     private registerProvider!: RegisterProvider;
     private runtime!: CdmDebugRuntime;
@@ -41,7 +40,7 @@ export class CdmDebugSession extends DebugSession {
     public constructor(temporaryDirectory: string) {
         super();
 
-        this.memoryView = new MemoryViewProvider(temporaryDirectory);
+        this.memoryView = new SymlinkManager(temporaryDirectory);
     }
 
     protected customRequest(
@@ -51,7 +50,7 @@ export class CdmDebugSession extends DebugSession {
         _request?: DebugProtocol.Request,
     ): void {
         if (command === "openMemoryView") {
-            this.memoryView.open();
+            this.memoryView.createTab();
         }
     }
 
@@ -92,7 +91,7 @@ export class CdmDebugSession extends DebugSession {
             }).then((provider) => this.registerProvider = provider as RegisterProvider);
 
         }).on("receivedMemory", (bytes) => {
-            this.memoryView.dump = new Uint8Array(bytes);
+            this.memoryView.updateDump(new Uint8Array(bytes));
 
         }).on("receivedRegisters", (values) => {
             this.registerProvider.update(values);
@@ -332,7 +331,7 @@ export class CdmDebugSession extends DebugSession {
         console.info("Received a DisconnectRequest from the client");
 
         this.runtime.pause().shutdown();
-        this.memoryView.close();
+        this.memoryView.closeAllTabs();
 
         this.sendResponse(response);
         console.info("Sent a DisconnectResponse response to the client");

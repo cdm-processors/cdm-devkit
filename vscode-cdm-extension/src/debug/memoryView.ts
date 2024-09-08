@@ -4,84 +4,104 @@ import { Stream } from "stream";
 
 import * as vscode from "vscode";
 
-const IS_MEMORY_VIEW_TAB = /^memory-view-(?<index>\d)\.hex$/g;
+type Writable =
+    | string
+    | NodeJS.ArrayBufferView
+    | Iterable<string | NodeJS.ArrayBufferView>
+    | AsyncIterable<string | NodeJS.ArrayBufferView>
+    | Stream;
 
-export class MemoryViewProvider {
-    private static VIEWS_NUMBER = 20;
+export interface MemoryViewManager {
+    updateDump: (memory: Writable) => Promise<void>;
+    createTab: () => Promise<void>;
+    closeAllTabs: () => Promise<void>;
+}
 
-    private view: vscode.Uri;
-    private available = new Set(Array(MemoryViewProvider.VIEWS_NUMBER).keys());
+export class SymlinkManager implements MemoryViewManager {
+    private static MEMORY_VIEW_REGEXP = /^memory-view-(?<index>\d)\.hex$/g;
+    private static MEMORY_VIEWS_NUMBER = 10;
 
-    private entry(index: number): vscode.Uri {
-        if (index === 0) {
-            return this.view;
-        } else {
-            return vscode.Uri.file(pathlib.join(this.temporaryDirectory, `memory-view-${index}.hex`));
-        }
+    private static file(index: number = 0): string {
+        return `memory-view-${index}.hex`;
     }
 
-    public constructor(private temporaryDirectory: string) {
-        this.view = vscode.Uri.file(pathlib.join(temporaryDirectory, "memory-view-0.hex"));
+    private path(index: number): string {
+        return pathlib.join(this.tempDirectory, SymlinkManager.file(index));
+    }
 
-        fsPromises.writeFile(this.view.fsPath, "").then(() => {
-            for (let index = 1; index < MemoryViewProvider.VIEWS_NUMBER; index += 1) {
-                fsPromises.symlink(this.view.fsPath, pathlib.join(temporaryDirectory, `memory-view-${index}.hex`)).then(() => {
-                    console.log(`Symlink 'memory-view-${index}.hex' has been successfully created`);
-                }).catch(() => {
-                    console.log(`Symlink 'memory-view-${index}.hex' already exists`);
-                });
-            }
-        });
+    private uri(index: number): vscode.Uri {
+        return vscode.Uri.file(this.path(index));
+    }
+
+    private dump: vscode.Uri;
+    private availableTabs = new Set<number>(Array(SymlinkManager.MEMORY_VIEWS_NUMBER).keys()); 
+
+    public constructor(
+        private tempDirectory: string
+    ) {
+        const dumpFsPath = pathlib.join(this.tempDirectory, SymlinkManager.file());
+        this.dump = vscode.Uri.file(dumpFsPath);
 
         vscode.window.tabGroups.onDidChangeTabs((event) => {
             event.closed.forEach((tab) => {
-                for (const match of tab.label.matchAll(IS_MEMORY_VIEW_TAB)) {
-                    console.log(match);
-                    if (match.groups?.index !== undefined) {
-                        this.available.add(Number.parseInt(match.groups.index));
-                    }
+                for (const match of tab.label.matchAll(SymlinkManager.MEMORY_VIEW_REGEXP)) {
+                    this.availableTabs.add(Number.parseInt(match.groups!.index));
                 }
             });
         });
     }
 
-    public async open(): Promise<void> {
-        for (let index = 0; index < MemoryViewProvider.VIEWS_NUMBER; index += 1) {
-            if (this.available.has(index)) {
-                console.log(`Entry 'memory-view-${index}.hex' is available, picking it`);
+    public async updateDump(memory: Writable): Promise<void> {
+        await fsPromises.writeFile(this.dump.fsPath, memory);
+    }
 
-                this.available.delete(index);
-                return await vscode.commands.executeCommand("vscode.openWith", this.entry(index), "hexEditor.hexedit", {
+    private async createDump(): Promise<void> {
+        await fsPromises.writeFile(this.dump.fsPath, "");
+
+        for (let tabIndex = 1; SymlinkManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
+            const _ = await fsPromises.symlink(this.dump.fsPath, this.path(tabIndex), "file").then(() => {
+                console.log(`Symlink 'memory-view-${tabIndex}.hex' has been successfully created`);
+            }).catch((err) => {
+                if (err?.code === "EEXIST") {
+                    console.log(`Symlink 'memory-view-${tabIndex}.hex' already exists, skipping it`);
+                } else {
+                    console.log(`Failed to create symlink 'memory-view-${tabIndex}.hex'. ${err}`);
+                }
+            });
+        }
+    }
+
+    public async createTab(): Promise<void> {
+        try {
+            const _ = await fsPromises.lstat(this.dump.fsPath);
+        } catch (err) {
+            await this.createDump();
+        }
+
+        for (let tabIndex = 0; tabIndex < SymlinkManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
+            if (this.availableTabs.has(tabIndex)) {
+                const _ = await vscode.commands.executeCommand("vscode.openWith", this.uri(tabIndex), "hexEditor.hexedit", {
                     preserveFocus: true,
                     viewColumn: vscode.ViewColumn.Beside,
                 });
+
+                return console.log(`Tab 'memory-view-${tabIndex}.hex' has been opened`);
             }
         }
 
-        vscode.window.showWarningMessage("There is no available memory views :(");
+        const _ = await vscode.window.showWarningMessage("There is no available memory views :(");
     }
 
-    public set dump(memory: 
-        | string
-        | NodeJS.ArrayBufferView
-        | Iterable<string | NodeJS.ArrayBufferView>
-        | AsyncIterable<string | NodeJS.ArrayBufferView>
-        | Stream
-    ) {
-        fsPromises.writeFile(this.view.fsPath, memory);
-    }
-
-    public async close(): Promise<void> {
-        const tabs = [];
+    public async closeAllTabs(): Promise<void> {
+        const viewTabs = [];
         for (const group of vscode.window.tabGroups.all) {
             for (const tab of group.tabs) {
-                for (const _ of tab.label.matchAll(IS_MEMORY_VIEW_TAB)) {
-                    console.log(tab.label);
-                    tabs.push(tab);
+                for (const _ of tab.label.matchAll(SymlinkManager.MEMORY_VIEW_REGEXP)) {
+                    viewTabs.push(tab);
                 }
             }
         }
 
-        const _ = await vscode.window.tabGroups.close(tabs);
+        const _ = await vscode.window.tabGroups.close(viewTabs);
     }
 }
