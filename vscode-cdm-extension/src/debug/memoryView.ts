@@ -14,7 +14,6 @@ type Writable =
 export interface MemoryViewManager {
     updateDump: (memory: Writable) => Promise<void>;
     createTab: () => Promise<void>;
-    closeAllTabs: () => Promise<void>;
 }
 
 export class SymlinkManager implements MemoryViewManager {
@@ -36,6 +35,23 @@ export class SymlinkManager implements MemoryViewManager {
     private dump: vscode.Uri;
     private availableTabs = new Set<number>(Array(SymlinkManager.MEMORY_VIEWS_NUMBER).keys()); 
 
+    private async createDump(): Promise<void> {
+        await fsPromises.writeFile(this.dump.fsPath, "");
+
+        for (let tabIndex = 1; tabIndex < SymlinkManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
+            fsPromises.symlink(this.dump.fsPath, this.path(tabIndex), "file").then(() => {
+                console.log(`Symlink 'memory-view-${tabIndex}.hex' has been successfully created`);
+            }).catch((err) => {
+                if (err?.code === "EEXIST") {
+                    console.log(`Symlink 'memory-view-${tabIndex}.hex' already exists, skipping it`);
+                } else {
+                    console.log(`Failed to create symlink 'memory-view-${tabIndex}.hex'. ${err}`);
+                    vscode.window.showWarningMessage(`Failed to create symlink 'memory-view-${tabIndex}.hex', only one memory view can be used. ${err}`);
+                }
+            });
+        }
+    }
+
     public constructor(
         private tempDirectory: string
     ) {
@@ -49,26 +65,12 @@ export class SymlinkManager implements MemoryViewManager {
                 }
             });
         });
+
+        this.createDump();
     }
 
     public async updateDump(memory: Writable): Promise<void> {
         await fsPromises.writeFile(this.dump.fsPath, memory);
-    }
-
-    private async createDump(): Promise<void> {
-        await fsPromises.writeFile(this.dump.fsPath, "");
-
-        for (let tabIndex = 1; SymlinkManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
-            const _ = await fsPromises.symlink(this.dump.fsPath, this.path(tabIndex), "file").then(() => {
-                console.log(`Symlink 'memory-view-${tabIndex}.hex' has been successfully created`);
-            }).catch((err) => {
-                if (err?.code === "EEXIST") {
-                    console.log(`Symlink 'memory-view-${tabIndex}.hex' already exists, skipping it`);
-                } else {
-                    console.log(`Failed to create symlink 'memory-view-${tabIndex}.hex'. ${err}`);
-                }
-            });
-        }
     }
 
     public async createTab(): Promise<void> {
@@ -80,6 +82,8 @@ export class SymlinkManager implements MemoryViewManager {
 
         for (let tabIndex = 0; tabIndex < SymlinkManager.MEMORY_VIEWS_NUMBER; tabIndex += 1) {
             if (this.availableTabs.has(tabIndex)) {
+                this.availableTabs.delete(tabIndex);
+
                 const _ = await vscode.commands.executeCommand("vscode.openWith", this.uri(tabIndex), "hexEditor.hexedit", {
                     preserveFocus: true,
                     viewColumn: vscode.ViewColumn.Beside,
@@ -90,18 +94,5 @@ export class SymlinkManager implements MemoryViewManager {
         }
 
         const _ = await vscode.window.showWarningMessage("There is no available memory views :(");
-    }
-
-    public async closeAllTabs(): Promise<void> {
-        const viewTabs = [];
-        for (const group of vscode.window.tabGroups.all) {
-            for (const tab of group.tabs) {
-                for (const _ of tab.label.matchAll(SymlinkManager.MEMORY_VIEW_REGEXP)) {
-                    viewTabs.push(tab);
-                }
-            }
-        }
-
-        const _ = await vscode.window.tabGroups.close(viewTabs);
     }
 }

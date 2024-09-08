@@ -331,7 +331,6 @@ export class CdmDebugSession extends DebugSession {
         console.info("Received a DisconnectRequest from the client");
 
         this.runtime.pause().shutdown();
-        this.memoryView.closeAllTabs();
 
         this.sendResponse(response);
         console.info("Sent a DisconnectResponse response to the client");
