@@ -1,6 +1,10 @@
-## This extension adds support for:
-+ CdM-8/8e/16 assembly
-+ CdM Microcode definition language
+# CdM Processors
 
-## What's next?
-+ Debug support for CdM processors
+Support for Coco-de-Mer family processors.
+
+## Features
+
+- Debugging in Logisim
+- Syntax highlighting and snippets for
+    - Coco-de-Mer family assembly languages
+    - Microcode definition language
