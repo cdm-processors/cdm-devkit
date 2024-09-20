@@ -2,9 +2,9 @@ import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
 
-import { ArchitectureID } from "../protocol/architectures";
-import { TargetID } from "../protocol/targets";
+import { ArchitectureId } from "../protocol/architectures";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
+import { TargetGeneralId } from "../protocol/targets";
 
 export class CdmDebugRuntime extends EventEmitter {
     private ws: WebSocket;
@@ -124,7 +124,7 @@ export class CdmDebugRuntime extends EventEmitter {
         }
     }
 
-    public initialize(target: TargetID, arch: ArchitectureID): this {
+    public initialize(target: TargetGeneralId, arch: ArchitectureId): this {
         this.send({
             action: "init",
             target: target,

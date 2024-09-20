@@ -1,5 +1,5 @@
- import { ArchitectureID } from "./architectures";
-import { TargetID } from "./targets";
+import { ArchitectureId } from "./architectures";
+import { TargetGeneralId } from "./targets";
 
 export const INITIALIZE = "init";
 export const LOAD_IMAGE = "load";
@@ -61,8 +61,8 @@ export type Response = Message & {
 
 export type InitializationMessage = Message & {
     action: typeof INITIALIZE,
-    target: TargetID,
-    memoryConfiguration: ArchitectureID,
+    target: TargetGeneralId,
+    memoryConfiguration: ArchitectureId,
 };
 
 export type InitializationResponse = Response & {
