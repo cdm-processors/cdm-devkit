@@ -199,10 +199,10 @@ cdm16e_microcode:
 # Prepare resources for logisim-cdm-emulator
 emulator_resources: microcode
 	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16$(SLASH)microcode$(SLASH)cdm16_decoder*.img \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16
+		$(CURRENT_DIR)$(SLASH)cocoemu$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16
 
 	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_*.img \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e
+		$(CURRENT_DIR)$(SLASH)cocoemu$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e
 
 clean: clean_microcode clean_emulator_resources
 	$(RM) $(BUILD_FOLDER)
@@ -246,10 +246,10 @@ clean_microcode_cdm16e:
 
 clean_emulator_resources:
 	$(RM_FILE) \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16$(SLASH)*.img
+		$(CURRENT_DIR)$(SLASH)cocoemu$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16$(SLASH)*.img
 
 	$(RM_FILE) \
-		$(JAVA_PROJECTS_FOLDER)$(SLASH)logisim-cdm-emulator$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e$(SLASH)*.img
+		$(CURRENT_DIR)$(SLASH)cocoemu$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e$(SLASH)*.img
 
 # Tests
 

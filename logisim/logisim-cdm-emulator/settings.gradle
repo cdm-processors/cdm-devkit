@@ -1,2 +1,4 @@
 rootProject.name = 'logisim-cdm-emulator'
 
+include ':cocoemu'
+project(':cocoemu').projectDir = file('../../cocoemu')
