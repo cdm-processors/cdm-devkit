@@ -76,7 +76,7 @@ class Collector:
         Returns:
             An image, if assembler exited gracefully, ``None`` otherwise.
         """
-        image_file = NamedTemporaryFile(delete=False)
+        image_file = NamedTemporaryFile(suffix=".img", delete=False)
         image_file.close()
 
         process = subprocess.run([
