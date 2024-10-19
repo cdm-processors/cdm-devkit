@@ -96,11 +96,21 @@ class BuildAstVisitor(AsmParserVisitor):
             raise AssemblerException(AssemblerExceptionTag.ASM, label.location.file, label.location.line,
                                      "Only external labels are allowed at the top of a file")
 
-    def visitSection_attr(self, ctx: AsmParser.Section_attrContext) -> str:
+    def visitSection_attr(self, ctx: AsmParser.Section_attrContext | None) -> str | None:
+        if ctx is None:
+            return None
+        
         return ctx.WORD().getText()
 
-    def visitSection_attrs(self, ctx: AsmParser.Section_attrsContext) -> list[str]:
-        return [self.visitSection_attr(section_attr) for section_attr in ctx.section_attr()]
+    def visitSection_attrs(self, ctx: AsmParser.Section_attrsContext | None) -> list[str]:
+        if ctx is None:
+            return []
+
+        return [
+            attribute
+            for sa in ctx.section_attr()
+            if (attribute := self.visitSection_attr(sa)) is not None
+        ]
 
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
