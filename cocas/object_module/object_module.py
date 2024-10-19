@@ -26,6 +26,8 @@ class ObjectSectionRecord:
     """If the relocatable section should get address that is a multiple of some number"""
     external: defaultdict[str, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
     """List of places in section where some external label is used"""
+    attributes: list[str] = field(default_factory=list)
+    """Section attributes"""
 
 
 @dataclass
