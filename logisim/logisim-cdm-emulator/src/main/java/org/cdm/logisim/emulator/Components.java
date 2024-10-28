@@ -5,8 +5,8 @@ import java.util.List;
 
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
-import org.cdm.logisim.emulator.cdm16.Cdm16ProcessorComponent;
-import org.cdm.logisim.emulator.cdm16e.Cdm16eProcessorComponent;
+import org.cdm.logisim.emulator.cdm16.Cdm16Component;
+import org.cdm.logisim.emulator.cdm16e.Cdm16eComponent;
 
 /**
  * The library of components that the user can access.
@@ -27,8 +27,8 @@ public class Components extends Library {
      */
     public Components() {
         tools = Arrays.asList(
-                new AddTool(new Cdm16ProcessorComponent()),
-                new AddTool(new Cdm16eProcessorComponent())
+                new AddTool(new Cdm16Component()),
+                new AddTool(new Cdm16eComponent())
         );
     }
 
