@@ -38,7 +38,7 @@ def export_code_locations(cl: dict[int, CodeLocation]) -> list[str]:
 
 
 def asect_useful(asect: ObjectSectionRecord):
-    return asect.data or asect.external or asect.entries or asect.code_locations
+    return asect.data or asect.external or asect.entries or asect.code_locations or asect.attributes
 
 
 def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[str]:
@@ -67,6 +67,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
                 if asect_useful(asect):
                     s = data_to_str(asect.data)
                     result.append(f'ABS  {asect.address:02x}: {s}\n')
+                    if asect.attributes:
+                        result.append(f'ATTR {" ".join(asect.attributes)}\n')
                     if debug:
                         result += export_code_locations(asect.code_locations)
             for asect in obj.asects:
@@ -78,6 +80,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
                 result.append(f'ALIG {rsect.alignment:02x}\n')
             s = data_to_str(rsect.data)
             result.append(f'DATA {s}\n')
+            if rsect.attributes:
+                result.append(f'ATTR {" ".join(rsect.attributes)}\n')
             if debug:
                 result += export_code_locations(rsect.code_locations)
             result.append(f'REL  {" ".join(map(str, rsect.relocatable))}\n')
