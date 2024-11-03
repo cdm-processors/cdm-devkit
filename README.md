@@ -168,6 +168,7 @@ Set `VERSION` variable if you want to specify project version
     - `cocoemu`
     - `cocodump`
     - `synthm`
+    - `cdp-java`
     - `logisim-banked-memory`
     - `logisim-cdm-emulator`
     - `logisim-runner`
