@@ -6,9 +6,11 @@ import { ArchitectureId } from "../protocol/architectures";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
 
-export class CdmDebugRuntime extends EventEmitter {
-    private ws: WebSocket;
-    private buffered: string[] = [];
+import { spawn } from 'child_process';
+
+export abstract class CdmDebugRuntime extends EventEmitter {
+    protected ws: WebSocket;
+    protected buffered: string[] = [];
 
     public constructor(
         address: string,
@@ -205,7 +207,35 @@ export class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
+    public abstract shutdown(): this; 
+}
+
+export class ExternalDebugRuntime extends CdmDebugRuntime {
+    public constructor(address: string) {
+        super(address);
+    }
+
     public shutdown(): this {
+        return this;
+    }
+}
+
+export class EmulatorDebugRuntime extends CdmDebugRuntime {
+    private emulatorProcess: any;
+
+    public constructor(address: string, emulatorPath: string) {
+        super(address);
+        this.startEmulator(emulatorPath);
+    }
+
+    private startEmulator(emulatorPath: string): void {
+        console.log(`Starting emulator at path: ${emulatorPath}`);
+        this.emulatorProcess = spawn(emulatorPath);
+    }
+
+    public shutdown(): this {
+        console.log(`Shutting down the emulator.`);
+        this.emulatorProcess.kill(); 
         this.ws.close();
         return this;
     }
