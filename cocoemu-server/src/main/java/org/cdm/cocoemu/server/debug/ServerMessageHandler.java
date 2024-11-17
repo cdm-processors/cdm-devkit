@@ -1,6 +1,6 @@
 package org.cdm.cocoemu.server.debug;
 
-import org.cdm.cocoemu.components.processors.cdm16e.Cdm16e;
+import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 import org.cdm.cocoemu.server.app.EmulatorThread;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
@@ -94,7 +94,7 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public ProcessorState getProcessorState() {
-        Cdm16e processor = emulatorThread.getSystem().cdm16e;
+        Cdm16 processor = emulatorThread.getSystem();
 
         return new ProcessorState() {
             @Override
@@ -139,48 +139,66 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleBreakpointsMessage(BreakpointsMessage breakpointsMessage) {
-        return null;
+        breakpoints.put(breakpointsMessage.context, breakpointsMessage.breakpoints);
+
+        return new ActionResponse(MessageActions.SET_BREAKPOINTS);
     }
 
     @Override
     protected DebuggerResponse handleLineLocationsMessage(LineLocationsMessage lineLocationsMessage) {
-        return null;
+        lineLocations.put(lineLocationsMessage.context, lineLocationsMessage.lineLocations);
+
+        return new ActionResponse(MessageActions.SET_LINE_LOCATIONS);
     }
 
     @Override
     protected DebuggerResponse handleStepMessage() {
-        return null;
+        runSimulation(new StopConditions().all());
+
+        return new ActionResponse(MessageActions.STEP);
     }
 
     @Override
     protected DebuggerResponse handleRunMessage(RunMessage runMessage) {
-        return null;
+        runSimulation(StopConditions.fromStrings(runMessage.stopConditions));
+
+        return new ActionResponse(MessageActions.RUN);
     }
 
     @Override
     protected DebuggerResponse handlePauseMessage() {
-        return null;
+        emulatorThread.setExternalTicker(false);
+        return new ActionResponse(MessageActions.PAUSE);
     }
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        return null;
+        emulatorThread.getSystem().reset();
+        /* Добавить DmaController */
+        emulatorThread.getSystem().update();
+        return new ActionResponse(MessageActions.RESET);
     }
 
     @Override
     protected DebuggerResponse handleInitMessage(InitializationMessage initializationMessage) {
-        lineLocations.clear;
+        lineLocations.clear();
+        breakpoints.clear();
 
+        return new InitializationResponse(true,
+                Arrays.asList("r0", "r1", "r2", "r3", "r4", "r5", "r6", "fp", "pc", "sp", "ps"),
+                Arrays.asList(16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16),
+                1_048_576
+        );
     }
 
     @Override
     protected DebuggerResponse handleGetRegistersMessage() {
-        return null;
+        return new GetRegistersResponse(getProcessorState().getRegisters());
     }
 
     @Override
     protected DebuggerResponse handleGetMemoryMessage(GetMemoryMessage getMemoryMessage) {
-        return null;
+        return new GetMemoryResponse(new ArrayList<>());
     }
 
     @Override
@@ -190,16 +208,16 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleBytesLoadMessage(BytesLoadMessage bytesLoadMessage) {
-        return null;
+        return new ActionResponse(MessageActions.LOAD);
     }
 
     @Override
     protected DebuggerResponse handleSetMemoryMessage(SetMemoryMessage setMemoryMessage) {
-        return null;
+        return new ActionResponse(MessageActions.SET_MEMORY);
     }
 
     @Override
     protected DebuggerResponse handleGetTunnelMessage(GetTunnelMessage getTunnelMessage) {
-        return null;
+        return new GetTunnelResponse(0);
     }
 }
