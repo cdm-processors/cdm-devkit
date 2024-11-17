@@ -2,13 +2,12 @@ package org.cdm.cocoemu.server.app;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 
-public class EmulatorThread {
+public class Emulator {
     private final Cdm16 system;
 
     private boolean shouldRun = true;
-    private boolean externalTicker = false;
 
-    public EmulatorThread() {
+    public Emulator() {
         system = new Cdm16();
     }
 
@@ -17,7 +16,7 @@ public class EmulatorThread {
     }
 
     public boolean isRunning() {
-        return shouldRun || externalTicker;
+        return shouldRun;
     }
 
     public void shutdown() {

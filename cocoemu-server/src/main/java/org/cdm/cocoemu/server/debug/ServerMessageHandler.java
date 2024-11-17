@@ -1,7 +1,7 @@
 package org.cdm.cocoemu.server.debug;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.cocoemu.server.app.EmulatorThread;
+import org.cdm.cocoemu.server.app.Emulator;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorState;
@@ -10,19 +10,19 @@ import org.cdm.debug.runtime.StopConditions;
 import java.util.*;
 
 public class ServerMessageHandler extends MessageHandler {
-    private final EmulatorThread emulatorThread;
+    private final Emulator emulator;
 
     private final Map<Integer, List<Integer>> lineLocations = new HashMap<>();
     private final Map<Integer, List<Integer>> breakpoints = new HashMap<>();
 
-    public ServerMessageHandler(EmulatorThread emulatorThread) {
-        this.emulatorThread = emulatorThread;
+    public ServerMessageHandler(Emulator emulator) {
+        this.emulator = emulator;
     }
 
     private boolean tickPredicate(ProcessorState state, StopConditions stopConditions) {
         handleMessage(false);
 
-        int ps = emulatorThread.getSystem().outputs.ps;
+        int ps = emulator.getSystem().outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
         List<Integer> currentBreakpoints = breakpoints.getOrDefault(context, Collections.emptyList());
@@ -42,11 +42,11 @@ public class ServerMessageHandler extends MessageHandler {
 
         ProcessorState processorState;
         do {
-            emulatorThread.doFullCycle();
+            emulator.doFullCycle();
         } while (!tickPredicate(getProcessorState(), stopConditions));
         processorState = getProcessorState();
 
-        int ps = emulatorThread.getSystem().outputs.ps;
+        int ps = emulator.getSystem().outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
         List<Integer> currentBreakpoints = breakpoints.getOrDefault(context, Collections.emptyList());
@@ -83,7 +83,7 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public ProcessorState getProcessorState() {
-        Cdm16 processor = emulatorThread.getSystem();
+        Cdm16 processor = emulator.getSystem();
 
         return new ProcessorState() {
             @Override
@@ -161,9 +161,9 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        emulatorThread.getSystem().reset();
+        emulator.getSystem().reset();
         /* Добавить DmaController */
-        emulatorThread.getSystem().update();
+        emulator.getSystem().update();
         return new ActionResponse(MessageActions.RESET);
     }
 
