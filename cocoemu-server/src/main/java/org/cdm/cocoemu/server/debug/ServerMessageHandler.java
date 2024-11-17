@@ -12,8 +12,8 @@ import java.util.*;
 public class ServerMessageHandler extends MessageHandler {
     private final Emulator emulator;
 
-    private final Map<Integer, List<Integer>> lineLocations = new HashMap<>();
-    private final Map<Integer, List<Integer>> breakpoints = new HashMap<>();
+    private List<Integer> lineLocations = new ArrayList<>();
+    private List<Integer> breakpoints = new ArrayList<>();
 
     public ServerMessageHandler(Emulator emulator) {
         this.emulator = emulator;
@@ -25,8 +25,8 @@ public class ServerMessageHandler extends MessageHandler {
         int ps = emulator.getSystem().outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
-        List<Integer> currentBreakpoints = breakpoints.getOrDefault(context, Collections.emptyList());
-        List<Integer> currentLineLocations = lineLocations.getOrDefault(context, Collections.emptyList());
+        List<Integer> currentBreakpoints = breakpoints;
+        List<Integer> currentLineLocations = lineLocations;
 
         StopConditions chekedStopConditions =
                 StopConditions.check(state, ,stopConditions, currentBreakpoints, currentLineLocations);
@@ -49,8 +49,8 @@ public class ServerMessageHandler extends MessageHandler {
         int ps = emulator.getSystem().outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
-        List<Integer> currentBreakpoints = breakpoints.getOrDefault(context, Collections.emptyList());
-        List<Integer> currentLineLocations = lineLocations.getOrDefault(context, Collections.emptyList());
+        List<Integer> currentBreakpoints = breakpoints;
+        List<Integer> currentLineLocations = lineLocations;
 
         StopConditions chekedStopConditions =
                 StopConditions.check(processorState, ,stopConditions, currentBreakpoints, currentLineLocations);
@@ -79,7 +79,6 @@ public class ServerMessageHandler extends MessageHandler {
 
         sendDebugEvent(reason);
 
-        CoconutEmulatorApplication.requestUpdateMemoryViews();
     }
 
     public ProcessorState getProcessorState() {
@@ -128,14 +127,14 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleBreakpointsMessage(BreakpointsMessage breakpointsMessage) {
-        breakpoints.put(breakpointsMessage.context, breakpointsMessage.breakpoints);
+        breakpoints = breakpointsMessage.breakpoints;
 
         return new ActionResponse(MessageActions.SET_BREAKPOINTS);
     }
 
     @Override
     protected DebuggerResponse handleLineLocationsMessage(LineLocationsMessage lineLocationsMessage) {
-        lineLocations.put(lineLocationsMessage.context, lineLocationsMessage.lineLocations);
+        lineLocations = lineLocationsMessage.lineLocations;
 
         return new ActionResponse(MessageActions.SET_LINE_LOCATIONS);
     }
