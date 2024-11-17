@@ -2,10 +2,9 @@ package org.cdm.cocoemu.server.app;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 
-public class EmulatorThread extends Thread {
+public class EmulatorThread {
     private final Cdm16 system;
 
-    private boolean shouldShutdown = false;
     private boolean shouldRun = true;
     private boolean externalTicker = false;
 
@@ -24,15 +23,6 @@ public class EmulatorThread extends Thread {
     public void shutdown() {
         system.reset();
 
-        shouldShutdown = true;
-    }
-
-    public boolean isExternalTicker() {
-        return externalTicker;
-    }
-
-    public void setExternalTicker(boolean externalTicker) {
-        this.externalTicker = externalTicker;
     }
 
     public void setShouldRun(boolean shouldRun) {
@@ -45,18 +35,5 @@ public class EmulatorThread extends Thread {
         system.update();
     }
 
-    @Override
-    public void run() {
-        while (!shouldShutdown) {
-            if (shouldRun && !externalTicker) {
-                doFullCycle();
-            } else {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
+
 }

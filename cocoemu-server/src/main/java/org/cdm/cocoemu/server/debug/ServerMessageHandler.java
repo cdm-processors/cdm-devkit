@@ -29,9 +29,9 @@ public class ServerMessageHandler extends MessageHandler {
         List<Integer> currentLineLocations = lineLocations.getOrDefault(context, Collections.emptyList());
 
         StopConditions chekedStopConditions =
-                StopConditions.check(state, stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(state, ,stopConditions, currentBreakpoints, currentLineLocations);
 
-        return !emulatorThread.isExternalTicker() || state.isHalted()
+        return state.isHalted()
                 || chekedStopConditions.stopOnFetch()
                 || chekedStopConditions.stopOnBreakpoint()
                 || chekedStopConditions.stopOnLine()
@@ -39,11 +39,6 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public void runSimulation(StopConditions stopConditions) {
-        if (emulatorThread.isExternalTicker()) {
-            return;
-        } else {
-            emulatorThread.setExternalTicker(true);
-        }
 
         ProcessorState processorState;
         do {
@@ -58,7 +53,7 @@ public class ServerMessageHandler extends MessageHandler {
         List<Integer> currentLineLocations = lineLocations.getOrDefault(context, Collections.emptyList());
 
         StopConditions chekedStopConditions =
-                StopConditions.check(processorState, stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(processorState, ,stopConditions, currentBreakpoints, currentLineLocations);
 
         String reason = DebugEvent.REASON_UNKNOWN;
 
@@ -81,12 +76,6 @@ public class ServerMessageHandler extends MessageHandler {
         if (processorState.isHalted()) {
             reason = DebugEvent.REASON_HALT;
         }
-
-        if (!emulatorThread.isExternalTicker()) {
-            reason = DebugEvent.REASON_PAUSE;
-        }
-
-        emulatorThread.setExternalTicker(false);
 
         sendDebugEvent(reason);
 
@@ -167,7 +156,6 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handlePauseMessage() {
-        emulatorThread.setExternalTicker(false);
         return new ActionResponse(MessageActions.PAUSE);
     }
 
