@@ -1,4 +1,5 @@
 import itertools
+from collections.abc import Iterable, Sequence
 from math import inf
 from typing import Any, Optional
 
@@ -8,8 +9,8 @@ from .exceptions import LinkerException
 from .targets import TargetParams, import_target
 
 
-def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
-    rsect_bins = []
+def init_bins(asects: Sequence[ObjectSectionRecord], image_size: Optional[int]) -> list[tuple[int, int]]:
+    rsect_bins: list[tuple[int, int]] = []
     last_bin_begin = 0
     for i in range(len(asects)):
         if len(asects[i].data) > 0:
@@ -30,12 +31,12 @@ def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
         if last_bin_begin < image_size:
             rsect_bins.append((last_bin_begin, image_size - last_bin_begin))
     else:
-        rsect_bins.append((last_bin_begin, inf))
+        rsect_bins.append((last_bin_begin, inf))  # type: ignore[arg-type]
 
     return rsect_bins
 
 
-def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[str, int]:
+def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list[tuple[int, int]], image_size) -> dict[str, int]:
     sect_addresses = {'$abs': 0}
     for rsect in rsects:
         rsect_size = len(rsect.data)
@@ -54,7 +55,7 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size)
     return sect_addresses
 
 
-def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]):
+def gather_ents(sects: Iterable[ObjectSectionRecord], sect_addresses: dict[str, int]) -> dict[str, int]:
     ents = dict()
     for sect in sects:
         for ent_name in sect.entries:
@@ -64,15 +65,15 @@ def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]
     return ents
 
 
-def find_exts_by_sect(sects: list[ObjectSectionRecord]):
-    exts_by_sect = dict()
+def find_exts_by_sect(sects: Iterable[ObjectSectionRecord]) -> dict[str, set[str]]:
+    exts_by_sect = dict[str, set[str]]()
     for sect in sects:
         exts = exts_by_sect.setdefault(sect.name, set())
         exts |= set(sect.external.keys())
     return exts_by_sect
 
 
-def find_sect_by_ent(sects: list[ObjectSectionRecord]):
+def find_sect_by_ent(sects: Iterable[ObjectSectionRecord]) -> dict[str, str]:
     sect_by_ent = dict()
     for sect in sects:
         for ent_name in sect.entries:
@@ -82,7 +83,7 @@ def find_sect_by_ent(sects: list[ObjectSectionRecord]):
     return sect_by_ent
 
 
-def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[str, str]):
+def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[str, str]) -> set[str]:
     used_sects_queue = ['$abs']
     used_sects = {'$abs'}
     i = 0
@@ -99,8 +100,10 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = None) -> \
-        tuple[bytearray, dict[int, CodeLocation]]:
+def link(
+    objects: list[tuple[Any, ObjectModule]],
+    image_size: Optional[int] = None,
+) -> tuple[bytearray, dict[int, CodeLocation]]:
     """
     Link object modules into one image
 
@@ -171,8 +174,10 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     return image, code_locations
 
 
-def target_link(objects: list[tuple[Any, ObjectModule]], target_name: str) -> \
-        tuple[bytearray, dict[int, CodeLocation]]:
+def target_link(
+    objects: list[tuple[Any, ObjectModule]],
+    target_name: str,
+) -> tuple[bytearray, dict[int, CodeLocation]]:
     """
     Link object modules with checking constraints for the target
 
