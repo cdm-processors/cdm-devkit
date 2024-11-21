@@ -2,8 +2,11 @@ package org.cdm.cocoemu.server.debug;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 import org.cdm.cocoemu.server.app.Emulator;
+import org.cdm.cocoemu.server.app.ServerAdapter;
+import org.cdm.cocoemu.systems.HarvardSystem;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
+import org.cdm.debug.runtime.ProcessorInfo;
 import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
 
@@ -19,7 +22,7 @@ public class ServerMessageHandler extends MessageHandler {
         this.emulator = emulator;
     }
 
-    private boolean tickPredicate(ProcessorState state, StopConditions stopConditions) {
+    private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
 
         int ps = emulator.getSystem().outputs.ps;
@@ -29,7 +32,7 @@ public class ServerMessageHandler extends MessageHandler {
         List<Integer> currentLineLocations = lineLocations;
 
         StopConditions chekedStopConditions =
-                StopConditions.check(state, ,stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(state, info, stopConditions, currentBreakpoints, currentLineLocations);
 
         return state.isHalted()
                 || chekedStopConditions.stopOnFetch()
@@ -41,9 +44,10 @@ public class ServerMessageHandler extends MessageHandler {
     public void runSimulation(StopConditions stopConditions) {
 
         ProcessorState processorState;
+        ProcessorInfo processorInfo;
         do {
             emulator.doFullCycle();
-        } while (!tickPredicate(getProcessorState(), stopConditions));
+        } while (!tickPredicate(getProcessorState(), processorInfo = getProcessorInfo(), stopConditions));
         processorState = getProcessorState();
 
         int ps = emulator.getSystem().outputs.ps;

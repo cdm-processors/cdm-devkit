@@ -1,55 +1,45 @@
 package org.cdm.cocoemu.server.app;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.debug.runtime.ProcessorState;
+import org.cdm.cocoemu.systems.HarvardSystem;
+import org.cdm.debug.runtime.ProcessorInfo;
 
-public class ServerAdapter {
-    public static void transferStateToProcessor(ProcessorState state, Cdm16 cdm16) {
-        if (state.getPort(Ports.DATA_IN).isFullyDefined()) {
-            cdm16.inputs.data_in = state.getPort(Ports.DATA_IN).toIntValue();
-        } else {
-            cdm16.inputs.data_in = 0;
-        }
+import java.util.List;
 
-        cdm16.inputs.irq = valueToBoolean(state.getPort(Ports.IRQ));
-        cdm16.inputs.int_number = state.getPort(Ports.INT_NUMBER).toIntValue();
+public class ServerAdapter extends Cdm16 {
 
-        cdm16.inputs.exc = valueToBoolean(state.getPort(Ports.EXC));
-        cdm16.inputs.exc_number = state.getPort(Ports.EXC_NUMBER).toIntValue();
+    Cdm16 cdm16;
 
-        cdm16.inputs.hold = valueToBoolean(state.getPort(Ports.HOLD));
+    ServerAdapter(Cdm16 cdm16) {
+        this.cdm16 = cdm16;
     }
 
-    public static void transferStateFromProcessor(Cdm16 cdm16, ProcessorState state) {
-        for (int i = 0; i < cdm16.outputs.gpRegisters.length; ++i) {
-            state.setPort(
-                    Ports.R0 + i,
-                    Value.createKnown(BitWidth.create(16), cdm16.outputs.gpRegisters[i]),
-                    DELAY
-            );
+    public ProcessorInfo getProcessorInfo() {
+        return new ProcessorInfo() {
+            @Override
+            public String getDisplayName() {
+                return "Cdm-16";
+            }
+
+            @Override
+            public int getMemorySize() {
+                return HarvardSystem.MEMORY_SIZE;
+            }
+
+            @Override
+            public List<String> getRegisterNames() {
+                return ServerAdapter.super.registerFile;
+            }
+
+            @Override
+            public List<Integer> getRegisterSizes() {
+                return List.of();
+            }
+
+            @Override
+            public boolean supportsExceptions() {
+                return false;
+            }
         }
-
-        state.setPort(Ports.PC, Value.createKnown(BitWidth.create(16), cdm16.outputs.pc), DELAY);
-        state.setPort(Ports.SP, Value.createKnown(BitWidth.create(16), cdm16.outputs.sp), DELAY);
-        state.setPort(Ports.PS, Value.createKnown(BitWidth.create(16), cdm16.outputs.ps), DELAY);
-
-        state.setPort(Ports.STATUS, Value.createKnown(BitWidth.create(2), cdm16.outputs.status), DELAY);
-
-        state.setPort(Ports.FETCH, booleanToValue(cdm16.outputs.fetch), DELAY);
-
-        state.setPort(Ports.WORD, booleanToValue(cdm16.outputs.word), DELAY);
-        state.setPort(Ports.DATA, booleanToValue(cdm16.outputs.data), DELAY);
-        state.setPort(Ports.READ, booleanToValue(cdm16.outputs.read), DELAY);
-        state.setPort(Ports.MEM, booleanToValue(cdm16.outputs.mem), DELAY);
-
-        state.setPort(Ports.IAck, booleanToValue(cdm16.outputs.iack), DELAY);
-
-        state.setPort(Ports.ADDRESS, Value.createKnown(BitWidth.create(16), cdm16.outputs.address), DELAY);
-
-        state.setPort(
-                Ports.DATA_OUT,
-                Value.createKnown(BitWidth.create(16), cdm16.outputs.data_out),
-                DELAY
-        );
     }
 }
