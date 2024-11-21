@@ -2,11 +2,9 @@ import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
 
-import { ArchitectureId } from "../protocol/architectures";
-import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
-import { TargetGeneralId } from "../protocol/targets";
-
-import { spawn } from 'child_process';
+import { ArchitectureId } from "../../protocol/architectures";
+import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../../protocol/general";
+import { TargetGeneralId } from "../../protocol/targets";
 
 export abstract class CdmDebugRuntime extends EventEmitter {
     protected ws: WebSocket;
@@ -216,12 +214,13 @@ export class ExternalDebugRuntime extends CdmDebugRuntime {
     }
 
     public shutdown(): this {
+        this.ws.close();
         return this;
     }
 }
 
 export class EmulatorDebugRuntime extends CdmDebugRuntime {
-    private emulatorProcess: any;
+    private terminal: vscode.Terminal | undefined;
 
     public constructor(address: string, emulatorPath: string) {
         super(address);
@@ -230,13 +229,24 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
 
     private startEmulator(emulatorPath: string): void {
         console.log(`Starting emulator at path: ${emulatorPath}`);
-        this.emulatorProcess = spawn(emulatorPath);
+        
+        this.terminal = vscode.window.createTerminal('Emulator Terminal');
+        this.terminal.sendText(emulatorPath);
+        this.terminal.show();
     }
 
     public shutdown(): this {
         console.log(`Shutting down the emulator.`);
-        this.emulatorProcess.kill(); 
+        
+        if (this.terminal) {
+            this.terminal.dispose();
+            this.terminal = undefined; 
+        } else {
+            console.warn(`No terminal found to shut down.`);
+        }
+
         this.ws.close();
         return this;
     }
 }
+

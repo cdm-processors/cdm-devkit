@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { DebugSession, ExitedEvent, InitializedEvent, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 
-import { CdmDebugRuntime } from "./runtime";
+import { CdmDebugRuntime } from "./runtime/runtime";
 import { DebugInfoHander } from "./breakpoints";
 import { ReferenceController, RegisterProvider } from "./variables";
 import { ArchitectureId } from "../protocol/architectures";
