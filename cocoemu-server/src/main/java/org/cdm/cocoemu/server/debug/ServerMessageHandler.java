@@ -1,6 +1,5 @@
 package org.cdm.cocoemu.server.debug;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +25,7 @@ public class ServerMessageHandler extends MessageHandler {
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
 
-        int ps = emulator.getSystem().outputs.ps;
+        int ps = emulator.getSystem().cdm16.outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
         List<Integer> currentBreakpoints = breakpoints;
@@ -50,7 +49,7 @@ public class ServerMessageHandler extends MessageHandler {
         } while (!tickPredicate(getProcessorState(), new Cdm16ServerAdapter(), stopConditions));
         processorState = getProcessorState();
 
-        int ps = emulator.getSystem().outputs.ps;
+        int ps = emulator.getSystem().cdm16.outputs.ps;
         int context = (ps >> 4) & 0xFF;
 
         List<Integer> currentBreakpoints = breakpoints;
@@ -86,7 +85,7 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public ProcessorState getProcessorState() {
-        Cdm16 processor = emulator.getSystem();
+        Cdm16 processor = emulator.getSystem().cdm16;
 
         return new ProcessorState() {
             @Override
@@ -164,7 +163,7 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        emulator.getSystem().reset();
+        emulator.getSystem().cdm16.reset();
         /* Добавить DmaController */
         emulator.getSystem().update();
         return new ActionResponse(MessageActions.RESET);

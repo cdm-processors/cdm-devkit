@@ -14,13 +14,7 @@ public class Main {
         }
         int port = Integer.parseInt(args[0]);
         Emulator e = new Emulator();
-        Supplier<MessageHandler> s = new Supplier<MessageHandler>() {
-            @Override
-            public ServerMessageHandler get() {
-                return new ServerMessageHandler(e);
-            }
-        };
+        Supplier<MessageHandler> s = () -> new ServerMessageHandler(e);
         Server server = new Server(port, s);
-
     }
 }

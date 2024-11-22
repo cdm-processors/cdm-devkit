@@ -1,17 +1,19 @@
 package org.cdm.cocoemu.server.app;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.core.image.Image;
+import org.cdm.cocoemu.systems.VonNeumannSystem;
 
 public class Emulator {
-    private final Cdm16 system;
+    private final VonNeumannSystem system;
 
     private boolean shouldRun = true;
 
     public Emulator() {
-        system = new Cdm16();
+        system = new VonNeumannSystem(new Cdm16(), new Image());
     }
 
-    public Cdm16 getSystem() {
+    public VonNeumannSystem getSystem() {
         return system;
     }
 
@@ -20,7 +22,7 @@ public class Emulator {
     }
 
     public void shutdown() {
-        system.reset();
+        system.cdm16.reset();
 
     }
 
