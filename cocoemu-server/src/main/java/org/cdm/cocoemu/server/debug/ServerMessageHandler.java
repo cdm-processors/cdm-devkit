@@ -1,16 +1,17 @@
 package org.cdm.cocoemu.server.debug;
 
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.server.app.Cdm16ServerAdapter;
 import org.cdm.cocoemu.server.app.Emulator;
-import org.cdm.cocoemu.server.app.ServerAdapter;
-import org.cdm.cocoemu.systems.HarvardSystem;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
 import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
-
-import java.util.*;
 
 public class ServerMessageHandler extends MessageHandler {
     private final Emulator emulator;
@@ -44,10 +45,9 @@ public class ServerMessageHandler extends MessageHandler {
     public void runSimulation(StopConditions stopConditions) {
 
         ProcessorState processorState;
-        ProcessorInfo processorInfo;
         do {
             emulator.doFullCycle();
-        } while (!tickPredicate(getProcessorState(), processorInfo = getProcessorInfo(), stopConditions));
+        } while (!tickPredicate(getProcessorState(), new Cdm16ServerAdapter(), stopConditions));
         processorState = getProcessorState();
 
         int ps = emulator.getSystem().outputs.ps;
@@ -57,7 +57,7 @@ public class ServerMessageHandler extends MessageHandler {
         List<Integer> currentLineLocations = lineLocations;
 
         StopConditions chekedStopConditions =
-                StopConditions.check(processorState, ,stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(processorState, new Cdm16ServerAdapter() ,stopConditions, currentBreakpoints, currentLineLocations);
 
         String reason = DebugEvent.REASON_UNKNOWN;
 
