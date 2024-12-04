@@ -205,7 +205,15 @@ export abstract class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    public abstract shutdown(): this; 
+    public shutdown(): this {
+        if (this.ws) {
+            this.ws.close();
+            console.log(`WebSocket connection closed.`);
+        } else {
+            console.warn(`No WebSocket connection found to shut down.`);
+        }
+        return this;
+    }
 }
 
 

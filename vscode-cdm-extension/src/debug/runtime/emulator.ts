@@ -20,13 +20,7 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
 
     public shutdown(): this {
         console.log(`Shutting down the emulator.`);
-        
-        if (this.ws) {
-            this.ws.close();
-            console.log(`WebSocket connection closed.`);
-        } else {
-            console.warn(`No WebSocket connection found to shut down.`);
-        }
+        super.shutdown(); 
 
         if (this.terminal) {
             this.terminal.dispose();
