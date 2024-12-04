@@ -12,6 +12,7 @@ import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
 import { MemoryViewManager, SymlinkManager, PlainFileManager } from "./memoryView";
 import { EmulatorDebugRuntime } from "./runtime/emulator";
+import { ExternalDebugRuntime } from "./runtime/external";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
