@@ -3,8 +3,7 @@ package org.cdm.cocoemu.server.debug;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.cocoemu.server.app.Cdm16ServerAdapter;
+import org.cdm.cocoemu.server.adapter.Cdm16ServerAdapter;
 import org.cdm.cocoemu.server.app.Emulator;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
@@ -82,50 +81,6 @@ public class ServerMessageHandler extends MessageHandler {
 
         sendDebugEvent(reason);
 
-    }
-
-    public ProcessorState getProcessorState() {
-        Cdm16 processor = emulator.getSystem().cdm16;
-
-        return new ProcessorState() {
-            @Override
-            public boolean isFetching() {
-                return processor.outputs.fetch;
-            }
-
-            @Override
-            public boolean isHalted() {
-                return processor.outputs.status == 2;
-            }
-
-            @Override
-            public int getProgramCounter() {
-                return processor.outputs.pc;
-            }
-
-            @Override
-            public List<Integer> getRegisters() {
-                List<Integer> registers = new ArrayList<>();
-                for (int registerValue : processor.outputs.gpRegisters) {
-                    registers.add(registerValue);
-                }
-                registers.add(processor.outputs.pc);
-                registers.add(processor.outputs.sp);
-                registers.add(processor.outputs.ps);
-
-                return registers;
-            }
-
-            @Override
-            public boolean exceptionHappened() {
-                return processor.exceptionHappened();
-            }
-
-            @Override
-            public int getExceptionNumber() {
-                return processor.exceptionNumber();
-            }
-        };
     }
 
     @Override
