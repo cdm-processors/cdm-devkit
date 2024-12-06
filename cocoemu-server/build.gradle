@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.cdm.cocoemu.server'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    flatDir(dirs: 'libs')
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    implementation(files('libs/cocoemu.jar'))
+    implementation(files('libs/cdp-java.main.jar'))
+}
+
+test {
+    useJUnitPlatform()
+}
