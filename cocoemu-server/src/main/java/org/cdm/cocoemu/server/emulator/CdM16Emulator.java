@@ -1,40 +1,39 @@
-package org.cdm.cocoemu.server.app;
+package org.cdm.cocoemu.server.emulator;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.cocoemu.core.image.Image;
-import org.cdm.cocoemu.systems.VonNeumannSystem;
 
-public class Emulator {
-    private final VonNeumannSystem system;
-
+public class CdM16Emulator implements CdMEmulator<Cdm16> {
+    private final Cdm16 system;
     private boolean shouldRun = true;
-
-    public Emulator() {
-        system = new VonNeumannSystem(new Cdm16(), new Image());
+    public CdM16Emulator() {
+        system = new Cdm16();
     }
 
-    public VonNeumannSystem getSystem() {
+    @Override
+    public Cdm16 getSystem() {
         return system;
     }
 
+    @Override
     public boolean isRunning() {
         return shouldRun;
     }
 
+    @Override
     public void shutdown() {
-        system.cdm16.reset();
-
+        system.reset();
     }
 
+    @Override
     public void setShouldRun(boolean shouldRun) {
         this.shouldRun = shouldRun;
     }
 
+    @Override
     public void doFullCycle() {
         system.clockRising();
         system.clockFalling();
         system.update();
     }
-
 
 }
