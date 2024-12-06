@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Cdm16Adapter extends ProcessorAdapter<Cdm16> {
-    public Cdm16Adapter() {
-        super(new Cdm16());
+    public Cdm16Adapter(Cdm16 processor) {
+        super(processor);
     }
 
     @Override
