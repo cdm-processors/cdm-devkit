@@ -1,5 +1,9 @@
 package org.cdm.cocoemu.server.adapter;
 
+import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.server.emulator.CdM16Emulator;
+import org.cdm.cocoemu.server.debug.DebugEnvironment;
+
 import java.util.*;
 
 public class Factory {
@@ -17,20 +21,20 @@ public class Factory {
 
         supportedTargets.put(
                 "cdm16",
-                Arrays.asList(ProcessorType.CDM16_CIRCUIT, ProcessorType.CDM16_EMU)
+                Arrays.asList(ProcessorType.CDM16, ProcessorType.CDM16E)
         );
     }
 
-    public static ProcessorAdapter getProcessorAdapter(ProcessorType processorType) {
+    public static DebugEnvironment<?> getProcessorAdapter(ProcessorType processorType) {
         switch (processorType) {
             case CDM8:
-                return new Cdm8CircuitAdapter();
+//                return new Cdm8CircuitAdapter();
             case CDM8E:
-                return new Cdm8eCircuitAdapter();
-            case CDM16_CIRCUIT:
-                return new Cdm16CircuitAdapter();
-            case CDM16_EMU:
-                return new Cdm16EmulatorAdapter();
+//                return new Cdm8eCircuitAdapter();
+            case CDM16:
+                return new DebugEnvironment<Cdm16>(new Cdm16Adapter(), new CdM16Emulator()) {};
+            case CDM16E:
+//                return new Cdm16EmulatorAdapter();
             default:
                 throw new UnsupportedOperationException();
         }

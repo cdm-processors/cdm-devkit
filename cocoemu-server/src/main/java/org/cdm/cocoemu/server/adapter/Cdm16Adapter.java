@@ -1,16 +1,15 @@
 package org.cdm.cocoemu.server.adapter;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.debug.runtime.ProcessorInfo;
 import org.cdm.debug.runtime.ProcessorState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Cdm16ServerAdapter extends ProcessorAdapter<Cdm16> {
-    public Cdm16ServerAdapter(Cdm16 processor) {
-        super(processor);
+public class Cdm16Adapter extends ProcessorAdapter<Cdm16> {
+    public Cdm16Adapter() {
+        super(new Cdm16());
     }
 
     @Override
