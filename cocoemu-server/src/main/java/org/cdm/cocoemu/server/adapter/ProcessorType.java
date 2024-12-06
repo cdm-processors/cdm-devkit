@@ -8,6 +8,6 @@ public enum ProcessorType {
 
     @Override
     public String toString() {
-        return Factory.getProcessorAdapter(this).getDisplayName();
+        return Factory.getDebugEnvironment(this).getProcessorAdapter().getDisplayName();
     }
 }

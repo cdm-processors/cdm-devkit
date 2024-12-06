@@ -25,40 +25,20 @@ public class Factory {
         );
     }
 
-    public static DebugEnvironment<?> getProcessorAdapter(ProcessorType processorType) {
+    public static DebugEnvironment<?> getDebugEnvironment(ProcessorType processorType) {
         switch (processorType) {
             case CDM8:
 //                return new Cdm8CircuitAdapter();
             case CDM8E:
 //                return new Cdm8eCircuitAdapter();
             case CDM16:
-                return new DebugEnvironment<Cdm16>(new Cdm16Adapter(), new CdM16Emulator()) {};
+                Cdm16 processor = new Cdm16();
+                return new DebugEnvironment<>(new Cdm16Adapter(processor), new CdM16Emulator(processor)) {};
             case CDM16E:
 //                return new Cdm16EmulatorAdapter();
             default:
                 throw new UnsupportedOperationException();
         }
-    }
-
-    public static ProcessorAdapter getProcessorAdapter(String targetId) {
-        if (!supportedTargets.containsKey(targetId)) {
-            return null;
-        }
-
-        List<ProcessorType> supportedProcessorTypes = supportedTargets.get(targetId);
-        Circuit currentCircuit = DebuggerComponent.getDebuggerCircuit();
-
-        ProcessorAdapter targetProcessorAdapter = null;
-        for (ProcessorType processorType : supportedProcessorTypes) {
-            ProcessorAdapter currentProcessorAdapter = ProcessorAdapterFactory.getProcessorAdapter(processorType);
-
-            if (currentProcessorAdapter.locateComponent(currentCircuit) != null) {
-                targetProcessorAdapter = currentProcessorAdapter;
-                break;
-            }
-        }
-
-        return targetProcessorAdapter;
     }
 }
 
