@@ -10,4 +10,8 @@ public interface CdMEmulator<T> {
     void setShouldRun(boolean shouldRun);
 
     void doFullCycle();
+
+    void reset();
+
+    void update();
 }

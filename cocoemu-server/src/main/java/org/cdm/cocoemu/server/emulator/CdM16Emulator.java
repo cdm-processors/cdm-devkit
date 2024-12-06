@@ -5,8 +5,9 @@ import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 public class CdM16Emulator implements CdMEmulator<Cdm16> {
     private final Cdm16 system;
     private boolean shouldRun = true;
-    public CdM16Emulator() {
-        system = new Cdm16();
+
+    public CdM16Emulator(Cdm16 system) {
+        this.system = system;
     }
 
     @Override
@@ -33,6 +34,16 @@ public class CdM16Emulator implements CdMEmulator<Cdm16> {
     public void doFullCycle() {
         system.clockRising();
         system.clockFalling();
+        system.update();
+    }
+
+    @Override
+    public void reset() {
+        system.reset();
+    }
+
+    @Override
+    public void update() {
         system.update();
     }
 
