@@ -9,11 +9,31 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    cocoemu
+}
+
 dependencies {
+    cocoemu project(':cocoemu')
+    configurations.implementation.extendsFrom(configurations.cocoemu)
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes('Library-Class': 'org.cdm.debug.*')
+    }
+
+    from {
+        configurations.cocoemu.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
 }
