@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.cdm.cocoemu.server'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    cocoemu
+    cdp_java
+}
+
+dependencies {
+    cocoemu project(':cocoemu')
+    configurations.implementation.extendsFrom(configurations.cocoemu)
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    cdp_java project(':cdp_java')
+    configurations.implementation.extendsFrom(configurations.cdp_java)
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes('Library-Class': 'org.cdm.debug.*')
+    }
+
+    from {
+        configurations.cocoemu.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
