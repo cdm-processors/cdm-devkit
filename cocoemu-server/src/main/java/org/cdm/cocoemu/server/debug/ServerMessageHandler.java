@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
-import org.cdm.cocoemu.server.emulator.CdMEmulator;
+import org.cdm.cocoemu.server.emulator.CdmEmulator;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
@@ -13,7 +13,7 @@ import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
 
 public class ServerMessageHandler extends MessageHandler {
-    private final CdMEmulator<?> emulator;
+    private final CdmEmulator<?> emulator;
     private final ProcessorAdapter<?> adapter;
     private List<Integer> lineLocations = new ArrayList<>();
     private List<Integer> breakpoints = new ArrayList<>();

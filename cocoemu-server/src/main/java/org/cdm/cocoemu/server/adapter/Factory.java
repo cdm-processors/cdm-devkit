@@ -1,7 +1,7 @@
 package org.cdm.cocoemu.server.adapter;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.cocoemu.server.emulator.CdM16Emulator;
+import org.cdm.cocoemu.server.emulator.Cdm16Emulator;
 import org.cdm.cocoemu.server.debug.DebugEnvironment;
 
 import java.util.*;
@@ -33,7 +33,7 @@ public class Factory {
 //                return new Cdm8eCircuitAdapter();
             case CDM16:
                 Cdm16 processor = new Cdm16();
-                return new DebugEnvironment<>(new Cdm16Adapter(processor), new CdM16Emulator(processor)) {};
+                return new DebugEnvironment<>(new Cdm16Adapter(processor), new Cdm16Emulator(processor)) {};
             case CDM16E:
 //                return new Cdm16EmulatorAdapter();
             default:

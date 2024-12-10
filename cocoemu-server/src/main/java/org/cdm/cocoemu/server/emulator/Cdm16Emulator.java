@@ -2,11 +2,11 @@ package org.cdm.cocoemu.server.emulator;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 
-public class CdM16Emulator implements CdMEmulator<Cdm16> {
+public class Cdm16Emulator implements CdmEmulator<Cdm16> {
     private final Cdm16 system;
     private boolean shouldRun = true;
 
-    public CdM16Emulator(Cdm16 system) {
+    public Cdm16Emulator(Cdm16 system) {
         this.system = system;
     }
 

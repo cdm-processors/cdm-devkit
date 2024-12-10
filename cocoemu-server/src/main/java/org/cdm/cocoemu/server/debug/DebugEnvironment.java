@@ -1,12 +1,12 @@
 package org.cdm.cocoemu.server.debug;
 
 import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
-import org.cdm.cocoemu.server.emulator.CdMEmulator;
+import org.cdm.cocoemu.server.emulator.CdmEmulator;
 
 public class DebugEnvironment<T> {
     private final ProcessorAdapter<T> processorAdapter;
-    private final CdMEmulator<T> emulator;
-    protected DebugEnvironment(ProcessorAdapter<T> processorAdapter, CdMEmulator<T> emulator) {
+    private final CdmEmulator<T> emulator;
+    protected DebugEnvironment(ProcessorAdapter<T> processorAdapter, CdmEmulator<T> emulator) {
         this.processorAdapter = processorAdapter;
         this.emulator = emulator;
     }
@@ -15,7 +15,7 @@ public class DebugEnvironment<T> {
         return processorAdapter;
     }
 
-    public CdMEmulator<T> getEmulator() {
+    public CdmEmulator<T> getEmulator() {
         return emulator;
     }
 }

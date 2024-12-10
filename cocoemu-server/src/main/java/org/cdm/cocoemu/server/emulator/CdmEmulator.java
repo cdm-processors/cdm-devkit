@@ -1,6 +1,6 @@
 package org.cdm.cocoemu.server.emulator;
 
-public interface CdMEmulator<T> {
+public interface CdmEmulator<T> {
     T getSystem();
 
     boolean isRunning();
