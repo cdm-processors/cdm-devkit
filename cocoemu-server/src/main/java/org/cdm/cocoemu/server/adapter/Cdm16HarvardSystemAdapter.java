@@ -1,16 +1,16 @@
 package org.cdm.cocoemu.server.adapter;
 
 import org.cdm.cocoemu.components.memory.Memory;
-import org.cdm.cocoemu.systems.VonNeumannSystem;
+import org.cdm.cocoemu.systems.HarvardSystem;
 import org.cdm.debug.runtime.ProcessorState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Cdm16VonNeumannSystemAdapter extends ProcessorAdapter<VonNeumannSystem> {
-    public Cdm16VonNeumannSystemAdapter(VonNeumannSystem processor) {
-        super(processor);
+public class Cdm16HarvardSystemAdapter extends ProcessorAdapter<HarvardSystem> {
+    public Cdm16HarvardSystemAdapter(HarvardSystem system) {
+        super(system);
     }
 
     @Override
@@ -63,12 +63,12 @@ public class Cdm16VonNeumannSystemAdapter extends ProcessorAdapter<VonNeumannSys
 
     @Override
     public Memory getBankedRom() {
-        return system.ram;
+        return system.rom;
     }
 
     @Override
     public String getDisplayName() {
-        return "CdM-16 Von Neumann System";
+        return "CdM-16 Harvard System";
     }
 
     @Override
@@ -90,5 +90,4 @@ public class Cdm16VonNeumannSystemAdapter extends ProcessorAdapter<VonNeumannSys
     public boolean supportsExceptions() {
         return true;
     }
-
 }

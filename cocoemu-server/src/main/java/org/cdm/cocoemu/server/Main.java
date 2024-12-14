@@ -12,6 +12,6 @@ public class Main {
         }
         int port = Integer.parseInt(args[0]);
 
-        Server server = new Server(port, () -> new ServerMessageHandler(Factory.getDebugEnvironment(ProcessorType.CDM16)));
+        Server server = new Server(port, () -> new ServerMessageHandler(Factory.getDebugEnvironment(ProcessorType.CDM16HARVARD)));
     }
 }

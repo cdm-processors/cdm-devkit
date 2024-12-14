@@ -3,6 +3,7 @@ package org.cdm.cocoemu.server.adapter;
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
 import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.server.debug.DebugEnvironment;
+import org.cdm.cocoemu.systems.HarvardSystem;
 import org.cdm.cocoemu.systems.VonNeumannSystem;
 
 import java.util.*;
@@ -21,8 +22,13 @@ public class Factory {
         );
 
         supportedTargets.put(
-                "cdm16",
-                Arrays.asList(ProcessorType.CDM16, ProcessorType.CDM16E)
+                "cdm16 Von Neumann",
+                Arrays.asList(ProcessorType.CDM16VONNEUMANN, ProcessorType.CDM16E)
+        );
+
+        supportedTargets.put(
+                "cdm16 Harvard",
+                Arrays.asList(ProcessorType.CDM16HARVARD, ProcessorType.CDM16E)
         );
     }
 
@@ -32,10 +38,14 @@ public class Factory {
 //                return new Cdm8CircuitAdapter();
             case CDM8E:
 //                return new Cdm8eCircuitAdapter();
-            case CDM16:
+            case CDM16VONNEUMANN:
                 Cdm16 processor = new Cdm16();
                 VonNeumannSystem system = new VonNeumannSystem(processor, new Image());
                 return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(system), processor) {};
+            case CDM16HARVARD:
+                Cdm16 processor2 = new Cdm16();
+                HarvardSystem system2 = new HarvardSystem(processor2, new Image());
+                return new DebugEnvironment<>(new Cdm16HarvardSystemAdapter(system2), processor2) {};
             case CDM16E:
 //                return new Cdm16EmulatorAdapter();
             default:
