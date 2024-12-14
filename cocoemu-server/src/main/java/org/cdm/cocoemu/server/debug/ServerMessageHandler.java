@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.cdm.cocoemu.core.Component;
 import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
-import org.cdm.cocoemu.server.emulator.CdmEmulator;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
@@ -13,14 +13,14 @@ import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
 
 public class ServerMessageHandler extends MessageHandler {
-    private final CdmEmulator<?> emulator;
+    private final Component processor;
     private final ProcessorAdapter<?> adapter;
     private List<Integer> lineLocations = new ArrayList<>();
     private List<Integer> breakpoints = new ArrayList<>();
 
     public ServerMessageHandler(DebugEnvironment<?> environment) {
         this.adapter = environment.getProcessorAdapter();
-        this.emulator = environment.getEmulator();
+        this.processor = environment.getProcessor();
     }
 
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
@@ -43,7 +43,9 @@ public class ServerMessageHandler extends MessageHandler {
 
         ProcessorState processorState;
         do {
-            emulator.doFullCycle();
+            processor.clockRising();
+            processor.clockFalling();
+            processor.update();
         } while (!tickPredicate(adapter.getProcessorState(), adapter, stopConditions));
         processorState = adapter.getProcessorState();
 
@@ -114,8 +116,7 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        emulator.reset();
-        emulator.update();
+        processor.update();
         return new ActionResponse(MessageActions.RESET);
     }
 

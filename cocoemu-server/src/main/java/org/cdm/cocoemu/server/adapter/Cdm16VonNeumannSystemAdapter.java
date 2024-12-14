@@ -1,14 +1,15 @@
 package org.cdm.cocoemu.server.adapter;
 
-import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.components.memory.Memory;
+import org.cdm.cocoemu.systems.VonNeumannSystem;
 import org.cdm.debug.runtime.ProcessorState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Cdm16Adapter extends ProcessorAdapter<Cdm16> {
-    public Cdm16Adapter(Cdm16 processor) {
+public class Cdm16VonNeumannSystemAdapter extends ProcessorAdapter<VonNeumannSystem> {
+    public Cdm16VonNeumannSystemAdapter(VonNeumannSystem processor) {
         super(processor);
     }
 
@@ -17,42 +18,52 @@ public class Cdm16Adapter extends ProcessorAdapter<Cdm16> {
         return new ProcessorState() {
             @Override
             public boolean isFetching() {
-                return processor.outputs.fetch;
+                return system.cdm16.outputs.fetch;
             }
 
             @Override
             public boolean isHalted() {
-                return processor.outputs.status == 2;
+                return system.cdm16.outputs.status == 2;
             }
 
             @Override
             public int getProgramCounter() {
-                return processor.outputs.pc;
+                return system.cdm16.outputs.pc;
             }
 
             @Override
             public List<Integer> getRegisters() {
                 List<Integer> registers = new ArrayList<>();
-                for (int registerValue : processor.outputs.gpRegisters) {
+                for (int registerValue : system.cdm16.outputs.gpRegisters) {
                     registers.add(registerValue);
                 }
-                registers.add(processor.outputs.pc);
-                registers.add(processor.outputs.sp);
-                registers.add(processor.outputs.ps);
+                registers.add(system.cdm16.outputs.pc);
+                registers.add(system.cdm16.outputs.sp);
+                registers.add(system.cdm16.outputs.ps);
 
                 return registers;
             }
 
             @Override
             public boolean exceptionHappened() {
-                return processor.exceptionHappened();
+                return system.cdm16.exceptionHappened();
             }
 
             @Override
             public int getExceptionNumber() {
-                return processor.exceptionNumber();
+                return system.cdm16.exceptionNumber();
             }
         };
+    }
+
+    @Override
+    public Memory getBankedRam() {
+        return system.ram;
+    }
+
+    @Override
+    public Memory getBankedRom() {
+        return system.ram;
     }
 
     @Override

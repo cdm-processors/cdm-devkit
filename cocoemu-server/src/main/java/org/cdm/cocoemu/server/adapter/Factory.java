@@ -1,8 +1,9 @@
 package org.cdm.cocoemu.server.adapter;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
-import org.cdm.cocoemu.server.emulator.Cdm16Emulator;
+import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.server.debug.DebugEnvironment;
+import org.cdm.cocoemu.systems.VonNeumannSystem;
 
 import java.util.*;
 
@@ -33,7 +34,8 @@ public class Factory {
 //                return new Cdm8eCircuitAdapter();
             case CDM16:
                 Cdm16 processor = new Cdm16();
-                return new DebugEnvironment<>(new Cdm16Adapter(processor), new Cdm16Emulator(processor)) {};
+                VonNeumannSystem system = new VonNeumannSystem(processor, new Image());
+                return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(system), processor) {};
             case CDM16E:
 //                return new Cdm16EmulatorAdapter();
             default:
