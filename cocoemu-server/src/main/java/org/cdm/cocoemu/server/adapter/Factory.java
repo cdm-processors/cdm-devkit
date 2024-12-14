@@ -5,6 +5,7 @@ import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.server.debug.DebugEnvironment;
 import org.cdm.cocoemu.systems.HarvardSystem;
 import org.cdm.cocoemu.systems.VonNeumannSystem;
+import org.cdm.debug.dto.MemoryConfiguratons;
 
 import java.util.*;
 
@@ -22,30 +23,26 @@ public class Factory {
         );
 
         supportedTargets.put(
-                "cdm16 Von Neumann",
-                Arrays.asList(ProcessorType.CDM16VONNEUMANN, ProcessorType.CDM16E)
-        );
-
-        supportedTargets.put(
-                "cdm16 Harvard",
-                Arrays.asList(ProcessorType.CDM16HARVARD, ProcessorType.CDM16E)
+                "cdm16",
+                Arrays.asList(ProcessorType.CDM16, ProcessorType.CDM16E)
         );
     }
 
-    public static DebugEnvironment<?> getDebugEnvironment(ProcessorType processorType) {
+    public static DebugEnvironment<?> getDebugEnvironment(ProcessorType processorType, String memoryConfiguration) {
         switch (processorType) {
             case CDM8:
 //                return new Cdm8CircuitAdapter();
             case CDM8E:
 //                return new Cdm8eCircuitAdapter();
-            case CDM16VONNEUMANN:
+            case CDM16:
                 Cdm16 processor = new Cdm16();
-                VonNeumannSystem system = new VonNeumannSystem(processor, new Image());
-                return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(system), processor) {};
-            case CDM16HARVARD:
-                Cdm16 processor2 = new Cdm16();
-                HarvardSystem system2 = new HarvardSystem(processor2, new Image());
-                return new DebugEnvironment<>(new Cdm16HarvardSystemAdapter(system2), processor2) {};
+                if (memoryConfiguration.equals(MemoryConfiguratons.VON_NEUMANN)) {
+                    return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(new VonNeumannSystem(processor, new Image())), processor) {};
+                } else if (memoryConfiguration.equals(MemoryConfiguratons.HARVARD)) {
+                    return new DebugEnvironment<>(new Cdm16HarvardSystemAdapter(new HarvardSystem(processor, new Image())), processor) {};
+                } else {
+                    throw new UnsupportedOperationException();
+                }
             case CDM16E:
 //                return new Cdm16EmulatorAdapter();
             default:

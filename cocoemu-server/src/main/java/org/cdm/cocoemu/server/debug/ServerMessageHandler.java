@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.cdm.cocoemu.core.Component;
+import org.cdm.cocoemu.server.adapter.Factory;
 import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
+import org.cdm.cocoemu.server.adapter.ProcessorType;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
@@ -13,15 +15,10 @@ import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
 
 public class ServerMessageHandler extends MessageHandler {
-    private final Component processor;
-    private final ProcessorAdapter<?> adapter;
+    private Component processor;
+    private ProcessorAdapter<?> adapter;
     private List<Integer> lineLocations = new ArrayList<>();
     private List<Integer> breakpoints = new ArrayList<>();
-
-    public ServerMessageHandler(DebugEnvironment<?> environment) {
-        this.adapter = environment.getProcessorAdapter();
-        this.processor = environment.getProcessor();
-    }
 
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
@@ -124,6 +121,11 @@ public class ServerMessageHandler extends MessageHandler {
     protected DebuggerResponse handleInitMessage(InitializationMessage initializationMessage) {
         lineLocations.clear();
         breakpoints.clear();
+
+        DebugEnvironment<?> environment = Factory.getDebugEnvironment(ProcessorType.valueOf(initializationMessage.target), initializationMessage.memoryConfiguration);
+        this.processor = environment.getProcessor();
+        this.adapter = environment.getProcessorAdapter();
+
         return new InitializationResponse(true,
                 Arrays.asList("r0", "r1", "r2", "r3", "r4", "r5", "r6", "fp", "pc", "sp", "ps"),
                 Arrays.asList(16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16),
