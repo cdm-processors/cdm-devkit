@@ -29,6 +29,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    compileOnly("org.jcommander:jcommander:2.0")
 }
 
 test {

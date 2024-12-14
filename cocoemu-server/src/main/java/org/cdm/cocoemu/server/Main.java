@@ -1,5 +1,6 @@
 package org.cdm.cocoemu.server;
 
+import com.beust.jcommander.JCommander;
 import org.cdm.cocoemu.server.adapter.Factory;
 import org.cdm.cocoemu.server.adapter.ProcessorType;
 import org.cdm.cocoemu.server.debug.ServerMessageHandler;
@@ -10,7 +11,9 @@ public class Main {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expected exactly one argument");
         }
-        int port = Integer.parseInt(args[0]);
+        Args args1 = new Args();
+        JCommander.newBuilder().addObject(args1).build().parse(args);
+        int port = args1.getPort();
 
         Server server = new Server(port, () -> new ServerMessageHandler(Factory.getDebugEnvironment(ProcessorType.CDM16HARVARD)));
     }
