@@ -1,4 +1,6 @@
-from copy import copy
+__all__ = ("concat_rsects",)
+
+from copy import copy, deepcopy
 from math import lcm
 from typing import TYPE_CHECKING, Iterable
 
@@ -20,12 +22,7 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
         if len(sections) < 2:
             ret.extend(sections)
         else:
-            new = copy(sections[0])
-            new.data = copy(sections[0].data)
-            new.entries = copy(sections[0].entries)
-            new.code_locations = copy(sections[0].code_locations)
-            new.external = copy(sections[0].external)
-            new.relocatable = copy(sections[0].relocatable)
+            new = deepcopy(sections[0])
             prev_size = len(new.data)
             for rsect in sections[1:]:
                 if (missing_attrs := set(new.attributes).symmetric_difference(rsect.attributes)):
