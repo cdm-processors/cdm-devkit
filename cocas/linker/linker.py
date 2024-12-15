@@ -1,6 +1,5 @@
 import itertools
 from collections.abc import Iterable, Sequence
-from math import inf
 from typing import Any, Optional
 
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects
@@ -9,7 +8,7 @@ from .exceptions import LinkerException
 from .targets import TargetParams, import_target
 
 
-def init_bins(asects: Sequence[ObjectSectionRecord], image_size: Optional[int]) -> list[tuple[int, int]]:
+def init_bins(asects: Sequence[ObjectSectionRecord], image_size: int) -> list[tuple[int, int]]:
     rsect_bins: list[tuple[int, int]] = []
     last_bin_begin = 0
     for i in range(len(asects)):
@@ -27,16 +26,13 @@ def init_bins(asects: Sequence[ObjectSectionRecord], image_size: Optional[int]) 
             if image_size and last_bin_begin > image_size:
                 raise LinkerException(f'Absolute section at address {asects[i].address} (size {len(asects[i].data)}) '
                                       f'exceeds image size limit {image_size}')
-    if image_size:
-        if last_bin_begin < image_size:
-            rsect_bins.append((last_bin_begin, image_size - last_bin_begin))
-    else:
-        rsect_bins.append((last_bin_begin, inf))  # type: ignore[arg-type]
+    if last_bin_begin < image_size:
+        rsect_bins.append((last_bin_begin, image_size - last_bin_begin))
 
     return rsect_bins
 
 
-def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list[tuple[int, int]], image_size) -> dict[str, int]:
+def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list[tuple[int, int]]) -> dict[str, int]:
     sect_addresses = {'$abs': 0}
     for rsect in rsects:
         rsect_size = len(rsect.data)
@@ -51,7 +47,11 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list[tuple[int, i
                     rsect_bins[i] = (address + rsect_size, bin_size - rsect_size)
                     break
         else:
-            raise LinkerException(f'Section "{rsect.name}" exceeds image size limit {image_size}')
+            message = (
+                f"section '{rsect.name}' cannot be placed, as "
+                f"there are no large enough bins; image size is too low"
+            )
+            raise LinkerException(message)
     return sect_addresses
 
 
@@ -100,10 +100,7 @@ def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[s
     return used_sects
 
 
-def link(
-    objects: list[tuple[Any, ObjectModule]],
-    image_size: Optional[int] = None,
-) -> tuple[bytearray, dict[int, CodeLocation]]:
+def link(objects: list[tuple[Any, ObjectModule]], image_size: int) -> tuple[bytearray, dict[int, CodeLocation]]:
     """
     Link object modules into one image
 
@@ -126,7 +123,7 @@ def link(
     asects.sort(key=lambda s: s.address)
 
     rsect_bins = init_bins(asects, image_size)
-    sect_addresses = place_sects(rsects, rsect_bins, image_size)
+    sect_addresses = place_sects(rsects, rsect_bins)
     ents = gather_ents(asects + rsects, sect_addresses)
     image = bytearray(2 ** 16)
     code_locations: dict[int, CodeLocation] = {}
