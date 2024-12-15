@@ -28,6 +28,12 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
             new.relocatable = copy(sections[0].relocatable)
             prev_size = len(new.data)
             for rsect in sections[1:]:
+                if (missing_attrs := set(new.attributes).symmetric_difference(rsect.attributes)):
+                    message = (
+                        f"two sections with name {name} have different sets of attributes, "
+                        f"different are: {missing_attrs}"
+                    )
+                    raise ValueError(message)
                 new.alignment = lcm(new.alignment, rsect.alignment)
                 prev_size = (prev_size + rsect.alignment - 1) // rsect.alignment * rsect.alignment
                 new.data.extend(bytearray(prev_size - len(new.data)))
