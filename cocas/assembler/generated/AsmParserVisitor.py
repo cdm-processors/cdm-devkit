@@ -1,4 +1,4 @@
-# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.1
+# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .AsmParser import AsmParser
@@ -34,6 +34,16 @@ class AsmParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AsmParser#templateSection.
     def visitTemplateSection(self, ctx:AsmParser.TemplateSectionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#section_attr.
+    def visitSection_attr(self, ctx:AsmParser.Section_attrContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#section_attrs.
+    def visitSection_attrs(self, ctx:AsmParser.Section_attrsContext):
         return self.visitChildren(ctx)
 
 

@@ -29,6 +29,8 @@ ANGLE_BRACKET : '>' ;
 OPEN_PAREN : '(' ;
 CLOSE_PAREN : ')' ;
 LINE_MARK_MARKER: '-|';
+OPEN_SQUARE_BRACKET : '[';
+CLOSE_SQUARE_BRACKET : ']';
 
 REGISTER : 'r'DECIMAL_NUMBER ;
 WORD : [a-zA-Z_][a-zA-Z_0-9]* ;
@@ -48,4 +50,3 @@ BASE64 : 'fp-' [a-zA-Z0-9/+=]+;
 
 
 UNEXPECTED_TOKEN: [\u0000-\uFFFE];
-
