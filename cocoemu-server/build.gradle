@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'io.freefair.lombok' version("8.6")
 }
 
 group = 'org.cdm.cocoemu.server'
@@ -27,9 +28,7 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    compileOnly 'org.projectlombok:lombok:1.18.32'
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
-    compileOnly "org.jcommander:jcommander:2.0"
+    implementation "com.beust:jcommander:1.82"
 }
 
 test {
