@@ -7,9 +7,9 @@ import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
 @Getter
 public class DebugEnvironment<T> {
     private final ProcessorAdapter<T> processorAdapter;
-    private final Component processor;
-    protected DebugEnvironment(ProcessorAdapter<T> processorAdapter, Component processor) {
+    private final Component system;
+    protected DebugEnvironment(ProcessorAdapter<T> processorAdapter, Component system) {
         this.processorAdapter = processorAdapter;
-        this.processor = processor;
+        this.system = system;
     }
 }

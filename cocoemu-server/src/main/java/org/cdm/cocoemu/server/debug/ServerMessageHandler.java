@@ -5,9 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.cdm.cocoemu.core.Component;
+import org.cdm.cocoemu.core.image.Image;
+import org.cdm.cocoemu.core.image.ImageLoader;
 import org.cdm.cocoemu.server.adapter.Factory;
 import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
-import org.cdm.cocoemu.server.adapter.ProcessorType;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
@@ -122,8 +123,11 @@ public class ServerMessageHandler extends MessageHandler {
         lineLocations.clear();
         breakpoints.clear();
 
-        DebugEnvironment<?> environment = Factory.getDebugEnvironment(ProcessorType.valueOf(initializationMessage.target), initializationMessage.memoryConfiguration);
-        this.processor = environment.getProcessor();
+        DebugEnvironment<?> environment = Factory.getDebugEnvironment(initializationMessage.target, initializationMessage.memoryConfiguration);
+        if (environment == null) {
+            return new FailResponse("No such system found");
+        }
+        this.processor = environment.getSystem();
         this.adapter = environment.getProcessorAdapter();
 
         return new InitializationResponse(true,
@@ -140,12 +144,19 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleGetMemoryMessage(GetMemoryMessage getMemoryMessage) {
-        return new GetMemoryResponse(new ArrayList<>());
+        return new GetMemoryResponse(adapter.getBankedRam().getImage().getValues());
     }
 
     @Override
     protected DebuggerResponse handlePathLoadMessage(PathLoadMessage pathLoadMessage) {
-        return null;
+        Image i;
+        try {
+            i = ImageLoader.loadFromFile(pathLoadMessage.path);
+        } catch (Exception e) {
+            return new FailResponse(e.toString());
+        }
+
+        return new ActionResponse(MessageActions.LOAD);
     }
 
     @Override

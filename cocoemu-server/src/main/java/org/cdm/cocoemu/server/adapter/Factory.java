@@ -1,6 +1,7 @@
 package org.cdm.cocoemu.server.adapter;
 
 import org.cdm.cocoemu.components.processors.cdm16.Cdm16;
+import org.cdm.cocoemu.core.Component;
 import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.server.debug.DebugEnvironment;
 import org.cdm.cocoemu.systems.HarvardSystem;
@@ -24,11 +25,16 @@ public class Factory {
 
         supportedTargets.put(
                 "cdm16",
-                Arrays.asList(ProcessorType.CDM16, ProcessorType.CDM16E)
+                Collections.singletonList(ProcessorType.CDM16)
+        );
+
+        supportedTargets.put(
+                "cdm16e",
+                Collections.singletonList(ProcessorType.CDM16E)
         );
     }
 
-    public static DebugEnvironment<?> getDebugEnvironment(ProcessorType processorType, String memoryConfiguration) {
+    public static DebugEnvironment<? extends Component> getDebugEnvironment(ProcessorType processorType, String memoryConfiguration) {
         switch (processorType) {
             case CDM8:
 //                return new Cdm8CircuitAdapter();
@@ -48,6 +54,19 @@ public class Factory {
             default:
                 throw new UnsupportedOperationException();
         }
+    }
+
+    public static DebugEnvironment<? extends Component> getDebugEnvironment(String target, String memoryConfiguration) {
+        if (!supportedTargets.containsKey(target)) {
+            return null;
+        }
+
+        List<ProcessorType> processors = supportedTargets.get(target);
+        DebugEnvironment<? extends Component> environment = null;
+        for (ProcessorType processorType : processors) {
+             environment = Factory.getDebugEnvironment(processorType, memoryConfiguration);
+        }
+        return environment;
     }
 }
 
