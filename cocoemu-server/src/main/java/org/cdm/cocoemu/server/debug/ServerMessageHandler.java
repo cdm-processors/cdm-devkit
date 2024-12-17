@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.cdm.cocoemu.components.memory.Memory;
 import org.cdm.cocoemu.core.Component;
 import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.core.image.ImageLoader;
@@ -24,11 +25,10 @@ public class ServerMessageHandler extends MessageHandler {
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
 
-        List<Integer> currentBreakpoints = breakpoints;
-        List<Integer> currentLineLocations = lineLocations;
+
 
         StopConditions chekedStopConditions =
-                StopConditions.check(state, info, stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(state, info, stopConditions, breakpoints, lineLocations);
 
         return state.isHalted()
                 || chekedStopConditions.stopOnFetch()
@@ -45,13 +45,10 @@ public class ServerMessageHandler extends MessageHandler {
             processor.clockFalling();
             processor.update();
         } while (!tickPredicate(adapter.getProcessorState(), adapter, stopConditions));
-        processorState = adapter.getProcessorState();
-
-        List<Integer> currentBreakpoints = breakpoints;
-        List<Integer> currentLineLocations = lineLocations;
+//        processorState = adapter.getProcessorState();
 
         StopConditions chekedStopConditions =
-                StopConditions.check(processorState, adapter ,stopConditions, currentBreakpoints, currentLineLocations);
+                StopConditions.check(processorState = adapter.getProcessorState(), adapter ,stopConditions, breakpoints, lineLocations);
 
         String reason = DebugEvent.REASON_UNKNOWN;
 
@@ -76,7 +73,6 @@ public class ServerMessageHandler extends MessageHandler {
         }
 
         sendDebugEvent(reason);
-
     }
 
     @Override
@@ -155,6 +151,12 @@ public class ServerMessageHandler extends MessageHandler {
         } catch (Exception e) {
             return new FailResponse(e.toString());
         }
+        Memory rom = adapter.getBankedRom();
+        i.pad(rom.size(), 0);
+
+        rom.getBuffer().clear();
+        rom.getBuffer().put(i.getBytes(), 0, rom.size());
+        rom.getBuffer().flip();
 
         return new ActionResponse(MessageActions.LOAD);
     }

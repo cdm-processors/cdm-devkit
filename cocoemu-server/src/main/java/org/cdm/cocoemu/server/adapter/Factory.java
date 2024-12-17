@@ -43,9 +43,11 @@ public class Factory {
             case CDM16:
                 Cdm16 processor = new Cdm16();
                 if (memoryConfiguration.equals(MemoryConfiguratons.VON_NEUMANN)) {
-                    return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(new VonNeumannSystem(processor, new Image())), processor) {};
+                    VonNeumannSystem system = new VonNeumannSystem(processor, new Image());
+                    return new DebugEnvironment<>(new Cdm16VonNeumannSystemAdapter(system), system) {};
                 } else if (memoryConfiguration.equals(MemoryConfiguratons.HARVARD)) {
-                    return new DebugEnvironment<>(new Cdm16HarvardSystemAdapter(new HarvardSystem(processor, new Image())), processor) {};
+                    HarvardSystem system = new HarvardSystem(processor, new Image());
+                    return new DebugEnvironment<>(new Cdm16HarvardSystemAdapter(system), system) {};
                 } else {
                     throw new UnsupportedOperationException();
                 }
