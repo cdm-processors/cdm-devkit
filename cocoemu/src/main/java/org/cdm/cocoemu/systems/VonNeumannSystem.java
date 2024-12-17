@@ -24,7 +24,6 @@ public class VonNeumannSystem implements Component {
 
         image.pad(MEMORY_SIZE, 0);
         ram = new BankedRam(image);
-
         update();
     }
 
