@@ -3,7 +3,7 @@ plugins {
     id "io.freefair.lombok" version "8.6"
 }
 
-group = 'org.cdm.emulator'
+group = 'org.cdm.cocoemu'
 
 repositories {
     mavenCentral()
