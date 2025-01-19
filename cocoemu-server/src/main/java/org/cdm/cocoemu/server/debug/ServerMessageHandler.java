@@ -1,31 +1,26 @@
 package org.cdm.cocoemu.server.debug;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.cdm.cocoemu.components.memory.Memory;
-import org.cdm.cocoemu.core.Component;
 import org.cdm.cocoemu.core.image.Image;
 import org.cdm.cocoemu.core.image.ImageLoader;
-import org.cdm.cocoemu.server.adapter.Factory;
-import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
+import org.cdm.cocoemu.server.adapters.SystemAdapter;
 import org.cdm.debug.MessageHandler;
 import org.cdm.debug.dto.*;
 import org.cdm.debug.runtime.ProcessorInfo;
 import org.cdm.debug.runtime.ProcessorState;
 import org.cdm.debug.runtime.StopConditions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ServerMessageHandler extends MessageHandler {
-    private Component processor;
-    private ProcessorAdapter<?> adapter;
+    private DebugEnvironment debugEnvironment;
+
     private List<Integer> lineLocations = new ArrayList<>();
     private List<Integer> breakpoints = new ArrayList<>();
 
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
-
-
 
         StopConditions chekedStopConditions =
                 StopConditions.check(state, info, stopConditions, breakpoints, lineLocations);
@@ -38,17 +33,17 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public void runSimulation(StopConditions stopConditions) {
+        SystemAdapter adapter = debugEnvironment.getSystemAdapter();
 
         ProcessorState processorState;
         do {
-            processor.clockRising();
-            processor.clockFalling();
-            processor.update();
-        } while (!tickPredicate(adapter.getProcessorState(), adapter, stopConditions));
-//        processorState = adapter.getProcessorState();
+            debugEnvironment.getSystem().clockRising();
+            debugEnvironment.getSystem().clockFalling();
+            debugEnvironment.getSystem().update();
+        } while (!tickPredicate(adapter.getProcessorState(), adapter.getProcessorInfo(), stopConditions));
 
         StopConditions chekedStopConditions =
-                StopConditions.check(processorState = adapter.getProcessorState(), adapter ,stopConditions, breakpoints, lineLocations);
+                StopConditions.check(processorState = adapter.getProcessorState(), adapter.getProcessorInfo(), stopConditions, breakpoints, lineLocations);
 
         String reason = DebugEvent.REASON_UNKNOWN;
 
@@ -110,7 +105,7 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        processor.update();
+        debugEnvironment.getSystem().update();
         return new ActionResponse(MessageActions.RESET);
     }
 
@@ -119,28 +114,37 @@ public class ServerMessageHandler extends MessageHandler {
         lineLocations.clear();
         breakpoints.clear();
 
-        DebugEnvironment<?> environment = Factory.getDebugEnvironment(initializationMessage.target, initializationMessage.memoryConfiguration);
+        DebugEnvironment environment = DebugEnvironmentFactory.getDebugEnvironment(
+                initializationMessage.target,
+                initializationMessage.memoryConfiguration
+        );
         if (environment == null) {
-            return new FailResponse("No such system found");
+            return new FailResponse(String.format(
+                    "Can't create debug environment with processor %s and memory configuration %s",
+                    initializationMessage.target,
+                    initializationMessage.memoryConfiguration
+            ));
         }
-        this.processor = environment.getSystem();
-        this.adapter = environment.getProcessorAdapter();
+        this.debugEnvironment = environment;
 
-        return new InitializationResponse(true,
-                Arrays.asList("r0", "r1", "r2", "r3", "r4", "r5", "r6", "fp", "pc", "sp", "ps"),
-                Arrays.asList(16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16),
-                1_048_576
+        ProcessorInfo processorInfo = debugEnvironment.getSystemAdapter().getProcessorInfo();
+
+        return new InitializationResponse(
+                processorInfo.supportsExceptions(),
+                processorInfo.getRegisterNames(),
+                processorInfo.getRegisterSizes(),
+                processorInfo.getMemorySize()
         );
     }
 
     @Override
     protected DebuggerResponse handleGetRegistersMessage() {
-        return new GetRegistersResponse(adapter.getProcessorState().getRegisters());
+        return new GetRegistersResponse(debugEnvironment.getSystemAdapter().getProcessorState().getRegisters());
     }
 
     @Override
     protected DebuggerResponse handleGetMemoryMessage(GetMemoryMessage getMemoryMessage) {
-        return new GetMemoryResponse(adapter.getBankedRam().getImage().getValues());
+        return new GetMemoryResponse(debugEnvironment.getSystemAdapter().getRam().getImage().getValues());
     }
 
     @Override
@@ -151,7 +155,7 @@ public class ServerMessageHandler extends MessageHandler {
         } catch (Exception e) {
             return new FailResponse(e.toString());
         }
-        Memory rom = adapter.getBankedRom();
+        Memory rom = debugEnvironment.getSystemAdapter().getRom();
         i.pad(rom.size(), 0);
 
         rom.getBuffer().clear();

@@ -2,14 +2,15 @@ package org.cdm.cocoemu.server.debug;
 
 import lombok.Getter;
 import org.cdm.cocoemu.core.Component;
-import org.cdm.cocoemu.server.adapter.ProcessorAdapter;
+import org.cdm.cocoemu.server.adapters.SystemAdapter;
 
 @Getter
-public class DebugEnvironment<T extends Component> {
-    private final ProcessorAdapter<T> processorAdapter;
+public class DebugEnvironment {
+    private final SystemAdapter systemAdapter;
     private final Component system;
-    protected DebugEnvironment(ProcessorAdapter<T> processorAdapter, Component system) {
-        this.processorAdapter = processorAdapter;
+
+    public DebugEnvironment(Component system, SystemAdapter systemAdapter) {
+        this.systemAdapter = systemAdapter;
         this.system = system;
     }
 }
