@@ -3,5 +3,5 @@ rootProject.name = 'cocoemu-server'
 include ':cocoemu'
 project(':cocoemu').projectDir = file('../cocoemu')
 
-include ':cdp_java'
-project(':cdp_java').projectDir = file('../cdp-java')
+include ':cdp'
+project(':cdp').projectDir = file('../cdp-java')

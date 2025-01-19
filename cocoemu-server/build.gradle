@@ -1,34 +1,22 @@
 plugins {
     id 'java'
-    id 'io.freefair.lombok' version("8.6")
+    id 'io.freefair.lombok' version '8.6'
 }
 
 group = 'org.cdm.cocoemu.server'
-version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
-configurations {
-    cocoemu
-    cdp_java
-}
-
 dependencies {
-    cocoemu project(':cocoemu')
-    configurations.implementation.extendsFrom(configurations.cocoemu)
+    implementation project(':cocoemu')
+    implementation project(':cdp')
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    cdp_java project(':cdp_java')
-    configurations.implementation.extendsFrom(configurations.cdp_java)
-
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.beust:jcommander:1.82'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation "com.beust:jcommander:1.82"
 }
 
 test {
@@ -37,15 +25,15 @@ test {
 
 jar {
     manifest {
-        attributes('Library-Class': 'org.cdm.debug.*')
+        attributes 'Main-Class': 'org.cdm.cocoemu.server.Main'
     }
 
     from {
-        configurations.cocoemu.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-        configurations.cdp_java.collect{
-            it.isDirectory() ? it : zipTree(it)
-        }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
