@@ -105,7 +105,10 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        return new FailResponse("Reset request is not implemented");
+        debugEnvironment.getSystemAdapter().resetSystem();
+        debugEnvironment.getSystem().update();
+
+        return new ActionResponse(MessageActions.RESET);
     }
 
     @Override

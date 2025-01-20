@@ -14,6 +14,11 @@ public class Cdm16HarvardSystemAdapter extends SystemAdapter {
     }
 
     @Override
+    public void resetSystem() {
+        system.cdm16.reset();
+    }
+
+    @Override
     public Memory getRam() {
         return system.ram;
     }

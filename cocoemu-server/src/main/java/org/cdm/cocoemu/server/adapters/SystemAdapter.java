@@ -19,6 +19,8 @@ public abstract class SystemAdapter {
         return processorAdapter.getProcessorState();
     }
 
+    public abstract void resetSystem();
+
     public abstract Memory getRam();
 
     public abstract Memory getRom();
