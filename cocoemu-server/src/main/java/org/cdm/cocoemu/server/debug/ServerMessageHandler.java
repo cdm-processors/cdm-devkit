@@ -19,13 +19,15 @@ public class ServerMessageHandler extends MessageHandler {
     private List<Integer> lineLocations = new ArrayList<>();
     private List<Integer> breakpoints = new ArrayList<>();
 
+    private boolean simulationRunning = false;
+
     private boolean tickPredicate(ProcessorState state, ProcessorInfo info, StopConditions stopConditions) {
         handleMessage(false);
 
         StopConditions chekedStopConditions =
                 StopConditions.check(state, info, stopConditions, breakpoints, lineLocations);
 
-        return state.isHalted()
+        return !simulationRunning || state.isHalted()
                 || chekedStopConditions.stopOnFetch()
                 || chekedStopConditions.stopOnBreakpoint()
                 || chekedStopConditions.stopOnLine()
@@ -33,6 +35,12 @@ public class ServerMessageHandler extends MessageHandler {
     }
 
     public void runSimulation(StopConditions stopConditions) {
+        if (simulationRunning) {
+            return;
+        } else {
+            simulationRunning = true;
+        }
+
         SystemAdapter adapter = debugEnvironment.getSystemAdapter();
 
         ProcessorState processorState;
@@ -67,6 +75,12 @@ public class ServerMessageHandler extends MessageHandler {
             reason = DebugEvent.REASON_HALT;
         }
 
+        if (!simulationRunning) {
+            reason = DebugEvent.REASON_PAUSE;
+        }
+
+        simulationRunning = false;
+
         sendDebugEvent(reason);
     }
 
@@ -100,7 +114,9 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handlePauseMessage() {
-        return new FailResponse("Pause request is not implemented");
+        simulationRunning = false;
+
+        return new ActionResponse(MessageActions.PAUSE);
     }
 
     @Override
