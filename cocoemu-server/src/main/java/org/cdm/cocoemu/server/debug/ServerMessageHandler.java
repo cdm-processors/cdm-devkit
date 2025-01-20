@@ -100,13 +100,12 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handlePauseMessage() {
-        return new ActionResponse(MessageActions.PAUSE);
+        return new FailResponse("Pause request is not implemented");
     }
 
     @Override
     protected DebuggerResponse handleResetMessage() {
-        debugEnvironment.getSystem().update();
-        return new ActionResponse(MessageActions.RESET);
+        return new FailResponse("Reset request is not implemented");
     }
 
     @Override
@@ -167,16 +166,16 @@ public class ServerMessageHandler extends MessageHandler {
 
     @Override
     protected DebuggerResponse handleBytesLoadMessage(BytesLoadMessage bytesLoadMessage) {
-        return new ActionResponse(MessageActions.LOAD);
+        return new FailResponse("BytesLoad request is not implemented");
     }
 
     @Override
     protected DebuggerResponse handleSetMemoryMessage(SetMemoryMessage setMemoryMessage) {
-        return new ActionResponse(MessageActions.SET_MEMORY);
+        return new FailResponse("SetMemory request is not implemented");
     }
 
     @Override
     protected DebuggerResponse handleGetTunnelMessage(GetTunnelMessage getTunnelMessage) {
-        return new GetTunnelResponse(0);
+        return new FailResponse("GetTunnel request is not implemented");
     }
 }
