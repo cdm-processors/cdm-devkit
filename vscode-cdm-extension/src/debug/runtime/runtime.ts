@@ -2,13 +2,13 @@ import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
 
-import { ArchitectureId } from "../protocol/architectures";
-import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
-import { TargetGeneralId } from "../protocol/targets";
+import { ArchitectureId } from "../../protocol/architectures";
+import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../../protocol/general";
+import { TargetGeneralId } from "../../protocol/targets";
 
-export class CdmDebugRuntime extends EventEmitter {
-    private ws: WebSocket;
-    private buffered: string[] = [];
+export abstract class CdmDebugRuntime extends EventEmitter {
+    protected ws: WebSocket;
+    protected buffered: string[] = [];
 
     public constructor(
         address: string,
@@ -206,7 +206,17 @@ export class CdmDebugRuntime extends EventEmitter {
     }
 
     public shutdown(): this {
-        this.ws.close();
+        if (this.ws) {
+            this.ws.close();
+            console.log(`WebSocket connection closed.`);
+        } else {
+            console.warn(`No WebSocket connection found to shut down.`);
+        }
         return this;
     }
 }
+
+
+
+
+
