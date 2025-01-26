@@ -148,12 +148,15 @@ java: emulator_resources gradlew
 		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE) \
 	)
 
+	$(CD) $(CURRENT_DIR)$(SLASH)cocoemu-server && \
+		$(GRADLEW) jar $(NEW_LINE)
+
 # Set +x permissions for ./gradlew scripts
 gradlew:
 	$(SET_PERMISSIONS)
 
 # Build Python-based projects
-python:
+python: java
 	@echo ------------------------
 	@echo Building Python projects
 	@echo ------------------------
@@ -213,6 +216,9 @@ clean: clean_microcode clean_emulator_resources
 		$(RM) $(JAVA_PROJECTS_FOLDER)$(SLASH)$(PROJECT)$(SLASH)build \
 			  $(JAVA_PROJECTS_FOLDER)$(SLASH)$(PROJECT)$(SLASH).gradle $(NEW_LINE) \
 	)
+
+	$(RM) $(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)build \
+			$(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH).gradle $(NEW_LINE)
 
 	$(RM_FILE) $(VSCODE_EXTENSION_FOLDER)$(SLASH)vscode-cdm-extension-*.*.*.vsix
 
