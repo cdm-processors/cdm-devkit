@@ -11,6 +11,8 @@ import { ArchitectureId } from "../protocol/architectures";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
 import { MemoryViewManager, SymlinkManager, PlainFileManager } from "./memoryView";
+import { EmulatorDebugRuntime } from "./runtime/emulator";
+import { ExternalDebugRuntime } from "./runtime/external";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
@@ -20,6 +22,8 @@ export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
         image: string;
         debug: string;
     };
+    environment: "emulator" | "external";
+    emulatorPath?: string;
 };
 
 export class CdmDebugSession extends DebugSession {
@@ -85,10 +89,22 @@ export class CdmDebugSession extends DebugSession {
     ): Promise<void> {
         console.log("Received a LaunchRequest from the client");
 
-        const { address, architecture, target, artifacts: { image, debug } } = args;
+        const { address, architecture, target, artifacts: { image, debug }, environment, emulatorPath} = args;
         this.image = image;
 
-        this.runtime = new CdmDebugRuntime(address);
+        //this.runtime = new CdmDebugRuntime(address);
+
+        if (environment == "emulator") {
+            console.log("Launching in emulator mode");
+            this.runtime = new EmulatorDebugRuntime(address, emulatorPath);
+        }
+        else if (environment === "external") {
+            console.log("Launching in external mode");  
+            this.runtime = new ExternalDebugRuntime(address);
+        } else {
+            console.error("Unknown environment");
+            return;
+        }
         this.runtime.once("initialized", (exceptions, names, sizes, ram) => {
             this.ram = ram;
             this.controller.issueReference((ref) => {
