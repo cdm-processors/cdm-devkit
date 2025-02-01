@@ -8,7 +8,7 @@ export class ExternalDebugRuntime extends CdmDebugRuntime {
     }
 
     public shutdown(): this {
-        this.ws.close();
+        super.shutdown();
         return this;
     }
 }

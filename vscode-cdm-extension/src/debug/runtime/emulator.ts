@@ -13,7 +13,6 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
     private startEmulator(emulatorPath: string): void {
         console.log(`Starting emulator at path: ${emulatorPath}`);
         
-        // Create a new terminal to run the emulator
         this.terminal = vscode.window.createTerminal('Emulator Terminal');
         this.terminal.sendText(emulatorPath);
         this.terminal.show();
@@ -21,7 +20,8 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
 
     public shutdown(): this {
         console.log(`Shutting down the emulator.`);
-        
+        super.shutdown(); 
+
         if (this.terminal) {
             this.terminal.dispose();
             this.terminal = undefined; 
@@ -29,7 +29,6 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
             console.warn(`No terminal found to shut down.`);
         }
 
-        this.ws.close();
         return this;
     }
 }

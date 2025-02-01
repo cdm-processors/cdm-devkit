@@ -205,48 +205,18 @@ export abstract class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 
-    public abstract shutdown(): this; 
-}
-
-export class ExternalDebugRuntime extends CdmDebugRuntime {
-    public constructor(address: string) {
-        super(address);
-    }
-
     public shutdown(): this {
-        this.ws.close();
-        return this;
-    }
-}
-
-export class EmulatorDebugRuntime extends CdmDebugRuntime {
-    private terminal: vscode.Terminal | undefined;
-
-    public constructor(address: string, emulatorPath: string) {
-        super(address);
-        this.startEmulator(emulatorPath);
-    }
-
-    private startEmulator(emulatorPath: string): void {
-        console.log(`Starting emulator at path: ${emulatorPath}`);
-        
-        this.terminal = vscode.window.createTerminal('Emulator Terminal');
-        this.terminal.sendText(emulatorPath);
-        this.terminal.show();
-    }
-
-    public shutdown(): this {
-        console.log(`Shutting down the emulator.`);
-        
-        if (this.terminal) {
-            this.terminal.dispose();
-            this.terminal = undefined; 
+        if (this.ws) {
+            this.ws.close();
+            console.log(`WebSocket connection closed.`);
         } else {
-            console.warn(`No terminal found to shut down.`);
+            console.warn(`No WebSocket connection found to shut down.`);
         }
-
-        this.ws.close();
         return this;
     }
 }
+
+
+
+
 
