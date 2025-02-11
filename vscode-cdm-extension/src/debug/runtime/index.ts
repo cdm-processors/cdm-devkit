@@ -6,16 +6,32 @@ import { ArchitectureId } from "../../protocol/architectures";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../../protocol/general";
 import { TargetGeneralId } from "../../protocol/targets";
 
+const CONNECTION_TIMEOUT = 5000;
+
 export abstract class CdmDebugRuntime extends EventEmitter {
-    protected ws: WebSocket;
+    protected address: string;
+
+    protected ws!: WebSocket;
     protected buffered: string[] = [];
 
-    public constructor(
-        address: string,
-    ) {
+    public constructor(address: string) {
         super();
 
-        this.ws = new WebSocket(address);
+        this.address = address;
+    }
+
+    public async start() {
+        this.ws = new WebSocket(this.address);
+
+        setTimeout(() => {
+            if (this.ws.readyState !== this.ws.OPEN) {
+                const errorMessage = "Websocket connection timeout";
+                console.error(errorMessage);
+                this.emit("error", errorMessage);
+                return;
+            }
+        }, CONNECTION_TIMEOUT);
+
         this.ws.on("message", (data) => {
             let decoded = data.toString();
             let unmarshalled = JSON.parse(decoded);
@@ -111,7 +127,7 @@ export abstract class CdmDebugRuntime extends EventEmitter {
     public once(eventName: "error", listener: (body: any) => void): this;
     public once(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.once(eventName, listener);
-    }    
+    }
 
     private send(obj: any): void {
         let marshalled = JSON.stringify(obj);
