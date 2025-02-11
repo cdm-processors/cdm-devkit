@@ -14,6 +14,8 @@ export abstract class CdmDebugRuntime extends EventEmitter {
     protected ws!: WebSocket;
     protected buffered: string[] = [];
 
+    protected closed: boolean = false;
+
     public constructor(address: string) {
         super();
 
@@ -27,11 +29,10 @@ export abstract class CdmDebugRuntime extends EventEmitter {
         const connectionTimeout = connectionConfiguration.get("timeout") as number;
         
         setTimeout(() => {
-            if (this.ws.readyState !== this.ws.OPEN) {
+            if (this.ws.readyState !== this.ws.OPEN && !this.closed) {
                 const errorMessage = "Websocket connection timeout";
                 console.error(errorMessage);
                 this.emit("error", errorMessage);
-                return;
             }
         }, connectionTimeout);
 
@@ -225,6 +226,8 @@ export abstract class CdmDebugRuntime extends EventEmitter {
     }
 
     public shutdown(): this {
+        this.closed = true;
+
         if (this.ws) {
             this.ws.close();
             console.log(`WebSocket connection closed.`);
@@ -234,8 +237,3 @@ export abstract class CdmDebugRuntime extends EventEmitter {
         return this;
     }
 }
-
-
-
-
-
