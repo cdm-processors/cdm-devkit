@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { CdmDebugRuntime } from '.';
-import { sleep } from '../../stdlib';
+import { parseAddress, sleep } from '../../stdlib';
 
 export class EmulatorDebugRuntime extends CdmDebugRuntime {
     private terminal!: vscode.Terminal;
@@ -12,9 +12,11 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
 
     public async start() {
         const emulatorConfiguration = vscode.workspace.getConfiguration("cdm.emulator");
-        
+
         const cocoemuExecutable = emulatorConfiguration.get("path") as string;
-        this.startEmulator(cocoemuExecutable);
+        const { port } = parseAddress(this.address)!;
+
+        this.startEmulator(cocoemuExecutable, port);
 
         // Wait for emulator to start
         // TODO: rewrite
@@ -24,16 +26,18 @@ export class EmulatorDebugRuntime extends CdmDebugRuntime {
         await super.start();
     }
 
-    private startEmulator(emulatorPath: string): void {
-        console.log(`Starting emulator at path: ${emulatorPath}`);
+    private startEmulator(path: string, port: number): void {
+        console.log(`Starting emulator at path: ${path} on port ${port}`);
+
+        const terminalString = `${path} --port ${port}`;
 
         this.terminal = vscode.window.createTerminal('Emulator Terminal');
-        this.terminal.sendText(emulatorPath);
+        this.terminal.sendText(terminalString);
     }
 
     public shutdown(): this {
         super.shutdown();
-        
+
         console.log(`Shutting down the emulator.`);
         if (this.terminal) {
             this.terminal.dispose();

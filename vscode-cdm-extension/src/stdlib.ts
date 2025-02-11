@@ -6,7 +6,7 @@ import pathlib from "path";
 import vscode from "vscode";
 
 export function isErrnoException(obj: any): obj is NodeJS.ErrnoException {
-    return obj instanceof Error;
+	return obj instanceof Error;
 }
 
 export async function tmpdir(name: string): Promise<{ path: string, dispose: () => void }> {
@@ -31,4 +31,30 @@ export async function tmpdir(name: string): Promise<{ path: string, dispose: () 
 
 export async function sleep(ms: number) {
 	await new Promise((r) => setTimeout(r, ms));
+}
+
+export type Address = {
+	protocol: string,
+	host: string,
+	port: number,
+}
+
+export function parseAddress(address: string): Address | undefined {
+	const stringParts = address.split(":");
+
+	if (stringParts.length != 3) {
+		return undefined;
+	}
+
+	const port = Number(stringParts[2]);
+
+	if (Number.isNaN(port)) {
+		return undefined;
+	}
+
+	return {
+		protocol: stringParts[0],
+		host: stringParts[1],
+		port: port,
+	};
 }

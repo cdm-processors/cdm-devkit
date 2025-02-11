@@ -12,6 +12,7 @@ import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
 import { MemoryViewManager, SymlinkManager, PlainFileManager } from "./memoryView";
 import { createDebugRuntime, EnvironmentId } from "./runtime/environment";
+import { parseAddress } from "../stdlib";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
@@ -97,6 +98,12 @@ export class CdmDebugSession extends DebugSession {
                 "Currently only CdM-16 emulator is suppoted. " +
                 "CdM-8/e degugging is available only in external environment (e.g. Logisim)"
             );
+            return;
+        }
+
+        if (!parseAddress(address)) {
+            this.sendEvent(new TerminatedEvent());
+            vscode.window.showErrorMessage("Can't parse address: " + address);
             return;
         }
 
