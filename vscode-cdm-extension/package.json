@@ -150,6 +150,11 @@
                     "type": "string",
                     "default": "cocas",
                     "markdownDescription": "Path to the `cocas` executable. By default, will try to use the one in `PATH`."
+                },
+                "cdm.path.cocoemu": {
+                    "type": "string",
+                    "default": "cocoemu-server",
+                    "markdownDescription": "Path to the `cocoemu-server` executable. By default, will try to use the one in `PATH`."
                 }
             }
         },
@@ -183,7 +188,8 @@
                             "address",
                             "architecture",
                             "target",
-                            "artifacts"
+                            "artifacts",
+                            "environment"
                         ],
                         "properties": {
                             "address": {
@@ -219,6 +225,14 @@
                                     }
                                 },
                                 "description": "The build artifacts file paths."
+                            },
+                            "environment": {
+                                "enum": [
+                                    "emulator",
+                                    "external"
+                                ],
+                                "default": "emulator",
+                                "description": "Runtime environment: emulator or external (e.g. Logisim)."
                             }
                         }
                     }
