@@ -1,7 +1,7 @@
 import vscode from "vscode";
 
 import { updateLaunchConfigurations, updateTasksConfiguration } from "./configurations";
-import { ARCHITECTURE_ITEMS, SOURCE_ITEMS, TARGET_ITEMS } from "./picks";
+import { ARCHITECTURE_ITEMS, ENVIRONMENT_ITEMS, SOURCE_ITEMS, TARGET_ITEMS } from "./picks";
 import { createTemplate, retrieveAssemblyFiles } from "./sources";
 
 export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
@@ -20,10 +20,15 @@ export async function bootstrapEnvironment(context: vscode.ExtensionContext) {
         return vscode.window.showInformationMessage("Stopping the bootstrap process, because a source discovery strategy wasn't picked.");
     }
 
+    const environment = await vscode.window.showQuickPick(ENVIRONMENT_ITEMS, { title: "Pick a runime environment" });
+    if (environment?.id === undefined) {
+        return vscode.window.showInformationMessage("Stopping the bootstrap process, because a runime environment wasn't picked.");
+    }
+
     const sourceSet = 
         discoveryStrategy.id === "template" ? await createTemplate(context, target.id) :
         discoveryStrategy.id === "scan" ? await retrieveAssemblyFiles() : [];
 
-    updateLaunchConfigurations(target.id, architecture.id);
+    updateLaunchConfigurations(target.id, architecture.id, environment.id);
     await updateTasksConfiguration(target.id, sourceSet);
 }
