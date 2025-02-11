@@ -146,15 +146,25 @@
         "configuration": {
             "title": "CdM Processors",
             "properties": {
-                "cdm.path.assembler": {
+                "cdm.assembler.path": {
                     "type": "string",
                     "default": "cocas",
                     "markdownDescription": "Path to the `cocas` executable. By default, will try to use the one in `PATH`."
                 },
-                "cdm.path.cocoemu": {
+                "cdm.emulator.path": {
                     "type": "string",
                     "default": "cocoemu-server",
                     "markdownDescription": "Path to the `cocoemu-server` executable. By default, will try to use the one in `PATH`."
+                },
+                "cdm.emulator.delay": {
+                    "type": "integer",
+                    "default": 1000,
+                    "markdownDescription": "Amount of time in milliseconds to wait between starting an emulator and trying to connect to it."
+                },
+                "cdm.connection.timeout": {
+                    "type": "integer",
+                    "default": 5000,
+                    "markdownDescription": "Websocket connection timeout (in milliseconds)."
                 }
             }
         },

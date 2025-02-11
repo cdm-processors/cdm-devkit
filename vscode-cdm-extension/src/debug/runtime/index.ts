@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
@@ -5,8 +7,6 @@ import { WebSocket } from "ws";
 import { ArchitectureId } from "../../protocol/architectures";
 import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../../protocol/general";
 import { TargetGeneralId } from "../../protocol/targets";
-
-const CONNECTION_TIMEOUT = 5000;
 
 export abstract class CdmDebugRuntime extends EventEmitter {
     protected address: string;
@@ -23,6 +23,9 @@ export abstract class CdmDebugRuntime extends EventEmitter {
     public async start() {
         this.ws = new WebSocket(this.address);
 
+        const connectionConfiguration = vscode.workspace.getConfiguration("cdm.connection");
+        const connectionTimeout = connectionConfiguration.get("timeout") as number;
+        
         setTimeout(() => {
             if (this.ws.readyState !== this.ws.OPEN) {
                 const errorMessage = "Websocket connection timeout";
@@ -30,7 +33,7 @@ export abstract class CdmDebugRuntime extends EventEmitter {
                 this.emit("error", errorMessage);
                 return;
             }
-        }, CONNECTION_TIMEOUT);
+        }, connectionTimeout);
 
         this.ws.on("message", (data) => {
             let decoded = data.toString();
