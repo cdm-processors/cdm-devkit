@@ -27,14 +27,16 @@ public class Server extends WebSocketServer {
     private WebSocket currentConnection;
 
     public Server(Supplier<MessageHandler> messageHandlerFactory) {
-        super(new InetSocketAddress(DEFAULT_PORT));
-
-        this.messageHandlerFactory = messageHandlerFactory;
+        this(DEFAULT_PORT, messageHandlerFactory);
     }
+
     public Server(int port, Supplier<MessageHandler> messageHandlerFactory) {
         super(new InetSocketAddress(port));
 
         this.messageHandlerFactory = messageHandlerFactory;
+
+        // Fix BindError
+        setReuseAddr(true);
     }
 
     public BlockingQueue<RawMessage> getMessageQueue() {
