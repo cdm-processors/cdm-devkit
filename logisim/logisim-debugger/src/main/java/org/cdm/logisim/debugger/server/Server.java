@@ -22,6 +22,9 @@ public class Server extends WebSocketServer {
 
     public Server(int port) {
         super(new InetSocketAddress(port));
+
+        // Fix BindError
+        setReuseAddr(true);
     }
 
     @Override
