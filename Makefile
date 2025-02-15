@@ -148,12 +148,22 @@ java: emulator_resources gradlew
 		$(GRADLEW) jar -Pversion="$(VERSION)" $(NEW_LINE) \
 	)
 
+	$(CD) $(CURRENT_DIR)$(SLASH)cocoemu-server && \
+		$(GRADLEW) jar $(NEW_LINE)
+
 # Set +x permissions for ./gradlew scripts
 gradlew:
 	$(SET_PERMISSIONS)
 
+# Copy cocoemu-server.jar into Python package
+cocoemu_server_jar: java
+	$(MKDIR) $(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)cocoemu_server_wrapper$(SLASH)jar
+
+	$(CP) $(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)build$(SLASH)libs$(SLASH)cocoemu-server.jar \
+		$(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)cocoemu_server_wrapper$(SLASH)jar
+
 # Build Python-based projects
-python:
+python: cocoemu_server_jar
 	@echo ------------------------
 	@echo Building Python projects
 	@echo ------------------------
@@ -204,7 +214,7 @@ emulator_resources: microcode
 	$(CP) $(PROCESSOR_SCHEMES_FOLDER)$(SLASH)cdm16e$(SLASH)microcode$(SLASH)cdm16e_*.img \
 		$(CURRENT_DIR)$(SLASH)cocoemu$(SLASH)src$(SLASH)main$(SLASH)resources$(SLASH)cdm16e
 
-clean: clean_microcode clean_emulator_resources
+clean: clean_microcode clean_emulator_resources clean_cocoemu_server_jar
 	$(RM) $(BUILD_FOLDER)
 
 	$(RM) $(PYTHON_DIST_FOLDER)
@@ -214,7 +224,13 @@ clean: clean_microcode clean_emulator_resources
 			  $(JAVA_PROJECTS_FOLDER)$(SLASH)$(PROJECT)$(SLASH).gradle $(NEW_LINE) \
 	)
 
+	$(RM) $(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)build \
+			$(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH).gradle $(NEW_LINE)
+
 	$(RM_FILE) $(VSCODE_EXTENSION_FOLDER)$(SLASH)vscode-cdm-extension-*.*.*.vsix
+
+clean_cocoemu_server_jar:
+	$(RM) $(CURRENT_DIR)$(SLASH)cocoemu-server$(SLASH)cocoemu_server_wrapper$(SLASH)jar
 
 clean_microcode: clean_microcode_cdm16 clean_microcode_cdm16e
 
