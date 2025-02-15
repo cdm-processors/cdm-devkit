@@ -32,13 +32,15 @@ classifiers = [
 packages = [
     { include = "cocas" },
     { include = "synthm" },
-    { include = "cocodump" }
+    { include = "cocodump" },
+    { include = "cocoemu_server_wrapper", from = "cocoemu-server" }
 ]
 
 [tool.poetry.scripts]
 cocas = 'cocas.main:main'
 synthm = 'synthm.main:main'
 cocodump = 'cocodump.main:main'
+cocoemu-server = 'cocoemu_server_wrapper.wrapper:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
