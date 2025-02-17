@@ -1,21 +1,41 @@
+import * as vscode from 'vscode';
+
 import { EventEmitter } from "events";
 
 import { WebSocket } from "ws";
 
-import { ArchitectureId } from "../protocol/architectures";
-import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../protocol/general";
-import { TargetGeneralId } from "../protocol/targets";
+import { ArchitectureId } from "../../protocol/architectures";
+import { BreakCondition, ExecutionStop, InitializationResponse, Reason, RequestMemoryResponse, RequestRegistersResponse } from "../../protocol/general";
+import { TargetGeneralId } from "../../protocol/targets";
 
-export class CdmDebugRuntime extends EventEmitter {
-    private ws: WebSocket;
-    private buffered: string[] = [];
+export abstract class CdmDebugRuntime extends EventEmitter {
+    protected address: string;
 
-    public constructor(
-        address: string,
-    ) {
+    protected ws!: WebSocket;
+    protected buffered: string[] = [];
+
+    protected closed: boolean = false;
+
+    public constructor(address: string) {
         super();
 
-        this.ws = new WebSocket(address);
+        this.address = address;
+    }
+
+    public async start() {
+        this.ws = new WebSocket(this.address);
+
+        const connectionConfiguration = vscode.workspace.getConfiguration("cdm.connection");
+        const connectionTimeout = connectionConfiguration.get("timeout") as number;
+        
+        setTimeout(() => {
+            if (this.ws.readyState !== this.ws.OPEN && !this.closed) {
+                const errorMessage = "Websocket connection timeout";
+                console.error(errorMessage);
+                this.emit("error", errorMessage);
+            }
+        }, connectionTimeout);
+
         this.ws.on("message", (data) => {
             let decoded = data.toString();
             let unmarshalled = JSON.parse(decoded);
@@ -111,7 +131,7 @@ export class CdmDebugRuntime extends EventEmitter {
     public once(eventName: "error", listener: (body: any) => void): this;
     public once(eventName: string | symbol, listener: (...args: any[]) => void): this {
         return super.once(eventName, listener);
-    }    
+    }
 
     private send(obj: any): void {
         let marshalled = JSON.stringify(obj);
@@ -206,7 +226,14 @@ export class CdmDebugRuntime extends EventEmitter {
     }
 
     public shutdown(): this {
-        this.ws.close();
+        this.closed = true;
+
+        if (this.ws) {
+            this.ws.close();
+            console.log(`WebSocket connection closed.`);
+        } else {
+            console.warn(`No WebSocket connection found to shut down.`);
+        }
         return this;
     }
 }

@@ -2,6 +2,7 @@ import vscode from "vscode";
 
 import { DEFINED as ARCHITECTURES, ArchitectureId } from "../../protocol/architectures";
 import { DEFINED as TARGETS, TargetGeneralId } from "../../protocol/targets";
+import { DEFINED as ENVIRONMENTS, EnvironmentId } from "../../debug/runtime/environment";
 
 type IdQuickPickItem<T> = vscode.QuickPickItem & { id: T };
 
@@ -38,3 +39,11 @@ export const SOURCE_ITEMS = [
         id: "nothing",
     },
 ] as const;
+
+export const ENVIRONMENT_ITEMS: IdQuickPickItem<EnvironmentId>[] = ENVIRONMENTS.map((environment) => {
+    return {
+        label: environment.name,
+        description: environment.description,
+        id: environment.id,
+    };
+});

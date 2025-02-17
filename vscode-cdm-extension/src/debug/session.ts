@@ -11,11 +11,14 @@ import { ArchitectureId } from "../protocol/architectures";
 import { BREAKPOINT, EXCEPTION, PAUSE, STEP, STOP } from "../protocol/general";
 import { TargetGeneralId } from "../protocol/targets";
 import { MemoryViewManager, SymlinkManager, PlainFileManager } from "./memoryView";
+import { createDebugRuntime, EnvironmentId } from "./runtime/environment";
+import { parseAddress } from "../stdlib";
 
 export type CdmLaunchRequestArguments = DebugProtocol.LaunchRequestArguments & {
     address: string;
     architecture: ArchitectureId;
     target: TargetGeneralId;
+    environment: EnvironmentId;
     artifacts: {
         image: string;
         debug: string;
@@ -85,10 +88,37 @@ export class CdmDebugSession extends DebugSession {
     ): Promise<void> {
         console.log("Received a LaunchRequest from the client");
 
-        const { address, architecture, target, artifacts: { image, debug } } = args;
+        const { address, architecture, target, environment, artifacts: { image, debug } } = args;
         this.image = image;
 
-        this.runtime = new CdmDebugRuntime(address);
+        // TODO: remove when CdM-8/e emulator will be implemented
+        if (environment === "emulator" && target !== "cdm16") {
+            this.sendEvent(new TerminatedEvent());
+            vscode.window.showErrorMessage(
+                "Currently only CdM-16 emulator is suppoted. " +
+                "CdM-8/e degugging is available only in external environment (e.g. Logisim)"
+            );
+            return;
+        }
+
+        if (!parseAddress(address)) {
+            this.sendEvent(new TerminatedEvent());
+            vscode.window.showErrorMessage("Can't parse address: " + address);
+            return;
+        }
+
+        const runtime = createDebugRuntime(environment, address);
+
+        if (!runtime) {
+            this.sendEvent(new TerminatedEvent());
+            vscode.window.showErrorMessage("Can't create debug runtime: " + environment);
+            return;
+        }
+
+        this.runtime = runtime;
+
+        await this.runtime.start();
+
         this.runtime.once("initialized", (exceptions, names, sizes, ram) => {
             this.ram = ram;
             this.controller.issueReference((ref) => {

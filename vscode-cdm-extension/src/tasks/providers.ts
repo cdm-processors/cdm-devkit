@@ -27,8 +27,8 @@ export class CocasTaskProvider implements vscode.TaskProvider<vscode.Task> {
         }
         args.push(...definition.sources);
 
-        const path = vscode.workspace.getConfiguration("cdm.path");
-        const shellExecution = new vscode.ShellExecution(path.get("assembler") as string, args);
+        const assemblerConfiguration = vscode.workspace.getConfiguration("cdm.assembler");
+        const shellExecution = new vscode.ShellExecution(assemblerConfiguration.get("path") as string, args);
 
         return new vscode.Task(
             definition,
