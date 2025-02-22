@@ -7,10 +7,10 @@ First of all, you need to set up your build system to produce two files:
 - Debug information (`.dbg.json`)
 
 > [!TIP]
-> Check out [Using CLI](./7-using-cli.md) to learn how to call assembler from command line
+> Check out [Using CLI](./7-using-cli.md) to learn how to call assembler from command line.
 
 > [!IMPORTANT]
-> Make sure to export debug information during build process
+> Make sure to export debug information during build process.
 >
 > In order to do it:
 > - Add `--debug` to object file creation steps
@@ -20,14 +20,12 @@ For example, you want to build your project with `make`. That way you need to cr
 
 ```json
 {
-  // See https://go.microsoft.com/fwlink/?LinkId=733558
-  // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run Make",  // Name of task
-      "type": "shell",      // Execute command in shell
-      "command": "make"     // Command to execute
+      "label": "Run Make",
+      "type": "shell",
+      "command": "make"
     }
   ]
 }

@@ -9,7 +9,7 @@ Development kit consists of three main parts:
 
 > [!IMPORTANT]
 > Make sure you have `cocas` and `cocoemu-server` available in your PATH.
-> Otherwise, or if you want to install package to managed environment, such as venv or conda, [check this article](./9-using-python-environments.md)
+> Otherwise, or if you want to install package to managed environment, such as venv or conda, [check this article](./9-using-python-environments.md).
 
 ### Install from repository
 
@@ -32,7 +32,7 @@ pip install cdm_devkit-x.x.x-py3-none-any.whl
 
 ### Install from VS Code Marketplace
 
-Extension is published on [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=cdm-processors.vscode-cdm-extension).
+`CdM Processors` extension is published on [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=cdm-processors.vscode-cdm-extension).
 
 ### Install from binary package
 

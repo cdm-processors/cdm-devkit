@@ -12,7 +12,7 @@
 
 As mentioned before, configuration consists of two files:
 - `tasks.json` defines tasks that are run to **build** your project and produce an image
-- `launch.json` defines launch configurations that determine how your program will be run and debugged
+- `launch.json` defines launch configurations that determine how your program will be **run and debugged**
 
 ## Build configuration
 
