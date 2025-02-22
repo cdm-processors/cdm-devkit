@@ -4,6 +4,7 @@ Development kit provides several CLI tools:
 - `cocas`: assembler and linker
 - `cocodump`: disassembler
 - `synthm`: decoder synthesis utility
+- `cocoemu-server`: CdM emulator with CDP support
 
 These tools support all existing CdM processors.
 
@@ -109,3 +110,13 @@ synthm -i cdm16_decoder.def
 ```
 
 This command will compile `cdm16_decoder.def` microcode definition file and produce secondary decoder circuit and microcode binary image.
+
+## cocoemu-server
+
+`cocoemu-server` is an CdM emulator that acts as CDP server. Upon startup it listens to incoming connections from debug clients.
+
+```bash
+cocoemu-server --port 7005
+```
+
+This command will start emulator with server on 7005 port.

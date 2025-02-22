@@ -15,6 +15,7 @@ For more information check out [this](./docs/guides/1-installing.md) guide.
 - `cocas` - assembler and linker
 - `cocodump` - disassembler
 - `synthm` - secondary decoder synthesis utility
+- `cocoemu-server` - CdM emulator with CDP support
 
 ### Visual Studio Code Extension
 
