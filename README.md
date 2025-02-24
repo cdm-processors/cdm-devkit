@@ -2,7 +2,7 @@
 
 ## Installation
 
-- Install [Python package](https://pypi.org/project/cdm-devkit) with `pip install cdm-devkit`.
+- Install [Python package](https://pypi.org/project/cdm-devkit) with `pip install cdm-devkit`
 - Install [CdM Processors](https://marketplace.visualstudio.com/items?itemName=cdm-processors.vscode-cdm-extension) VS Code extension
 - Download `-misc` archive from [release](https://github.com/cdm-processors/cdm-devkit/releases/latest) page
 
