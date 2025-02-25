@@ -111,7 +111,11 @@ export class CdmDebugSession extends DebugSession {
 
         if (!runtime) {
             this.sendEvent(new TerminatedEvent());
-            vscode.window.showErrorMessage("Can't create debug runtime: " + environment);
+            if (environment) {
+                vscode.window.showErrorMessage("Can't create debug runtime: " + environment);
+            } else {
+                vscode.window.showErrorMessage("Environment is not defined in launch.json. Update launch configuration.");
+            }
             return;
         }
 
