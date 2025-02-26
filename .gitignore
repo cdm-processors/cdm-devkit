@@ -263,3 +263,6 @@ gen
 notes.txt
 
 .DS_Store
+
+# ANTLR generated files
+.antlr

@@ -22,8 +22,11 @@ section
     | tplate_header section_body # templateSection
     ;
 
-asect_header  :  Asect number NEWLINE+ ;
-rsect_header  :  Rsect name   NEWLINE+ ;
+section_attr  : WORD ;
+section_attrs : OPEN_SQUARE_BRACKET (section_attr (COMMA section_attr)*)? CLOSE_SQUARE_BRACKET;
+
+asect_header  :  Asect section_attrs? number NEWLINE+ ;
+rsect_header  :  Rsect section_attrs? name NEWLINE+ ;
 tplate_header : Tplate name   NEWLINE+ ;
 
 section_body : code_block ;
