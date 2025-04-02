@@ -15,7 +15,7 @@ from .exceptions import AntlrErrorListener, AssemblerException, AssemblerExcepti
 from .generated import MacroLexer, MacroParser, MacroVisitor
 
 
-def unique(params: list[str]):
+def unique(params: list[str], macro_stack: list[str]):
     register_available = [True] * 4
     var_params = []
     for param in params:
@@ -39,9 +39,27 @@ def unique(params: list[str]):
         defined_vars[param] = f'r{i}'
     return defined_vars
 
+def mpush(params: list[str], macro_stack: list[str]):
+    for param in params:
+        macro_stack.append(param)
+
+    return dict()
+
+def mpop(params: list[str], macro_stack: list[str]):
+    defined_vars = dict()
+    for param in params:
+        if not macro_stack:
+            raise CdmTempException('mpop: macro stack is empty')
+
+        defined_vars[param] = macro_stack.pop()
+
+    return defined_vars	
+
 
 macro_instructions = {
     'unique': unique,
+    'mpush': mpush,
+    'mpop': mpop,
 }
 
 
@@ -131,6 +149,7 @@ class ExpandMacrosVisitor(MacroVisitor):
         # rewriter should be None if then will be called .visit(MlbContext)
         # rewriter should be valid if then will be called .visit(ProgramContext)
         self.nonce = 0
+        self.macro_stack = []
         self.macros = {name: mlb_macros[name].copy() for name in mlb_macros}
         self.rewriter = rewriter
         self.filepath = filepath
@@ -180,7 +199,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                 # each line that does not contain another macro
                 # MUST add exactly ONE line to ret_parts
                 if instruction in macro_instructions:
-                    variables.update(macro_instructions[instruction](parameters))
+                    variables.update(macro_instructions[instruction](parameters, self.macro_stack))
                     if label != '':
                         ret_parts.append(f'{label}\n')
                     else:
