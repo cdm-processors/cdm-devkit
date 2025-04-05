@@ -17,7 +17,8 @@ from .targets import TargetInstructions, import_target, standard_mlb
 def assemble_module(input_stream: antlr4.InputStream,
                     target_instructions: TargetInstructions,
                     macros_library: dict[str, dict[int, MacroDefinition]],
-                    filepath: Path) -> ObjectModule:
+                    filepath: Path,
+                    include_paths: list[Path]) -> ObjectModule:
     """
     Convert lines of an assembler file to object code
 
@@ -26,7 +27,7 @@ def assemble_module(input_stream: antlr4.InputStream,
     :param macros_library: standard macros of assembler
     :param filepath: path of the file to use in error handling
     """
-    macro_expanded_input_stream = process_macros(input_stream, macros_library, filepath)
+    macro_expanded_input_stream = process_macros(input_stream, macros_library, filepath, include_paths, False)
     r = build_ast(macro_expanded_input_stream, filepath)
     return generate_object_module(r, target_instructions)
 
@@ -52,6 +53,7 @@ def assemble_files(target: str,
                    relative_path: Optional[Path],
                    absolute_path: Optional[Path],
                    realpath: bool,
+                   include_paths: list[Path],
                    macro_libraries: list[dict[str, dict[int, MacroDefinition]]] = None
                    ) -> list[tuple[Path, ObjectModule]]:
     """
@@ -63,6 +65,7 @@ def assemble_files(target: str,
     :param relative_path: if debug paths should be relative to some path
     :param absolute_path: if relative paths should be converted to absolute
     :param realpath: if paths should be converted to canonical
+    :param include_paths: list of include search paths
     :param macro_libraries: user's .mlb files, different from standard .mlb
     :return: list of pairs [source file path, object module]
     """
@@ -88,7 +91,7 @@ def assemble_files(target: str,
         if not data.endswith('\n'):
             data += '\n'
         input_stream = antlr4.InputStream(data)
-        obj = assemble_module(input_stream, target_instructions, macros, filepath)
+        obj = assemble_module(input_stream, target_instructions, macros, filepath, include_paths)
 
         debug_info_path = get_debug_info_path(filepath, debug, relative_path, realpath)
         if debug_info_path:
