@@ -9,5 +9,5 @@ __all__ = (
 )
 
 from cocas.ple import constants
-from cocas.ple.types import PleSegmentType, PleSegmentEntry, PleSegmentFlag, PlainExecutable
 from cocas.ple.dump import dump, dumps
+from cocas.ple.types import PlainExecutable, PleSegmentEntry, PleSegmentFlag, PleSegmentType

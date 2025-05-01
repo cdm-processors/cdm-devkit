@@ -3,7 +3,7 @@ __all__ = ("sized", "validate")
 import dataclasses
 import functools
 from collections.abc import Mapping
-from typing import TypeGuard, TypeVar, TypedDict, cast
+from typing import TypedDict, TypeGuard, TypeVar, cast
 
 DataclassT = TypeVar("DataclassT")
 
@@ -33,7 +33,7 @@ def sized(n: int, unsigned: bool = True) -> StdintMetadata:
         return StdintMetadata(range=range(0, 1 << n))
 
     if n == 1:
-        message = f"1-bit signed int does not have any meaning"
+        message = "1-bit signed int does not have any meaning"
         raise ValueError(message)
 
     bound = 1 << (n - 1)
@@ -57,7 +57,9 @@ def validate(cls: type[DataclassT]) -> type[DataclassT]:
 
     init = cls.__init__
     @functools.wraps(init)
-    def init_with_validate(self, *args, **kwargs) -> None: # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
+    def init_with_validate(
+        self, *args, **kwargs,  # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
+    ) -> None:
         init(self, *args, **kwargs)  # pyright: ignore[reportUnknownArgumentType]
 
         for name, metadata in collected.items():
