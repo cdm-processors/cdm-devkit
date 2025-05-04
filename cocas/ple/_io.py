@@ -64,7 +64,7 @@ class Reader:
             ExhaustedStreamError:
                 If there are no enough bytes.
         """
-        return int.from_bytes(self.bytes(1), byteorder="big", signed=False)
+        return int.from_bytes(self.bytes(1), byteorder="little", signed=False)
 
     def u16(self) -> int:
         """Read an unsigned short.
@@ -73,9 +73,9 @@ class Reader:
             ExhaustedStreamError:
                 If there are no enough bytes.
         """
-        return int.from_bytes(self.bytes(2), byteorder="big", signed=False)
+        return int.from_bytes(self.bytes(2), byteorder="little", signed=False)
 
-    def skip(self, alignment: int) -> None:
+    def skip(self, alignment: int, force: bool = False) -> None:
         """Read and discard `n` bytes; `(Reader.read + n) % alignment == 0`.
 
         Raises:
@@ -83,8 +83,8 @@ class Reader:
                 If there are no enough bytes.
         """
         r = reverse_rem(self._read, alignment)
-        if r != 0:
-            _ = self.bytes(r)
+        if r != 0 or force:
+            _ = self.bytes(r or alignment)
 
 
 class Writer:
@@ -120,7 +120,7 @@ class Writer:
             FailedWriteError:
                 If write hasn't succeeded.
         """
-        return self.bytes(value.to_bytes(length=1, byteorder="big", signed=False))
+        return self.bytes(value.to_bytes(length=1, byteorder="little", signed=False))
 
     def u16(self: WriterT, value: int) -> WriterT:
         """Write unsigned short `value` to the stream.
@@ -129,7 +129,7 @@ class Writer:
             FailedWriteError:
                 If write hasn't succeeded.
         """
-        return self.bytes(value.to_bytes(length=2, byteorder="big", signed=False))
+        return self.bytes(value.to_bytes(length=2, byteorder="little", signed=False))
 
     def align(self: WriterT, alignment: int) -> WriterT:
         """Write `n` null bytes; `(Writer.emitted + n) % alignment == 0`."""

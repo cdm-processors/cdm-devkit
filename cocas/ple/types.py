@@ -25,8 +25,8 @@ SENTINEL = object()
 
 
 class PleSegmentType(IntEnum):
-    NONE = auto()
-    LOAD = auto()
+    NONE = 0x0
+    LOAD = 0x1
 
 
 class PleSegmentFlag(IntFlag):
@@ -95,7 +95,7 @@ class PleImage:
                 .u16(s.virtual_address)
                 .align(PARAGRAPH_SIZE)
             )
-            sector_index += _io.round_up_div(len(s.content), SECTOR_SIZE)
+            sector_index += _io.round_up_div(s.physical_size * PARAGRAPH_SIZE, SECTOR_SIZE)
 
         for s in self.segments:
             _ = writer.bytes(s.content).align(SECTOR_SIZE)
@@ -128,9 +128,10 @@ class PleImage:
         headers_sectors = _io.round_up_div((1 + segments_n) * PARAGRAPH_SIZE, SECTOR_SIZE)
         if headers_sectors > 1:
             buffer += fp_reader.bytes((headers_sectors - 1) * SECTOR_SIZE)
+        index += 1
 
         buffer_reader = _io.Reader(BytesIO(buffer))
-        buffer_reader.skip(index)
+        buffer_reader.skip(index, force=True)
         entrypoint = buffer_reader.u16()
         buffer_reader.skip(PARAGRAPH_SIZE)
 
@@ -150,7 +151,7 @@ class PleImage:
         for physical_offset, physical_size, entry in entries_metadata:
             offset_delta = physical_offset - current_offset
             if offset_delta:
-                buffer = buffer[offset_delta:]
+                buffer = buffer[offset_delta * SECTOR_SIZE:]
                 current_offset = physical_offset
 
             bytes_size = physical_size * PARAGRAPH_SIZE
