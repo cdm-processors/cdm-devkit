@@ -26,14 +26,9 @@ def reverse_rem(value: int, divider: int) -> int:
     return 0 if r == 0 else (divider - r)
 
 
-class Handle(Generic[T]):
-    def __init__(self, fp: T) -> None:
-        self._fp: T = fp
-
-
-class Reader(Handle["SupportsRead[bytes]"]):
+class Reader:
     def __init__(self, fp: "SupportsRead[bytes]") -> None:
-        super().__init__(fp)
+        self._fp: "SupportsRead[bytes]" = fp
         self._read: int = 0
 
     def bytes(self, length: int) -> bytes:
@@ -62,9 +57,9 @@ class Reader(Handle["SupportsRead[bytes]"]):
             _ = self.bytes(r)
 
 
-class Writer(Handle["SupportsWrite[bytes]"]):
+class Writer:
     def __init__(self, fp: "SupportsWrite[bytes]") -> None:
-        super().__init__(fp)
+        self._fp: "SupportsWrite[bytes]" = fp
         self._emitted: int = 0
 
     @property
