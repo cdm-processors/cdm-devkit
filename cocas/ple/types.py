@@ -25,15 +25,11 @@ SENTINEL = object()
 
 
 class PleSegmentType(IntEnum):
-    """todo: add docstring"""
-
     NONE = auto()
     LOAD = auto()
 
 
 class PleSegmentFlag(IntFlag):
-    """todo: add docstring"""
-
     DATA = auto()
     WRITE_PROTECTED = auto()
 
@@ -41,8 +37,6 @@ class PleSegmentFlag(IntFlag):
 @stdint.validate
 @dataclass
 class PleSegmentEntry:
-    """todo: add docstring"""
-
     content: bytes
     virtual_address: int = field(metadata=stdint.sized(16))
     memory_size: int = field(default=cast(int, SENTINEL), metadata=stdint.sized(16))
@@ -61,8 +55,6 @@ class PleSegmentEntry:
 @stdint.validate
 @dataclass
 class PleImage:
-    """todo: add docstring"""
-
     entrypoint: int = field(metadata=stdint.sized(16))
     version: int = field(default=1, metadata=stdint.sized(8))
 

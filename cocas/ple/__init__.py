@@ -1,3 +1,5 @@
+"""Plain Executable file format utilities."""
+
 __all__ = (
     # public modules
     "constants",

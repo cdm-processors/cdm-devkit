@@ -4,7 +4,7 @@ __all__ = (
     "Writer",
 )
 
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from cocas.ple.exceptions import ExhaustedStreamError, FailedWriteError
 
@@ -22,6 +22,7 @@ def round_up_div(value: int, multiple: int) -> int:
 
 
 def reverse_rem(value: int, divider: int) -> int:
+    """Get such minimal `n`, that `(value + n) % divider == 0`."""
     r = value % divider
     return 0 if r == 0 else (divider - r)
 
@@ -31,7 +32,18 @@ class Reader:
         self._fp: "SupportsRead[bytes]" = fp
         self._read: int = 0
 
+    @property
+    def read(self) -> int:
+        """Number of read bytes."""
+        return self._read
+
     def bytes(self, length: int) -> bytes:
+        """Read exactly `length` bytes from the stream.
+
+        Raises:
+            ExhaustedStreamError:
+                If there are no enough bytes.
+        """
         try:
             b = self._fp.read(length)
         except Exception as exc:
@@ -46,12 +58,30 @@ class Reader:
         return b
 
     def u8(self) -> int:
+        """Read an unsigned byte.
+
+        Raises:
+            ExhaustedStreamError:
+                If there are no enough bytes.
+        """
         return int.from_bytes(self.bytes(1), byteorder="big", signed=False)
 
     def u16(self) -> int:
+        """Read an unsigned short.
+
+        Raises:
+            ExhaustedStreamError:
+                If there are no enough bytes.
+        """
         return int.from_bytes(self.bytes(2), byteorder="big", signed=False)
 
     def skip(self, alignment: int) -> None:
+        """Read and discard `n` bytes; `(Reader.read + n) % alignment == 0`.
+
+        Raises:
+            ExhaustedStreamError:
+                If there are no enough bytes.
+        """
         r = reverse_rem(self._read, alignment)
         if r != 0:
             _ = self.bytes(r)
@@ -64,9 +94,16 @@ class Writer:
 
     @property
     def emitted(self) -> int:
+        """Number of written bytes."""
         return self._emitted
 
     def bytes(self: WriterT, value: bytes) -> WriterT:
+        """Write `value` bytes to the stream.
+
+        Raises:
+            FailedWriteError:
+                If write hasn't succeeded.
+        """
         try:
             _ = self._fp.write(value)
         except Exception as exc:
@@ -77,12 +114,25 @@ class Writer:
         return self
 
     def u8(self: WriterT, value: int) -> WriterT:
+        """Write unsigned byte `value` to the stream.
+
+        Raises:
+            FailedWriteError:
+                If write hasn't succeeded.
+        """
         return self.bytes(value.to_bytes(length=1, byteorder="big", signed=False))
 
     def u16(self: WriterT, value: int) -> WriterT:
+        """Write unsigned short `value` to the stream.
+
+        Raises:
+            FailedWriteError:
+                If write hasn't succeeded.
+        """
         return self.bytes(value.to_bytes(length=2, byteorder="big", signed=False))
 
     def align(self: WriterT, alignment: int) -> WriterT:
+        """Write `n` null bytes; `(Writer.emitted + n) % alignment == 0`."""
         r = reverse_rem(self._emitted, alignment)
         if r != 0:
             return self.bytes(bytes(r))

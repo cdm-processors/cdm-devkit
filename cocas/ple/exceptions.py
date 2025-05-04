@@ -1,3 +1,5 @@
+"""Plain Executable exceptions."""
+
 __all__ = (
     "PleException",
     "PleIoError",
