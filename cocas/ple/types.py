@@ -164,7 +164,7 @@ class PleImage:
             bytes_size = physical_size * PARAGRAPH_SIZE
             size_delta = bytes_size - len(buffer)
             if size_delta:
-                buffer += fp_reader.bytes(_io.round_up_div(size_delta, SECTOR_SIZE))
+                buffer += fp_reader.bytes(_io.round_up_div(size_delta, SECTOR_SIZE) * SECTOR_SIZE)
 
             entry.content = bytes(buffer[0: bytes_size])
 
