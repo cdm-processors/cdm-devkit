@@ -1,5 +1,5 @@
 __all__ = (
-    "round_up",
+    "round_up_div",
     "Reader",
     "Writer",
 )
@@ -15,7 +15,8 @@ T = TypeVar("T")
 WriterT = TypeVar("WriterT", bound="Writer")
 
 
-def round_up(value: int, multiple: int) -> int:
+def round_up_div(value: int, multiple: int) -> int:
+    """Like `//`, but rounds to ceil, not to floor."""
     c, r = divmod(value, multiple)
     return c + bool(r)
 

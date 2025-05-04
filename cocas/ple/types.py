@@ -51,7 +51,7 @@ class PleSegmentEntry:
 
     @property
     def physical_size(self) -> int:
-        return _io.round_up(len(self.content), PARAGRAPH_SIZE)
+        return _io.round_up_div(len(self.content), PARAGRAPH_SIZE)
 
     def __post_init__(self) -> None:
         if self.memory_size is SENTINEL:
@@ -91,7 +91,7 @@ class PleImage:
         _ = writer.bytes(MAGIC_BYTES).u8(self.version).u8(segments_n).u16(self.entrypoint).align(PARAGRAPH_SIZE)
 
         headers_bytes = writer.emitted + PARAGRAPH_SIZE * segments_n
-        sector_index = _io.round_up(headers_bytes, SECTOR_SIZE)
+        sector_index = _io.round_up_div(headers_bytes, SECTOR_SIZE)
 
         for s in self.segments:
             _ = (
@@ -103,7 +103,7 @@ class PleImage:
                 .u16(s.virtual_address)
                 .align(PARAGRAPH_SIZE)
             )
-            sector_index += _io.round_up(len(s.content), SECTOR_SIZE)
+            sector_index += _io.round_up_div(len(s.content), SECTOR_SIZE)
 
         for s in self.segments:
             _ = writer.bytes(s.content).align(SECTOR_SIZE)
@@ -133,7 +133,7 @@ class PleImage:
         index += 1
 
         segments_n = buffer[index]
-        headers_sectors = _io.round_up((1 + segments_n) * PARAGRAPH_SIZE, SECTOR_SIZE)
+        headers_sectors = _io.round_up_div((1 + segments_n) * PARAGRAPH_SIZE, SECTOR_SIZE)
         if headers_sectors > 1:
             buffer += fp_reader.bytes((headers_sectors - 1) * SECTOR_SIZE)
 
@@ -164,7 +164,7 @@ class PleImage:
             bytes_size = physical_size * PARAGRAPH_SIZE
             size_delta = bytes_size - len(buffer)
             if size_delta:
-                buffer += fp_reader.bytes(_io.round_up(size_delta, SECTOR_SIZE))
+                buffer += fp_reader.bytes(_io.round_up_div(size_delta, SECTOR_SIZE))
 
             entry.content = bytes(buffer[0: bytes_size])
 
