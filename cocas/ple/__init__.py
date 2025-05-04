@@ -1,13 +1,15 @@
 __all__ = (
+    # public modules
     "constants",
+    "exceptions",
+    "types",
+
+    # quality of life re-exports
     "PleSegmentType",
     "PleSegmentEntry",
     "PleSegmentFlag",
-    "PlainExecutable",
-    "dump",
-    "dumps",
+    "PleImage",
 )
 
-from cocas.ple import constants
-from cocas.ple.dump import dump, dumps
-from cocas.ple.types import PlainExecutable, PleSegmentEntry, PleSegmentFlag, PleSegmentType
+from cocas.ple import constants, exceptions, types
+from cocas.ple.types import PleImage, PleSegmentEntry, PleSegmentFlag, PleSegmentType
