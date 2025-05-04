@@ -150,6 +150,7 @@ class PleImage:
             physical_size = buffer_reader.u16()
             memory_size = buffer_reader.u16()
             virtual_address = buffer_reader.u16()
+            buffer_reader.skip(PARAGRAPH_SIZE)
             entry = PleSegmentEntry(bytes(), virtual_address, memory_size, type, flags)
             bisect.insort(entries_metadata, (physical_offset, physical_size, entry), key=lambda x: x[0])
 
