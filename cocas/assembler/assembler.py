@@ -100,6 +100,7 @@ def assemble_files(target: str,
                     if j.file == fp:
                         j.file = dip
                     else:
-                        j.file = get_debug_info_path(Path(j.file), debug, relative_path, realpath)
+                        p = get_debug_info_path(Path(j.file), debug, relative_path, realpath)
+                        j.file = str(p) if p is not None else None
         objects.append((filepath, obj))
     return objects
