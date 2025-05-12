@@ -1,10 +1,13 @@
 import codecs
 import warnings
 from base64 import b64decode
+from collections.abc import Mapping, MutableSequence
 from pathlib import Path
+from typing import cast
 
 from antlr4 import CommonTokenStream, InputStream
 
+from cocas.assembler.constants import DBG_LOC_INST, DBG_SOURCE_INST
 from cocas.object_module import CodeLocation
 
 from .ast_nodes import (
@@ -22,6 +25,7 @@ from .ast_nodes import (
     RegisterNode,
     RelocatableExpressionNode,
     RelocatableSectionNode,
+    SectionNode,
     TemplateSectionNode,
     UntilLoopNode,
     WhileLoopNode,
@@ -32,7 +36,7 @@ from .generated import AsmLexer, AsmParser, AsmParserVisitor
 
 # noinspection PyPep8Naming
 class BuildAstVisitor(AsmParserVisitor):
-    allowed_top_instructions = []
+    allowed_top_instructions = [DBG_SOURCE_INST]
 
     def __init__(self, filepath: str):
         super().__init__()
@@ -43,8 +47,11 @@ class BuildAstVisitor(AsmParserVisitor):
         self.in_macro = False
         self.current_macro_file = ""
         self.current_macro_line = 0
+        self.generated: bool = False
 
     def _ctx_location(self, ctx) -> CodeLocation:
+        if self.generated:
+            return CodeLocation()
         if self.in_macro:
             return CodeLocation(self.current_macro_file, self.current_macro_line)
         return CodeLocation(self.source_path, ctx.start.line - self.line_offset)
@@ -61,7 +68,9 @@ class BuildAstVisitor(AsmParserVisitor):
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
             elif isinstance(child, AsmParser.Top_lineContext):
-                ret.shared_externals, ret.top_instructions = self.visitTop_line(child)
+                shared, top = self.visitTop_line(child)
+                ret.shared_externals.extend(shared)
+                ret.top_instructions.extend(top)
         return ret
 
     def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
@@ -305,6 +314,7 @@ class BuildAstVisitor(AsmParserVisitor):
         if ctx.labels_declaration() is not None:
             ret += self.visitLabels_declaration(ctx.labels_declaration())
         op = ctx.instruction().getText()
+        self.generated |= op == DBG_SOURCE_INST
         args = self.visitArguments(ctx.arguments()) if ctx.arguments() is not None else []
         ret.append(InstructionNode(op, args))
         return ret
@@ -313,7 +323,72 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
 
 
-def build_ast(input_stream: InputStream, filepath: Path):
+Ren = RelocatableExpressionNode
+
+
+def resolve_debug_locs(files: Mapping[int, str], sections: MutableSequence[SectionNode]) -> None:
+    for section in sections:
+        lines_iter = enumerate(iter(section.lines))
+        loc_insts: list[int] = []
+
+        for index, line_node in lines_iter:
+            if not isinstance(line_node, InstructionNode) or line_node.mnemonic != DBG_LOC_INST:
+                continue
+            loc_insts.append(index)
+            match line_node.arguments:
+                case [Ren(_, _, _, file), Ren(_, _, _, line), Ren(_, _, _, column)]:
+                    if (path := files.get(file)) is None:
+                        raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file,
+                                                 line_node.location.column,
+                                                 f"{DBG_LOC_INST} refers to file with index {file}; where is no {DBG_SOURCE_INST} with such index")
+                    current_loc = CodeLocation(path, line, column)
+                case _:
+                    raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file,
+                                             line_node.location.column,
+                                             f"{DBG_LOC_INST} expects a number and a string, while {line_node.arguments} provided")
+
+            _, next_line_node = next(lines_iter, (None, None))
+            if next_line_node is None:
+                raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file, line_node.location.column,
+                                         f"expected an instruction line after {DBG_LOC_INST}, while it's missing")
+            if not isinstance(next_line_node, InstructionNode):
+                raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file, line_node.location.column,
+                                         f"expected an instruction line after {DBG_LOC_INST}, while {type(next_line_node)} has been found")
+            if next_line_node.mnemonic == DBG_LOC_INST:
+                raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file, line_node.location.column,
+                                         f"there are two consecutive {DBG_LOC_INST} instructions; there is no point to do that")
+            next_line_node.location = current_loc
+
+        for index in reversed(loc_insts):
+            _ = section.lines.pop(index)
+
+
+def resolve_debug_pseudos(pn: ProgramNode) -> None:
+    files: dict[int, str] = {}
+    source_insts: list[int] = []
+
+    for index, ti in enumerate(pn.top_instructions):
+        if ti.mnemonic != DBG_SOURCE_INST:
+            continue
+        match ti.arguments:
+            case [Ren(_, _, _, index), str() as path]:
+                if index in files:
+                    raise AssemblerException(AssemblerExceptionTag.ASM, ti.location.file, ti.location.column,
+                                             f"duplicate {DBG_SOURCE_INST} for index {index}")
+                files[index] = path
+            case _:
+                raise AssemblerException(AssemblerExceptionTag.ASM, ti.location.file, ti.location.column,
+                                         f"{DBG_SOURCE_INST} expects a number and a string, while {ti.arguments} provided")
+        source_insts.append(index)
+
+    for index in reversed(source_insts):
+        _ = pn.top_instructions.pop(index)
+
+    resolve_debug_locs(files, cast(list[SectionNode], pn.absolute_sections))
+    resolve_debug_locs(files, cast(list[SectionNode], pn.relocatable_sections))
+
+
+def build_ast(input_stream: InputStream, filepath: Path) -> ProgramNode:
     str_path = filepath.absolute().as_posix()
     lexer = AsmLexer(input_stream)
     lexer.removeErrorListeners()
@@ -326,4 +401,8 @@ def build_ast(input_stream: InputStream, filepath: Path):
     cst = parser.program()
     bav = BuildAstVisitor(str_path)
     result = bav.visit(cst)
+    if not isinstance(result, ProgramNode):
+        raise AssemblerException(AssemblerExceptionTag.ASM, str_path, 0,
+                                 "failed to build a program AST from provided code")
+    resolve_debug_pseudos(result)
     return result

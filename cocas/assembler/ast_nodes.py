@@ -21,14 +21,12 @@ class LabelNode(Node):
 
 @dataclass
 class LocatableNode(Node):
-    def __post_init__(self):
-        self.location: CodeLocation = CodeLocation()
+    location: CodeLocation = field(default_factory=CodeLocation, init=False, compare=False)
 
 
 @dataclass
 class ExportLocationNode(LocatableNode):
-    def __post_init__(self):
-        self.location: CodeLocation = CodeLocation()
+    pass
 
 
 @dataclass
@@ -126,4 +124,4 @@ class ProgramNode(Node):
     relocatable_sections: list[RelocatableSectionNode]
     absolute_sections: list[AbsoluteSectionNode]
     shared_externals: list[LabelNode] = field(default_factory=list)
-    top_instructions: list[LabelNode] = field(default_factory=list)
+    top_instructions: list[InstructionNode] = field(default_factory=list)

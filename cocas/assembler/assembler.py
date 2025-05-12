@@ -99,7 +99,8 @@ def assemble_files(target: str,
                 for j in lib.code_locations.values():
                     if j.file == fp:
                         j.file = dip
-                    else:
-                        j.file = get_debug_info_path(Path(j.file), debug, relative_path, realpath)
+                    elif j.file is not None:
+                        p = get_debug_info_path(Path(j.file), debug, relative_path, realpath)
+                        j.file = str(p) if p is not None else None
         objects.append((filepath, obj))
     return objects
