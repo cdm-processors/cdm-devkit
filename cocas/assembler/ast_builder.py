@@ -337,7 +337,11 @@ def resolve_debug_locs(files: Mapping[int, str], sections: MutableSequence[Secti
             loc_insts.append(index)
             match line_node.arguments:
                 case [Ren(_, _, _, file), Ren(_, _, _, line), Ren(_, _, _, column)]:
-                    current_loc = CodeLocation(files[file], line, column)
+                    if (path := files.get(file)) is None:
+                        raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file,
+                                                 line_node.location.column,
+                                                 f"{DBG_LOC_INST} refers to file with index {file}; where is no {DBG_SOURCE_INST} with such index")
+                    current_loc = CodeLocation(path, line, column)
                 case _:
                     raise AssemblerException(AssemblerExceptionTag.ASM, line_node.location.file,
                                              line_node.location.column,
