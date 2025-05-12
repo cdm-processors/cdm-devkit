@@ -315,7 +315,7 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
 
 
-def build_ast(input_stream: InputStream, filepath: Path):
+def build_ast(input_stream: InputStream, filepath: Path) -> ProgramNode:
     str_path = filepath.absolute().as_posix()
     lexer = AsmLexer(input_stream)
     lexer.removeErrorListeners()
@@ -328,4 +328,7 @@ def build_ast(input_stream: InputStream, filepath: Path):
     cst = parser.program()
     bav = BuildAstVisitor(str_path)
     result = bav.visit(cst)
+    if not isinstance(result, ProgramNode):
+        raise AssemblerException(AssemblerExceptionTag.ASM, str_path, 0,
+                                 "failed to build a program AST from provided code")
     return result
