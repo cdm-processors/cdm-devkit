@@ -36,7 +36,8 @@ def debug_export(code_locations: dict[int, CodeLocation]) -> str:
     :param code_locations: mapping from address in binary image to location in source code
     :return: string with json representation of debug information, code locations are sorted
     """
-    files = sorted(set(map(lambda x: x.file, code_locations.values())))
+    code_locations = {addr: cl for addr, cl in code_locations.items() if cl.file is not None}
+    files = sorted({cl.file for cl in code_locations.values()})
     sorted_cl = {key: value for (key, value) in sorted(code_locations.items())}
     dump = json.dumps({"files": files, "codeLocations": sorted_cl},
                       default=default_json(files), indent=4, ensure_ascii=False)

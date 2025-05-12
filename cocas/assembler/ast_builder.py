@@ -47,8 +47,11 @@ class BuildAstVisitor(AsmParserVisitor):
         self.in_macro = False
         self.current_macro_file = ""
         self.current_macro_line = 0
+        self.generated: bool = False
 
     def _ctx_location(self, ctx) -> CodeLocation:
+        if self.generated:
+            return CodeLocation()
         if self.in_macro:
             return CodeLocation(self.current_macro_file, self.current_macro_line)
         return CodeLocation(self.source_path, ctx.start.line - self.line_offset)
@@ -311,6 +314,7 @@ class BuildAstVisitor(AsmParserVisitor):
         if ctx.labels_declaration() is not None:
             ret += self.visitLabels_declaration(ctx.labels_declaration())
         op = ctx.instruction().getText()
+        self.generated |= op == DBG_SOURCE_INST
         args = self.visitArguments(ctx.arguments()) if ctx.arguments() is not None else []
         ret.append(InstructionNode(op, args))
         return ret
