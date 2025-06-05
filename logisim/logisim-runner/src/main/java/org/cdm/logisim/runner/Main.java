@@ -21,6 +21,14 @@ public class Main {
     private static final int TIMEOUT = 4;
 
     public static void main(String[] args) {
+        if (args.length < 5) {
+            System.err.println("Invalid arguments");
+            System.err.println("Usage: logisim-runner.jar " +
+                    "[programImage] [circuit] [outputImage] [config] [timeout]"
+            );
+            System.exit(EXIT_FAILURE);
+        }
+
         Runner runner = new Runner();
 
         File imgFile = new File(args[IMG_FILE]);
