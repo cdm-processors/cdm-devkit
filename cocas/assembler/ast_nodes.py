@@ -126,4 +126,4 @@ class ProgramNode(Node):
     relocatable_sections: list[RelocatableSectionNode]
     absolute_sections: list[AbsoluteSectionNode]
     shared_externals: list[LabelNode] = field(default_factory=list)
-    top_instructions: list[LabelNode] = field(default_factory=list)
+    top_instructions: list[InstructionNode] = field(default_factory=list)

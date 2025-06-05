@@ -61,7 +61,9 @@ class BuildAstVisitor(AsmParserVisitor):
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
             elif isinstance(child, AsmParser.Top_lineContext):
-                ret.shared_externals, ret.top_instructions = self.visitTop_line(child)
+                shared, top = self.visitTop_line(child)
+                ret.shared_externals.extend(shared)
+                ret.top_instructions.extend(top)
         return ret
 
     def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
