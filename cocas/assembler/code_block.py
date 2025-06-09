@@ -176,11 +176,21 @@ class Section(CodeBlock):
             address = 0
         else:
             raise Exception('Section is neither abs nor rel, can it happen? It was elif instead of else here')
+
+        self.attributes = sn.attributes
         super().__init__(address, sn.lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
         entries = dict(p for p in self.labels.items() if p[0] in self.ents)
-        out = ObjectSectionRecord(self.name, self.address, bytearray(), entries, [], self.code_locations)
+        out = ObjectSectionRecord(
+            self.name,
+            self.address,
+            bytearray(),
+            entries,
+            [],
+            self.code_locations,
+            attributes=self.attributes,
+        )
         for seg in self.segments:
             seg.fill(out, self, labels, templates)
         return out

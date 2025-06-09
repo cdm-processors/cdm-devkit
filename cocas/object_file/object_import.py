@@ -85,6 +85,12 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             om = ObjectModule(list(asects.values()), list(rsects.values()), None)
         return om
 
+    def visitAttr_record(self, ctx: ObjectFileParser.Attr_recordContext | None) -> list[str]:
+        if ctx is None:
+            return []
+
+        return [sa.WORD().getText() for sa in ctx.section_attr()]
+
     def visitAsect_block(self, ctx: ObjectFileParser.Asect_blockContext):
         asects = {}
         for addr, record in map(self.visitAbs_block, ctx.abs_block()):
@@ -99,6 +105,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
     def visitAbs_block(self, ctx: ObjectFileParser.Abs_blockContext):
         addr, asect = self.visitAbs_record(ctx.abs_record())
+        asect.attributes = self.visitAttr_record(ctx.attr_record())
         for cl in map(self.visitLoc_record, ctx.loc_record()):
             for byte, loc in cl.items():
                 asect.code_locations[byte] = loc
@@ -106,6 +113,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
     def visitRsect_block(self, ctx: ObjectFileParser.Rsect_blockContext):
         name = self.visitName_record(ctx.name_record())
+        attributes = self.visitAttr_record(ctx.attr_record())
         if ctx.alig_record():
             align = self.visitAlig_record(ctx.alig_record())
         else:
@@ -121,7 +129,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         code_locations = {}
         for cl in map(self.visitLoc_record, ctx.loc_record()):
             code_locations |= cl
-        return name, ObjectSectionRecord(name, 0, data, entries, rel, code_locations, align)
+        return name, ObjectSectionRecord(name, 0, data, entries, rel, code_locations, align, attributes=attributes)
 
     def visitTarg_record(self, ctx: ObjectFileParser.Targ_recordContext):
         return self.visitLabel(ctx.label())
