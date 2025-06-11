@@ -1,4 +1,4 @@
-# Generated from object_file/grammar/ObjectFileParser.g4 by ANTLR 4.13.1
+# Generated from object_file/grammar/ObjectFileParser.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .ObjectFileParser import ObjectFileParser
@@ -109,8 +109,8 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ObjectFileParser#location.
-    def visitLocation(self, ctx:ObjectFileParser.LocationContext):
+    # Visit a parse tree produced by ObjectFileParser#locations.
+    def visitLocations(self, ctx:ObjectFileParser.LocationsContext):
         return self.visitChildren(ctx)
 
 
