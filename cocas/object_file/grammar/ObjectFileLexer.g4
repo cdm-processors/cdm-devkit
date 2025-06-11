@@ -3,7 +3,7 @@ lexer grammar ObjectFileLexer;
 TARG: 'TARG';
 FILE: 'FILE' -> pushMode(IN_FILE);
 ABS : 'ABS' -> pushMode(IN_ABS);
-LOC: 'LOC';
+LOC: 'LOC' -> pushMode(IN_LOC);
 NTRY: 'NTRY';
 NAME: 'NAME';
 ALIG: 'ALIG';
@@ -38,3 +38,6 @@ SPACES_FILE: ' '+ -> popMode, pushMode(IN_FILEPATH);
 
 mode IN_FILEPATH;
 FILEPATH: ~[\r\n]+ -> popMode;
+
+mode IN_LOC;
+LOCS: [0-9a-fA-F: ]+ -> popMode;

@@ -1,12 +1,15 @@
 import bisect
 import codecs
+import itertools
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.object_module.object_module import ObjectSectionRecord
 
 from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor
@@ -35,23 +38,27 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             raise ObjectFileException(self.file, ctx.start.line,
                                       f'Expected non-empty target header for {target_name}, got empty')
 
-        modules = []
+        modules: list[ObjectModule] = []
         for i in ctx.object_block():
             modules.append(self.visitObject_block(i))
         return modules
 
     def visitObject_block(self, ctx: ObjectFileParser.Object_blockContext) -> ObjectModule:
-        if ctx.source_record():
-            filename = self.visitSource_record(ctx.source_record())
-        else:
-            filename = None
+        legacy_source_path: str | None = None
+        source_paths_table: list[Path] = []
+
+        if source_records := ctx.source_record():
+            record_iter: Iterator[ObjectFileParser.Source_recordContext] = iter(source_records)
+            legacy_source_path = self.visitSource_record(next(record_iter))
+            source_paths_table = [Path(self.visitSource_record(r)) for r in record_iter]
+            source_paths_table.insert(0, Path(legacy_source_path))
 
         if ctx.asect_block():
             asects, asect_addr = self.visitAsect_block(ctx.asect_block())
         else:
             asects, asect_addr = {}, []
 
-        rsects = {}
+        rsects: dict[str, ObjectSectionRecord] = {}
         for block in ctx.rsect_block():
             name, rsect = self.visitRsect_block(block)
             if name in rsects:
@@ -73,11 +80,12 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                     rsects[sect].external[label].append(entry)
                 else:
                     raise ObjectFileException(self.file, xtrn.start.line, f'Section not found: {sect}')
-        if filename:
-            f = Path(filename)
-            for i in (asects | rsects).values():
-                for j in i.code_locations.values():
-                    j.file = f.as_posix()
+        if legacy_source_path:
+            f = Path(legacy_source_path)
+            for sect in itertools.chain(asects.values(), rsects.values()):
+                for loc in sect.code_locations.values():
+                    if isinstance(loc.file, int):
+                        loc.file = source_paths_table[loc.file].as_posix()
             om = ObjectModule(list(asects.values()), list(rsects.values()), f)
         else:
             for i in (asects | rsects).values():
@@ -85,8 +93,11 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             om = ObjectModule(list(asects.values()), list(rsects.values()), None)
         return om
 
-    def visitAsect_block(self, ctx: ObjectFileParser.Asect_blockContext):
-        asects = {}
+    def visitAsect_block(
+        self,
+        ctx: ObjectFileParser.Asect_blockContext,
+    ) -> tuple[dict[int, ObjectSectionRecord], list[int]]:
+        asects: dict[int, ObjectSectionRecord] = {}
         for addr, record in map(self.visitAbs_block, ctx.abs_block()):
             asects[addr] = record
         if not asects and ctx.ntry_record():
@@ -104,8 +115,8 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                 asect.code_locations[byte] = loc
         return addr, asect
 
-    def visitRsect_block(self, ctx: ObjectFileParser.Rsect_blockContext):
-        name = self.visitName_record(ctx.name_record())
+    def visitRsect_block(self, ctx: ObjectFileParser.Rsect_blockContext) -> tuple[str, ObjectSectionRecord]:
+        name: str = self.visitName_record(ctx.name_record())
         if ctx.alig_record():
             align = self.visitAlig_record(ctx.alig_record())
         else:
@@ -126,7 +137,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
     def visitTarg_record(self, ctx: ObjectFileParser.Targ_recordContext):
         return self.visitLabel(ctx.label())
 
-    def visitSource_record(self, ctx: ObjectFileParser.Source_recordContext):
+    def visitSource_record(self, ctx: ObjectFileParser.Source_recordContext) -> str:
         return self.visitFilepath(ctx.filepath())
 
     def visitAbs_record(self, ctx: ObjectFileParser.Abs_recordContext):
@@ -134,10 +145,27 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         data = self.visitData(ctx.data())
         return addr, ObjectSectionRecord('$abs', addr, data, {}, [], {})
 
-    def visitLoc_record(self, ctx: ObjectFileParser.Loc_recordContext):
-        res = {}
-        for byte, line, col in map(self.visitLocation, ctx.location()):
-            res[byte] = CodeLocation(None, line, col)
+    def visitLocations(self, ctx: ObjectFileParser.LocationsContext) -> Iterator[tuple[int, int, int, int]]:
+        def try_int(value: str) -> int:
+            try:
+                return int(value, 16)
+            except ValueError:
+                raise ObjectFileException(self.file, ctx.start.line, f'Not a hex number: {value}')
+
+        locations= cast(str, ctx.LOCS().getText())
+        for location in locations.strip().split(" "):
+            parts = location.split(":")
+            if len(parts) == 3:
+                yield (0, *map(try_int, parts))
+            elif len(parts) == 4:
+                yield tuple(map(try_int, parts))
+            else:
+                raise ObjectFileException(self.file, ctx.start.line, f'Invalid location: {location}')
+
+    def visitLoc_record(self, ctx: ObjectFileParser.Loc_recordContext) -> dict[int, CodeLocation]:
+        res: dict[int, CodeLocation] = {}
+        for index, byte, lin, col in self.visitLocations(ctx.locations()):
+            res[byte] = CodeLocation(index, lin, col)  # unsafe: will be converted later
         return res
 
     def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext):
@@ -145,7 +173,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         address = self.visitNumber(ctx.number())
         return label, address
 
-    def visitName_record(self, ctx: ObjectFileParser.Name_recordContext):
+    def visitName_record(self, ctx: ObjectFileParser.Name_recordContext) -> str:
         return self.visitSection(ctx.section())
 
     def visitAlig_record(self, ctx: ObjectFileParser.Alig_recordContext):
@@ -154,7 +182,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
     def visitData_record(self, ctx: ObjectFileParser.Data_recordContext):
         return self.visitData(ctx.data())
 
-    def visitFilepath(self, ctx: ObjectFileParser.FilepathContext):
+    def visitFilepath(self, ctx: ObjectFileParser.FilepathContext) -> str:
         return ctx.getText()
 
     def visitRel_record(self, ctx: ObjectFileParser.Rel_recordContext):
@@ -205,10 +233,6 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
     def visitRange(self, ctx: ObjectFileParser.RangeContext):
         return range(self.visitNumber(ctx.number(0)), self.visitNumber(ctx.number(1)))
-
-    def visitLocation(self, ctx: ObjectFileParser.LocationContext):
-        return self.visitNumber(ctx.number(0)), self.visitNumber(ctx.number(1)), \
-            self.visitNumber(ctx.number(2))
 
     def visitLabel(self, ctx: ObjectFileParser.LabelContext):
         return ctx.getText()

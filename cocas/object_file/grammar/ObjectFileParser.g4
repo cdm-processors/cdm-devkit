@@ -10,7 +10,7 @@ object_file:
 ;
 
 object_block:
-    source_record?
+    source_record*
     ( asect_block
       rsect_block*
     | rsect_block+
@@ -39,7 +39,7 @@ rsect_block:
 targ_record: TARG label NEWLINE;
 source_record: FILE SPACES_FILE filepath NEWLINE;
 abs_record: ABS abs_address COLON_ABS data? NEWLINE_BYTES+;
-loc_record: LOC location* NEWLINE;
+loc_record: LOC locations NEWLINE;
 ntry_record: NTRY label number NEWLINE;
 name_record: NAME section NEWLINE;
 alig_record: ALIG number NEWLINE;
@@ -52,7 +52,7 @@ filepath: FILEPATH;
 entry_usage: minus? number (COLON range lower_part?)?;
 range: number COLON number;
 lower_part: PLUS number;
-location: number COLON number COLON number;
+locations: LOCS;
 
 abs_address: WORD_ABS;
 number: WORD;
