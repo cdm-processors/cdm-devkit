@@ -62,8 +62,8 @@ else
 
 GRADLEW = ./gradlew
 CP = cp -r
-RM = rm -r
-RM_FILE = rm
+RM = rm -rf
+RM_FILE = rm -f
 TAR = tar -czvf
 
 # Check for zip archiver on Unix
