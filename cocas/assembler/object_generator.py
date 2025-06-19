@@ -2,7 +2,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Any, Union
 
-from cocas.object_module import CodeLocation, ObjectModule
+from cocas.object_module import CodeLocation, ObjectModule, concat_rsects
 
 from .ast_nodes import (
     InstructionNode,
@@ -142,6 +142,6 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
     for rsect in rsects:
         update_varying_length([rsect], asects_labels, template_fields)
 
-    obj = ObjectModule([asect.to_object_section_record(asects_labels, template_fields) for asect in asects],
-                       [rsect.to_object_section_record(asects_labels, template_fields) for rsect in rsects])
-    return obj
+    asect_objects = [asect.to_object_section_record(asects_labels, template_fields) for asect in asects]
+    rsect_objects = concat_rsects(map(lambda x: x.to_object_section_record(asects_labels, template_fields), rsects))
+    return ObjectModule(asect_objects, rsect_objects)
