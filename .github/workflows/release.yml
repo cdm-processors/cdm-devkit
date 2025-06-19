@@ -54,3 +54,4 @@ jobs:
             build/cdm-devkit-misc-*
             build/vscode-cdm-extension-*.*.*.vsix
             build/cdm_devkit-*.whl
+            build/cdm_devkit-*.tar.gz
