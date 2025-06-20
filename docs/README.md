@@ -18,6 +18,7 @@ This folder contains some useful information about various `cdm-devkit` parts.
 7. [Using CLI](./guides/7-using-cli.md)
 8. [Using external build system](./guides/8-external-build-systems.md)
 9. [Using Python environment](./guides/9-using-python-environments.md)
+10. [Macros and macro libraries](./guides/10-macros.md)
 
 ### Processors documentation
 

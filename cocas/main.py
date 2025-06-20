@@ -26,6 +26,7 @@ def main():
     parser.add_argument('-c', '--compile', action='store_true', help='compile into object files without linking')
     parser.add_argument('-m', '--merge', action='store_true', help='merge object files into one')
     parser.add_argument('-o', '--output', type=Path, help='specify output file name')
+    parser.add_argument('-I', metavar='', action='append', dest='include_paths', type=Path, help='specify include search path')
     debug_group = parser.add_argument_group('debug')
     debug_group.add_argument('--debug', type=Path, nargs='?', const=True, help='export debug information')
     debug_path_group = debug_group.add_mutually_exclusive_group()
@@ -36,6 +37,9 @@ def main():
     debug_group.add_argument('--realpath', action='store_true',
                              help='canonicalize paths by following symlinks and resolving . and ..')
     args = parser.parse_args()
+    if args.include_paths is None:
+        args.include_paths = []
+
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
         return
@@ -90,7 +94,7 @@ def main():
     try:
         macro_libraries = [read_mlb(mlb) for mlb in mlb_files]
         objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
-            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath,
+            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath, args.include_paths,
                            macro_libraries=macro_libraries),
             read_object_files(target, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
         ))

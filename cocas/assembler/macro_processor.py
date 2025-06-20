@@ -1,4 +1,5 @@
 import codecs
+import antlr4
 import itertools
 import re
 from base64 import b64encode
@@ -15,7 +16,7 @@ from .exceptions import AntlrErrorListener, AssemblerException, AssemblerExcepti
 from .generated import MacroLexer, MacroParser, MacroVisitor
 
 
-def unique(params: list[str]):
+def unique(params: list[str], macro_stack: list[str]):
     register_available = [True] * 4
     var_params = []
     for param in params:
@@ -39,9 +40,27 @@ def unique(params: list[str]):
         defined_vars[param] = f'r{i}'
     return defined_vars
 
+def mpush(params: list[str], macro_stack: list[str]):
+    for param in params:
+        macro_stack.append(param)
+
+    return dict()
+
+def mpop(params: list[str], macro_stack: list[str]):
+    defined_vars = dict()
+    for param in params:
+        if not macro_stack:
+            raise CdmTempException('mpop: macro stack is empty')
+
+        defined_vars[param] = macro_stack.pop()
+
+    return defined_vars	
+
 
 macro_instructions = {
     'unique': unique,
+    'mpush': mpush,
+    'mpop': mpop,
 }
 
 
@@ -127,13 +146,16 @@ def substitute_pieces_in_line(line: MacroLine, params: list[str], nonce: str, va
 
 # noinspection PyPep8Naming
 class ExpandMacrosVisitor(MacroVisitor):
-    def __init__(self, rewriter: Optional[TokenStreamRewriter], mlb_macros, filepath: str):
+    def __init__(self, rewriter: Optional[TokenStreamRewriter], mlb_macros, filepath: str, include_paths: list[Path], nested):
         # rewriter should be None if then will be called .visit(MlbContext)
         # rewriter should be valid if then will be called .visit(ProgramContext)
+        self.nested = nested
         self.nonce = 0
+        self.macro_stack = []
         self.macros = {name: mlb_macros[name].copy() for name in mlb_macros}
         self.rewriter = rewriter
         self.filepath = filepath
+        self.include_paths = include_paths
 
     @staticmethod
     def _generate_location_line(filepath: str, line: int, info: str = None) -> str:
@@ -150,6 +172,34 @@ class ExpandMacrosVisitor(MacroVisitor):
             if self.macros[macro.name][macro.arity] != macro:
                 raise CdmTempException(f"Redefinition of macro {macro.name}/{macro.arity} with different body")
         self.macros[macro.name][macro.arity] = macro
+
+    def include_file(self, include_filename: str):
+        # Firstly check in directoru where file is
+        with Path(self.filepath).parent as path:
+            include_filepath = path / include_filename
+            if include_filepath.is_file():
+                with include_filepath.open('rb') as file:
+                    data = file.read()
+                data = codecs.decode(data, 'utf8', 'strict')
+                if not data.endswith('\n'):
+                    data += '\n'
+                input_stream = antlr4.InputStream(data)
+
+                return ''.join([chr(i) for i in process_macros(input_stream, dict(), include_filepath, self.include_paths, True, self).data])
+
+        for path in self.include_paths:
+            include_filepath = path / include_filename
+            if include_filepath.is_file():
+                with include_filepath.open('rb') as file:
+                    data = file.read()
+                data = codecs.decode(data, 'utf8', 'strict')
+                if not data.endswith('\n'):
+                    data += '\n'
+                input_stream = antlr4.InputStream(data)
+                return ''.join([chr(i) for i in process_macros(input_stream, dict(), include_filepath, self.include_paths, True, self).data])
+		
+        # Raise exception if there is no such file in include paths
+        raise CdmTempException(f'Include: file {include_filename} not found in any search path')
 
     # Returns a None for things as asect or empty line.
     # Returns string of macro
@@ -180,7 +230,7 @@ class ExpandMacrosVisitor(MacroVisitor):
                 # each line that does not contain another macro
                 # MUST add exactly ONE line to ret_parts
                 if instruction in macro_instructions:
-                    variables.update(macro_instructions[instruction](parameters))
+                    variables.update(macro_instructions[instruction](parameters, self.macro_stack))
                     if label != '':
                         ret_parts.append(f'{label}\n')
                     else:
@@ -219,14 +269,23 @@ class ExpandMacrosVisitor(MacroVisitor):
                     self.add_macro(self.visitMacro(child))
                 elif isinstance(child, MacroParser.LineContext):
                     label, instruction, parameters = self.visitLine(child)
-                    expanded_text = self.expand_macro(instruction, parameters)
+                    if instruction == 'include':
+                        if len(parameters) != 1:
+                            raise CdmTempException('Include: wrong amount of parameters, expected 1 parameter')
+                        expanded_text = self.include_file(parameters[0])
+                    else:
+                        expanded_text = self.expand_macro(instruction, parameters)
                     if expanded_text is not None:
                         if label != '':
                             expanded_text = f'{label}\n{expanded_text}'
 
-                        mstart = self._generate_location_line(self.filepath, child.start.line, "mstart")
-                        mstop = self._generate_location_line(self.filepath, child.stop.line + 1, "mstop")
-                        expanded_text = f'{mstart}{expanded_text}{mstop}'
+                        if self.nested:
+                            stop_mark = self._generate_location_line(self.filepath, child.stop.line + 1)
+                            expanded_text = f'{expanded_text}{stop_mark}'
+                        else:
+                            mstart = self._generate_location_line(self.filepath, child.start.line, "mstart")
+                            mstop = self._generate_location_line(self.filepath, child.stop.line + 1, "mstop")
+                            expanded_text = f'{mstart}{expanded_text}{mstop}'
                         self.rewriter.insertBeforeToken(child.start, expanded_text)
                         self.rewriter.delete(self.rewriter.DEFAULT_PROGRAM_NAME, child.start, child.stop)
             except CdmTempException as e:
@@ -327,11 +386,14 @@ def read_mlb(filepath: Path) -> dict[str, dict[int, MacroDefinition]]:
     token_stream = CommonTokenStream(lexer)
     parser = MacroParser(token_stream)
     cst = parser.mlb()
-    emv = ExpandMacrosVisitor(None, dict(), str_path)
+    emv = ExpandMacrosVisitor(None, dict(), str_path, [], False)
     return emv.visit(cst)
 
-
-def process_macros(input_stream: InputStream, library_macros, filepath: Path):
+# Added arguments:
+# include_paths - list of include paths
+# nested - if file macroprocessed for insertion into another file
+# init_ctx - ExpandMacrosVisitor - initial context which used for sharing same macros, nonce value and macro stack with some file, for insertion into which we macroprocessing this file
+def process_macros(input_stream: InputStream, library_macros, filepath: Path, include_paths: list[Path], nested, init_ctx: ExpandMacrosVisitor = None):
     str_path = filepath.absolute().as_posix()
     lexer = MacroLexer(input_stream)
     lexer.removeErrorListeners()
@@ -343,7 +405,16 @@ def process_macros(input_stream: InputStream, library_macros, filepath: Path):
     parser.addErrorListener(AntlrErrorListener(AssemblerExceptionTag.MACRO, str_path))
     cst = parser.program()
     rewriter = TokenStreamRewriter(token_stream)
-    emv = ExpandMacrosVisitor(rewriter, library_macros, str_path)
+
+    emv = ExpandMacrosVisitor(rewriter, library_macros, str_path, include_paths, nested)
+    # If init_ctx passed, take its nonce value, macro_stack and macros to emv (all except nonce by reference)
+    if init_ctx is not None:
+        emv.nonce = init_ctx.nonce
+        emv.macro_stack = init_ctx.macro_stack
+        emv.macros = init_ctx.macros
     emv.visit(cst)
     new_text = rewriter.getDefaultText()
+    # Modify init_ctx nonce
+    if init_ctx is not None:
+        init_ctx.nonce = emv.nonce
     return InputStream(new_text)
