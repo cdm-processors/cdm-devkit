@@ -189,14 +189,14 @@ def spmove_handler(opcode: int, arguments: list):
 
 
 def dc_handler(arguments: list):
-    assert_args(arguments, Union[RelocatableExpressionNode, str], single_type=True)
+    assert_args(arguments, Union[RelocatableExpressionNode, bytes], single_type=True)
     if len(arguments) == 0:
         raise CdmTempException('At least one argument must be provided')
 
     segments = []
     for arg in arguments:
-        if isinstance(arg, str):
-            segments.append(BytesSegment(bytearray(arg, 'utf8')))
+        if isinstance(arg, bytes):
+            segments.append(BytesSegment(bytearray(arg)))
         elif isinstance(arg, RelocatableExpressionNode):
             if arg.byte_specifier is None:
                 added_labels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))

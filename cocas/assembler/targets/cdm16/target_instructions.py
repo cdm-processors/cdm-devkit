@@ -102,12 +102,11 @@ def dc(line: InstructionNode, _, __):
                     raise CdmTempException(f'Number is not a byte: {arg.const_term}')
             else:
                 segments.append(ExpressionSegment(arg, line.location))
-        elif isinstance(arg, str):
+        elif isinstance(arg, bytes):
             if command == 'dw':
                 raise CdmTempException('Currently "dw" doesn\'t support strings')
-            encoded = arg.encode('utf-8')
-            segments.append(BytesSegment(encoded, line.location))
-            size += len(encoded)
+            segments.append(BytesSegment(arg, line.location))
+            size += len(arg)
         else:
             raise CdmTempException(f'Incompatible argument type: {type(arg)}')
     return segments

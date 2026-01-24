@@ -81,10 +81,9 @@ def dc(line: InstructionNode, _, __):
     for arg in line.arguments:
         if isinstance(arg, RelocatableExpressionNode):
             segments.append(ExpressionSegment(arg, line.location))
-        elif isinstance(arg, str):
-            encoded = arg.encode('utf-8')
-            segments.append(BytesSegment(encoded, line.location))
-            size += len(encoded)
+        elif isinstance(arg, bytes):
+            segments.append(BytesSegment(arg, line.location))
+            size += len(arg)
         else:
             raise CdmTempException(f'Incompatible argument type: {type(arg)}')
     return segments

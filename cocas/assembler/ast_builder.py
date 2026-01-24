@@ -269,35 +269,35 @@ class BuildAstVisitor(AsmParserVisitor):
         return LabelNode(ctx.getText())
 
     def visitString(self, ctx: AsmParser.StringContext):
-        s = ctx.getText()[1:-1]
-        if '\\' in s:
-            return self.handle_esc_seq(s, self._ctx_location(ctx))
-        else:
-            return s
+        loc = self._ctx_location(ctx)
+        return self.encode_string(ctx.getText()[1:-1], loc)
 
     def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
         loc = self._ctx_location(ctx)
-        s = self.handle_esc_seq(ctx.getText()[1:-1], loc)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
         if len(s) < 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
                                      "Empty character constant")
         elif len(s) > 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
-                                     "Multi-character character constant")
+                                     "Multi-byte character constant")
         return s
 
     @staticmethod
-    def handle_esc_seq(s: str, loc: CodeLocation):
-        x: str
+    def encode_string(s: str, loc: CodeLocation):
+        result: bytes
         warnings.filterwarnings("error")
         try:
-            x = codecs.unicode_escape_decode(s)[0]
+            if '\\' in s:
+                result = codecs.escape_decode(codecs.encode(s, 'utf8'))[0]
+            else:
+                result = codecs.encode(s, 'utf8')
         except DeprecationWarning as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except UnicodeDecodeError as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         warnings.resetwarnings()
-        return x
+        return result
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
