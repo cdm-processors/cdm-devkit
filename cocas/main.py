@@ -74,7 +74,7 @@ def main():
     filepath: Path
     for filepath in args.sources:
         filetype = filepath.suffix or args.merge and '.obj' or '.asm'
-        if filetype in ['.obj', '.lib', ]:
+        if filetype in [ '.obj', '.o', '.lib' ]:
             obj_files.append(filepath)
         elif filetype == '.mlb':
             mlb_files.append(filepath)
