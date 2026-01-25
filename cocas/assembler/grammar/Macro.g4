@@ -34,7 +34,7 @@ COMMENT : '#'~[\n]* -> skip ;
 
 ASTERISK : '*' ;
 COMMA : ',' ;
-LABEL_END : [:>] ;
+LABEL_END : ':' | '>' | ':>' | '~>' ;
 QUESTION_MARK : '?' ;
 STRING: '"' (~[\\"\n]+ | '\\' .)* '"' ;
 CHAR : '\'' (~[\\'\n]+ | '\\' .)* '\'' ;

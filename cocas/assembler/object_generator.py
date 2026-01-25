@@ -36,7 +36,7 @@ class Template:
                 if line.external:
                     raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
                                              'External labels not allowed in templates')
-                elif line.entry:
+                elif line.linkage:
                     raise AssemblerException(AssemblerExceptionTag.TPLATE, line.location.file, line.location.line,
                                              'Ents not allowed in templates')
                 else:
@@ -129,7 +129,7 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
 
     asects = [Section(asect, target_instructions) for asect in pn.absolute_sections]
     rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]
-    shared_externals = set(map(lambda x: x.name, pn.shared_externals))
+    shared_externals = dict(map(lambda x: (x.label.name, x.linkage), pn.shared_externals))
     for i in itertools.chain(asects, rsects):
         i.exts |= shared_externals
     asects.sort(key=lambda s: s.address)

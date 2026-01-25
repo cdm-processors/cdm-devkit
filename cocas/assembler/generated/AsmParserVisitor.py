@@ -1,4 +1,4 @@
-# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.1
+# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .AsmParser import AsmParser
@@ -89,6 +89,41 @@ class AsmParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AsmParser#top_line.
     def visitTop_line(self, ctx:AsmParser.Top_lineContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#globalExtType.
+    def visitGlobalExtType(self, ctx:AsmParser.GlobalExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#fileExtType.
+    def visitFileExtType(self, ctx:AsmParser.FileExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#weakExtType.
+    def visitWeakExtType(self, ctx:AsmParser.WeakExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#localLabelSuffix.
+    def visitLocalLabelSuffix(self, ctx:AsmParser.LocalLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#globalLabelSuffix.
+    def visitGlobalLabelSuffix(self, ctx:AsmParser.GlobalLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#fileLabelSuffix.
+    def visitFileLabelSuffix(self, ctx:AsmParser.FileLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#weakLabelSuffix.
+    def visitWeakLabelSuffix(self, ctx:AsmParser.WeakLabelSuffixContext):
         return self.visitChildren(ctx)
 
 

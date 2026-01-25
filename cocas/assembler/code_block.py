@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Type
 
-from cocas.object_module import CodeLocation, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectSectionRecord, Linkage
 
 from .ast_nodes import (
     AbsoluteSectionNode,
@@ -30,8 +30,8 @@ class CodeBlock:
         self.loop_stack: list = []
         self.segments: list[ICodeSegment] = []
         self.labels: dict[str, int] = dict()
-        self.ents: set[str] = set()
-        self.exts: set[str] = set()
+        self.ents: dict[str, Linkage] = dict()
+        self.exts: dict[str, Linkage] = dict()
         self.code_locations: dict[int, CodeLocation] = dict()
         temp_storage = dict()  # variable to save information for future lines
         self.assemble_lines(lines, temp_storage)
@@ -76,11 +76,11 @@ class CodeBlock:
                                      f'Duplicate label "{label_name}" declaration')
 
         if line.external:
-            self.exts.add(label_name)
+            self.exts[label_name] = line.linkage
         else:
             self.append_label(label_name)
-            if line.entry:
-                self.ents.add(label_name)
+            if line.linkage:
+                self.ents[label_name] = line.linkage
 
     def assemble_instruction(self, line: InstructionNode, temp_storage):
         for seg in self.target_instructions.assemble_instruction(line, temp_storage):
