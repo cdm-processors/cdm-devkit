@@ -3,7 +3,7 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Callable, Union, get_args, get_origin
 
-from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode, StringLiteralNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment
 from .code_segments import (
@@ -102,11 +102,12 @@ def dc(line: InstructionNode, _, __):
                     raise CdmTempException(f'Number is not a byte: {arg.const_term}')
             else:
                 segments.append(ExpressionSegment(arg, line.location))
-        elif isinstance(arg, bytes):
+        elif isinstance(arg, StringLiteralNode):
+            data: bytes = arg.data
             if command == 'dw':
                 raise CdmTempException('Currently "dw" doesn\'t support strings')
-            segments.append(BytesSegment(arg, line.location))
-            size += len(arg)
+            segments.append(BytesSegment(data, line.location))
+            size += len(data)
         else:
             raise CdmTempException(f'Incompatible argument type: {type(arg)}')
     return segments

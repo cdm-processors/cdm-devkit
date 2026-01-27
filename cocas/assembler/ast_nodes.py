@@ -20,6 +20,11 @@ class LabelNode(Node):
 
 
 @dataclass
+class StringLiteralNode(Node):
+    data: bytes
+
+
+@dataclass
 class LocatableNode(Node):
     def __post_init__(self):
         self.location: CodeLocation = CodeLocation()

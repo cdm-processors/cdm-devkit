@@ -4,7 +4,7 @@ from typing import Callable, get_args, get_origin
 
 from bitstruct import pack
 
-from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode, StringLiteralNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment
 from .code_segments import AlignmentPaddingSegment, BytesSegment, ExpressionSegment
@@ -81,9 +81,10 @@ def dc(line: InstructionNode, _, __):
     for arg in line.arguments:
         if isinstance(arg, RelocatableExpressionNode):
             segments.append(ExpressionSegment(arg, line.location))
-        elif isinstance(arg, bytes):
-            segments.append(BytesSegment(arg, line.location))
-            size += len(arg)
+        elif isinstance(arg, StringLiteralNode):
+            data: bytes = arg.data
+            segments.append(BytesSegment(data, line.location))
+            size += len(data)
         else:
             raise CdmTempException(f'Incompatible argument type: {type(arg)}')
     return segments

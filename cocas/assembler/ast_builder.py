@@ -16,6 +16,7 @@ from .ast_nodes import (
     InstructionNode,
     LabelDeclarationNode,
     LabelNode,
+    StringLiteralNode,
     LocatableNode,
     Node,
     ProgramNode,
@@ -270,7 +271,8 @@ class BuildAstVisitor(AsmParserVisitor):
 
     def visitString(self, ctx: AsmParser.StringContext):
         loc = self._ctx_location(ctx)
-        return self.encode_string(ctx.getText()[1:-1], loc)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
+        return StringLiteralNode(s)
 
     def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
         loc = self._ctx_location(ctx)
@@ -281,7 +283,7 @@ class BuildAstVisitor(AsmParserVisitor):
         elif len(s) > 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
                                      "Multi-byte character constant")
-        return s
+        return StringLiteralNode(s)
 
     @staticmethod
     def encode_string(s: str, loc: CodeLocation):
