@@ -70,8 +70,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
                     if debug:
                         result += export_code_locations(asect.code_locations)
             for asect in obj.asects:
-                for label, address in asect.entries.items():
-                    result.append(f'NTRY {label} {address:02x}\n')
+                for label, entry in asect.entries.items():
+                    result.append(f'NTRY {label} {entry}\n')
         for rsect in obj.rsects:
             result.append(f'NAME {rsect.name}\n')
             if rsect.alignment != target_params.default_alignment:
@@ -81,15 +81,17 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
             if debug:
                 result += export_code_locations(rsect.code_locations)
             result.append(f'REL  {" ".join(map(str, rsect.relocatable))}\n')
-            for label, address in rsect.entries.items():
-                result.append(f'NTRY {label} {address:02x}\n')
+            for label, entry in rsect.entries.items():
+                result.append(f'NTRY {label} {entry}\n')
         external = defaultdict(list)
         for sect in (obj.asects if asects_exist else []) + obj.rsects:
             for label, entries in sect.external.items():
                 for entry in entries:
-                    external[label].append((sect.name, entry))
-        for label, entries in external.items():
-            result.append(f'XTRN {label}: {" ".join(map(sect_entry_to_str, entries))}\n')
+                    # I'm not sure that attributes should be included in the grouping
+                    label_with_attrs = f"{label}{entry.get_attrs_str()}"
+                    external[label_with_attrs].append((sect.name, entry))
+        for label_with_attrs, entries in external.items():
+            result.append(f'XTRN {label_with_attrs}: {" ".join(map(sect_entry_to_str, entries))}\n')
             pass
     return result
 

@@ -60,7 +60,7 @@ def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]
         for ent_name in sect.entries:
             if ent_name in ents:
                 raise LinkerException(f'Duplicate entries "{ent_name}"')
-            ents[ent_name] = sect.entries[ent_name] + sect_addresses[sect.name]
+            ents[ent_name] = sect.entries[ent_name].address + sect_addresses[sect.name]
     return ents
 
 

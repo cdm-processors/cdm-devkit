@@ -5,6 +5,7 @@ from typing import Union
 
 from .external_entry import ExternalEntry
 from .location import CodeLocation
+from .entry import Entry
 
 
 @dataclass
@@ -16,8 +17,8 @@ class ObjectSectionRecord:
     """Address of the section. 0 for every relocatable section"""
     data: bytearray
     """Compiled binary image of that section before linking"""
-    entries: dict[str, int]
-    """Exported labels of this section and their addresses"""
+    entries: dict[str, Entry]
+    """Exported labels of this section and their Entries (address, attributes e.t.c.)"""
     relocatable: list[ExternalEntry]
     """Places where the address of this relocatable section should be added"""
     code_locations: dict[int, CodeLocation]

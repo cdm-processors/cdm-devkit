@@ -19,6 +19,7 @@ from .ast_nodes import (
 )
 from .exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .targets import ICodeSegment, TargetInstructions
+from ..object_module.entry import Entry
 
 
 @dataclass
@@ -179,7 +180,11 @@ class Section(CodeBlock):
         super().__init__(address, sn.lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        entries = dict(p for p in self.labels.items() if p[0] in self.ents)
+        entries = {
+            key: Entry(label, self.ents[key])
+            for key, label in self.labels.items()
+            if key in self.ents
+        }
         out = ObjectSectionRecord(self.name, self.address, bytearray(), entries, [], self.code_locations)
         for seg in self.segments:
             seg.fill(out, self, labels, templates)
