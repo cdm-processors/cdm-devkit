@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from .external_entry import ExternalEntry
+from .external_entry_key import ExternalEntryKey
 from .location import CodeLocation
 from .entry import Entry
 
