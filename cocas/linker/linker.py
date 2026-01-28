@@ -68,7 +68,7 @@ def find_exts_by_sect(sects: list[ObjectSectionRecord]):
     exts_by_sect = dict()
     for sect in sects:
         exts = exts_by_sect.setdefault(sect.name, set())
-        exts |= set(sect.external.keys())
+        exts |= set(map(lambda k: k.label, sect.external.keys()))
     return exts_by_sect
 
 
@@ -161,7 +161,7 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
                 lower_limit = 1 << 8 * entry.entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
                 val += entry.lower_part + lower_parts.get(entry.offset, 0)
-                val += ents[ext_name] * entry.sign
+                val += ents[ext_name.label] * entry.sign
                 val %= (1 << 8 * entry.entry_bytes.stop)
                 image[pos:pos + len(entry.entry_bytes)] = \
                     (val // lower_limit).to_bytes(len(entry.entry_bytes), 'little', signed=False)
