@@ -87,11 +87,9 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
         for sect in (obj.asects if asects_exist else []) + obj.rsects:
             for label, entries in sect.external.items():
                 for entry in entries:
-                    # I'm not sure that attributes should be included in the grouping
-                    label_with_attrs = f"{label}{entry.get_attrs_str()}"
-                    external[label_with_attrs].append((sect.name, entry))
-        for label_with_attrs, entries in external.items():
-            result.append(f'XTRN {label_with_attrs}: {" ".join(map(sect_entry_to_str, entries))}\n')
+                    external[label].append((sect.name, entry))
+        for label, entries in external.items():
+            result.append(f'XTRN {label}: {" ".join(map(sect_entry_to_str, entries))}\n')
             pass
     return result
 

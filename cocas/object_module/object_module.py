@@ -7,6 +7,8 @@ from .external_entry import ExternalEntry
 from .location import CodeLocation
 from .entry import Entry
 
+from ..assembler.external_label_key import ExternalLabelKey
+
 
 @dataclass
 class ObjectSectionRecord:
@@ -25,7 +27,7 @@ class ObjectSectionRecord:
     """Mapping between addresses in binary image and locations in the source file"""
     alignment: int = field(default=1)
     """If the relocatable section should get address that is a multiple of some number"""
-    external: defaultdict[str, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
+    external: defaultdict[ExternalLabelKey, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
     """List of places in section where some external label is used"""
 
 

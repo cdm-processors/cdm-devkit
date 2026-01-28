@@ -1,6 +1,7 @@
 from enum import Enum
 
 class Attributes(Enum):
+    NONE = 0,
     LOCAL = 1,
     WEAK = 2
 
@@ -10,7 +11,8 @@ class Attributes(Enum):
                 return "LOCAL"
             case Attributes.WEAK:
                 return "WEAK"
+            case Attributes.NONE:
+                return ""
             case _:
                 pass # do something
-    
-    
+       

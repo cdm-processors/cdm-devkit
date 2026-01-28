@@ -138,10 +138,10 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
         pass  # do something
 
     update_varying_length(asects, {}, template_fields)
-    asects_labels = gather_local_labels(asects)
+    all_labels = gather_local_labels(asects)
     for rsect in rsects:
-        update_varying_length([rsect], asects_labels, template_fields)
+        update_varying_length([rsect], all_labels, template_fields)
 
-    asect_objects = [asect.to_object_section_record(asects_labels, template_fields) for asect in asects]
-    rsect_objects = concat_rsects(map(lambda x: x.to_object_section_record(asects_labels, template_fields), rsects))
+    asect_objects = [asect.to_object_section_record(all_labels, template_fields) for asect in asects]
+    rsect_objects = concat_rsects(map(lambda x: x.to_object_section_record(all_labels, template_fields), rsects))
     return ObjectModule(asect_objects, rsect_objects)
