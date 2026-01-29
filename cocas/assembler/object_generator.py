@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Union
 
 from cocas.object_module import CodeLocation, ObjectModule, concat_rsects
+from ..object_module.linkage import Linkage
 
 from .ast_nodes import (
     InstructionNode,
@@ -105,6 +106,7 @@ def label_or_template(label: Union[LabelNode, Any], template_fields: dict[str, d
 def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
+    file_local_labels: dict[str, tuple[str, int]] = dict()
 
     # LabelDeclarationNode
     # InstructionNode
@@ -121,6 +123,8 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
                     if prefix in template_fields:
                         raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                                  f"Label {line.label.name} conflicts with template {prefix}")
+                if line.linkage == Linkage.FILE_LOCAL:
+                    file_local_labels[line.label.name] = (line.location.file, line.location.line)
             elif isinstance(line, InstructionNode):
                 for arg in line.arguments:
                     if isinstance(arg, RelocatableExpressionNode):
@@ -144,4 +148,15 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
 
     asect_objects = [asect.to_object_section_record(all_labels, template_fields) for asect in asects]
     rsect_objects = concat_rsects(map(lambda x: x.to_object_section_record(all_labels, template_fields), rsects))
+    
+    for obj in itertools.chain(asect_objects, rsect_objects):
+        for label in obj.entries.keys():
+            if label in file_local_labels:
+                file_local_labels.pop(label)
+    
+    if not len(file_local_labels) == 0:
+        label, (file, line) = next(iter(file_local_labels.items()))
+        raise AssemblerException(AssemblerExceptionTag.ASM, file, line,
+                                    f'Not found file local label(s) implementation: "{label}"')
+
     return ObjectModule(asect_objects, rsect_objects)

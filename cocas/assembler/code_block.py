@@ -182,7 +182,9 @@ class Section(CodeBlock):
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
         entries = {
-            key: Entry(label, self.ents[key])
+            key: (lambda: (entry := Entry(label), 
+                        entry.add_linkage_attribute(self.ents[key]), 
+                        entry)[2])()
             for key, label in self.labels.items()
             if key in self.ents
         }

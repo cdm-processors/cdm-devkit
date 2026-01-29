@@ -35,3 +35,6 @@ class ExternalLabelKey:
     
     def __repr__(self):
         return str(self)
+    
+    def is_file_local(self):
+        return Attributes.LOCAL in self.attrs

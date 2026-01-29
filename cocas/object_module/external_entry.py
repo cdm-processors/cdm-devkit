@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-from .attributes import Attributes
-
 @dataclass
 class ExternalEntry:
     """Describes where and how some unknown at compile time value will be placed over the binary image.

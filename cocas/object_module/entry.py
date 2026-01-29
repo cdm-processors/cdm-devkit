@@ -1,21 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional
 
 from .attributes import Attributes
 from .linkage import Linkage
 
 @dataclass
 class Entry:
-    def __init__(self, address: int, linkage: Linkage):
-        self.address: int = address
-        self.attrs: list(Attributes) = list()
-        match linkage:
-            case Linkage.FILE_LOCAL:
-                self.attrs.append(Attributes.LOCAL)
-            case Linkage.WEAK_GLOBAL:
-                self.attrs.append(Attributes.WEAK)
-            case _:
-                pass
-    
+    address: int
+    attrs: list[Attributes] = field(default_factory=list)
+
+    def add_linkage_attribute(self, linkage: Optional[Linkage]):
+        if linkage:
+            attr: Attributes = linkage.to_attribute()
+            if attr != Attributes.NONE:
+                self.attrs.append(linkage.to_attribute())
+
     def __str__(self):
         string = ""
         if len(self.attrs) > 0:
@@ -28,4 +27,3 @@ class Entry:
        
     def __repr__(self):
         return str(self)
-

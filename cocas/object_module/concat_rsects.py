@@ -35,7 +35,7 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
                 same_entries = new.entries.keys() & rsect.entries.keys()
                 if same_entries:
                     raise ValueError(f"Two sections with same name {name} declare label {next(iter(same_entries))}")
-                new.entries.update({entry: pos + prev_size for entry, pos in rsect.entries.items()})
+                new.entries.update({entry_name: entry.address + prev_size for entry_name, entry in rsect.entries.items()})
                 for pos, loc in rsect.code_locations.items():
                     new.code_locations[pos + prev_size] = loc
                 for label, exts in rsect.external.items():
