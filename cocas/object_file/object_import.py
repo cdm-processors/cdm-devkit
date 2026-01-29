@@ -6,7 +6,8 @@ from typing import Optional, Union
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, Attributes, Entry, ExternalEntryKey
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, Attributes, Entry
+from cocas.assembler import ExternalLabelKey
 
 from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor
@@ -68,9 +69,9 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                                                   'No absolute sections found, but needed for xtrn entry')
                     # what is this?
                     ind = max(bisect.bisect_right(asect_addr, entry.offset) - 1, 0)
-                    asects[asect_addr[ind]].external[ExternalEntryKey(label, attributes)].append(entry)
+                    asects[asect_addr[ind]].external[ExternalLabelKey(label, attributes=attributes)].append(entry)
                 elif sect in rsects:
-                    rsects[sect].external[ExternalEntryKey(label, attributes)].append(entry)
+                    rsects[sect].external[ExternalLabelKey(label, attributes=attributes)].append(entry)
                 else:
                     raise ObjectFileException(self.file, xtrn.start.line, f'Section not found: {sect}')
         if filename:

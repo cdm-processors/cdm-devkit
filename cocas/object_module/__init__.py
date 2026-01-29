@@ -7,4 +7,3 @@ from .object_module import ObjectModule, ObjectSectionRecord
 from .linkage import Linkage
 from .entry import Entry
 from .attributes import Attributes
-from .external_entry_key import ExternalEntryKey
