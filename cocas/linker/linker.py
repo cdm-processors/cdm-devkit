@@ -1,6 +1,6 @@
 import itertools
 from math import inf
-from typing import Any, Optional, Iterable
+from typing import Any, Optional
 
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Attributes
 
@@ -33,6 +33,7 @@ def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
         rsect_bins.append((last_bin_begin, inf))
 
     return rsect_bins
+
 
 def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[str, int]:
     sect_addresses = {'$abs': 0}
@@ -125,6 +126,7 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     :param image_size: maximum size of image for current target or None if no limit
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
+    # For all XTRN find corresponding NTRY
     entry_by_exts = find_entries_for_exts([obj for _, obj in objects])
     
     asects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
