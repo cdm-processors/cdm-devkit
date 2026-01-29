@@ -28,8 +28,5 @@ class ExternalEntry:
     def __repr__(self):
         return str(self)
 
-    def get_attrs_str(self):
-        return ""
-
     def as_tuple(self):
         return self.offset, self.entry_bytes, self.sign
