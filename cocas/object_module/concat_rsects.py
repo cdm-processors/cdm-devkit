@@ -34,9 +34,6 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
                 prev_size = (prev_size + rsect.alignment - 1) // rsect.alignment * rsect.alignment
                 new.data.extend(bytearray(prev_size - len(new.data)))
                 new.data += rsect.data
-                # same_entries = new.entries.keys() & rsect.entries.keys()
-                # if same_entries:
-                #     raise ValueError(f"Two sections with same name {name} declare label {next(iter(same_entries))}")
                 new.entries.update({name: Entry(entry.address + prev_size, entry.attrs) for name, entry in rsect.entries.items()})
                 for pos, loc in rsect.code_locations.items():
                     new.code_locations[pos + prev_size] = loc
