@@ -4,13 +4,11 @@ from typing import TYPE_CHECKING, Optional
 
 import bitstruct
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord, ExternalLabelKey
 
-from ...ast_nodes import LabelNode, LabelDeclarationNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
+from ...ast_nodes import LabelNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignedSegment, IAlignmentPaddingSegment, ICodeSegment, IVaryingLengthSegment
-from ....object_module.external_label_key import ExternalLabelKey
-from ....object_module.linkage import Linkage
 
 if TYPE_CHECKING:
     from ...code_block import Section

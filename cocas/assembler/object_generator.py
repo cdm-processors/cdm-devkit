@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Union
 
 from cocas.object_module import CodeLocation, ObjectModule, concat_rsects
-from ..object_module.linkage import Linkage
+from cocas.object_module.linkage import Linkage
 
 from .ast_nodes import (
     InstructionNode,

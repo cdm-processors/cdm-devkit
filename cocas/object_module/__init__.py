@@ -5,5 +5,6 @@ from .external_entry import ExternalEntry
 from .location import CodeLocation
 from .object_module import ObjectModule, ObjectSectionRecord
 from .linkage import Linkage
+from .external_label_key import ExternalLabelKey
 from .entry import Entry
 from .attributes import Attributes

@@ -1,5 +1,5 @@
-from ..object_module.linkage import Linkage
-from ..object_module.attributes import Attributes
+from cocas.object_module.linkage import Linkage
+from cocas.object_module.attributes import Attributes
 from typing import Optional
 
 class ExternalLabelKey:

@@ -2,12 +2,11 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord, ExternalLabelKey
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignmentPaddingSegment, ICodeSegment
-from ....object_module.external_label_key import ExternalLabelKey
 
 if TYPE_CHECKING:
     from ...code_block import Section
