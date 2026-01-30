@@ -2,6 +2,7 @@ import codecs
 import warnings
 from base64 import b64decode
 from pathlib import Path
+from typing import Optional
 
 from antlr4 import CommonTokenStream, InputStream
 
@@ -249,25 +250,25 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
-    def visitLocalLabelSuffix(self, ctx) -> Linkage:
+    def visitLocalLabelSuffix(self, ctx) -> Optional[Linkage]:
         return None
     
-    def visitGlobalLabelSuffix(self, ctx) -> Linkage:
+    def visitGlobalLabelSuffix(self, ctx) -> Optional[Linkage]:
         return Linkage.GLOBAL
     
-    def visitFileLabelSuffix(self, ctx) -> Linkage:
+    def visitFileLabelSuffix(self, ctx) -> Optional[Linkage]:
         return Linkage.FILE_LOCAL
     
-    def visitWeakLabelSuffix(self, ctx) -> Linkage:
+    def visitWeakLabelSuffix(self, ctx) -> Optional[Linkage]:
         return Linkage.WEAK_GLOBAL
 
-    def visitGlobalExtType(self, ctx) -> Linkage:
+    def visitGlobalExtType(self, ctx) -> Optional[Linkage]:
         return Linkage.GLOBAL
     
-    def visitFileExtType(self, ctx) -> Linkage:
+    def visitFileExtType(self, ctx) -> Optional[Linkage]:
         return Linkage.FILE_LOCAL
     
-    def visitWeakExtType(self, ctx) -> Linkage:
+    def visitWeakExtType(self, ctx) -> Optional[Linkage]:
         return Linkage.WEAK_GLOBAL
 
     def visitStandaloneLabels(self, ctx: AsmParser.StandaloneLabelsContext) -> list[LabelDeclarationNode]:
