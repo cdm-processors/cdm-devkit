@@ -269,12 +269,12 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
         return LabelNode(ctx.getText())
 
-    def visitString(self, ctx: AsmParser.StringContext):
+    def visitString(self, ctx: AsmParser.StringContext) -> StringLiteralNode:
         loc = self._ctx_location(ctx)
         s = self.encode_string(ctx.getText()[1:-1], loc)
         return StringLiteralNode(s)
 
-    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
+    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> StringLiteralNode:
         loc = self._ctx_location(ctx)
         s = self.encode_string(ctx.getText()[1:-1], loc)
         if len(s) < 1:
@@ -286,14 +286,16 @@ class BuildAstVisitor(AsmParserVisitor):
         return StringLiteralNode(s)
 
     @staticmethod
-    def encode_string(s: str, loc: CodeLocation):
+    def encode_string(s: str, loc: CodeLocation) -> bytes:
         result: bytes
         warnings.filterwarnings("error")
+        result: bytes
         try:
-            if '\\' in s:
-                result = codecs.escape_decode(codecs.encode(s, 'utf8'))[0]
+            result_ = codecs.escape_decode(codecs.encode(s, 'utf8'))[0]
+            if isinstance(result_, bytes):
+                result = result_
             else:
-                result = codecs.encode(s, 'utf8')
+                result = codecs.encode(result_, "utf-8")
         except DeprecationWarning as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except UnicodeDecodeError as e:
