@@ -54,7 +54,7 @@ def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size)
     return sect_addresses
 
 
-def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[int, (ObjectSectionRecord, Entry)]):
+def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[int, tuple[ObjectSectionRecord, Entry]]):
     used_sects_queue = asects.copy()
     used_sects = []
     i = 0
@@ -71,12 +71,12 @@ def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[
 
 def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[(ObjectSectionRecord, Entry)]]:
     # ret: id(ExternalLabelKey) -> (section, entry)
-    ret: dict[int, Optional[(ObjectSectionRecord, Entry)]] = {}
+    ret: dict[int, Optional[tuple[ObjectSectionRecord, Entry]]] = {}
 
     # modules_scope: id(ObjectModule) -> (label -> (section, entry))
-    modules_scope: dict[int, dict[str, (ObjectSectionRecord, Entry)]] = {}
-    global_scope: dict[str, (ObjectSectionRecord, Entry)] = {}
-    weak_global_scope: dict[str, list[(ObjectSectionRecord, Entry)]] = {}
+    modules_scope: dict[int, dict[str, tuple[ObjectSectionRecord, Entry]]] = {}
+    global_scope: dict[str, tuple[ObjectSectionRecord, Entry]] = {}
+    weak_global_scope: dict[str, list[tuple[ObjectSectionRecord, Entry]]] = {}
 
     for module in modules:
         for sect in (module.rsects + module.asects):
