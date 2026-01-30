@@ -95,11 +95,11 @@ def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tup
     for module in modules:
         for sect in (module.rsects + module.asects):
             for ext in sect.external:
-                if Attributes.LOCAL in ext.attrs:
+                if Attributes.LOCAL in ext.attributes:
                     if (not id(module) in modules_scope) or (not ext.label in modules_scope[id(module)]):
                         raise LinkerException(f'Unresolved file-local ext "{ext.label}"')
                     ret[id(ext)] = modules_scope[id(module)][ext.label]
-                elif Attributes.WEAK in ext.attrs:
+                elif Attributes.WEAK in ext.attributes:
                     if ext.label in global_scope:
                         ret[id(ext)] = global_scope[ext.label]
                     elif ext.label in weak_global_scope:
