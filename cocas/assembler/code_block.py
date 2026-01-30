@@ -19,7 +19,7 @@ from .ast_nodes import (
 )
 from .exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .targets import ICodeSegment, TargetInstructions
-from ..object_module.entry import Entry
+from cocas.object_module.entry import Entry
 
 
 @dataclass
