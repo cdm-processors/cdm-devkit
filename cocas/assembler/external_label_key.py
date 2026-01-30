@@ -6,6 +6,11 @@ class ExternalLabelKey:
     """Describes the key for adding ExternalEntry objects to a dictionary.
     Contains the label name, attributes, sorted in non-descending order, anb
     their string representation."""
+
+    label: str
+    attrs: list(Attributes) = []
+    key: str
+    
     def __init__(self, label: str,
                 linkage_attr: Optional[Linkage] = None,
                 attributes: Optional[list[Attributes]] = None):

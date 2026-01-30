@@ -308,7 +308,7 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
         if isinstance(term, LabelNode):
             if term.name in section.exts:
                 result.ext_labels[ExternalLabelKey(term.name, section.exts[term.name])] = \
-                    result.ext_labels.get(term.name, 0) + sign
+                    result.ext_labels.get(ExternalLabelKey(term.name, section.exts[term.name]), 0) + sign
             elif term.name in section.labels and section.name != '$abs':
                 result.rel_labels[term.name] = result.rel_labels.get(term.name, 0) + sign
             elif term.name in section.labels:
