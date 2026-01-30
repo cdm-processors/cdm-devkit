@@ -9,6 +9,7 @@ from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import ICodeSegment, IVaryingLengthSegment
 from .branches import check_inverse_branch
 from .instruction_codes import simple_instructions
+from ....object_module.external_label_key import ExternalLabelKey
 
 TAG = AssemblerExceptionTag.ASM
 
@@ -262,12 +263,16 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: 
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1), full_bytes=False))
+        obj_rec.external \
+            .setdefault(ExternalLabelKey(ext, s.exts[ext]), []) \
+            .append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
         entry = ExternalEntry(offset, range(1, 2), full_bytes=False, lower_part=val_lo)
-        obj_rec.external.setdefault(ext, []).append(entry)
+        obj_rec.external.setdefault(ExternalLabelKey(ext, s.exts[ext]), []).append(entry)
     else:
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2), full_bytes=True))
+        obj_rec.external \
+            .setdefault(ExternalLabelKey(ext, s.exts[ext]), []) \
+            .append(ExternalEntry(offset, range(0, 2), full_bytes=True))
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,

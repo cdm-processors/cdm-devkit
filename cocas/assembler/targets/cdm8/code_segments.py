@@ -7,6 +7,7 @@ from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignmentPaddingSegment, ICodeSegment
+from ....object_module.external_label_key import ExternalLabelKey
 
 if TYPE_CHECKING:
     from ...code_block import Section
@@ -78,7 +79,7 @@ class ParsedExpression:
     relocate_additions: int = field(default=0)
     asect: dict[str, int] = field(default_factory=dict)
     rel_labels: dict[str, int] = field(default_factory=dict)
-    ext_labels: dict[str, int] = field(default_factory=dict)
+    ext_labels: dict[ExternalLabelKey, int] = field(default_factory=dict)
 
 
 def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels: dict[str, int],
@@ -89,7 +90,8 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
     for term, sign in [(t, 1) for t in expr.add_terms] + [(t, -1) for t in expr.sub_terms]:
         if isinstance(term, LabelNode):
             if term.name in section.exts:
-                result.ext_labels[term.name] = result.ext_labels.get(term.name, 0) + sign
+                result.ext_labels[ExternalLabelKey(term.name, section.exts[term.name])] = \
+                    result.ext_labels.get(ExternalLabelKey(term.name, section.exts[term.name]), 0) + sign
             elif term.name in section.labels and section.name != '$abs':
                 result.rel_labels[term.name] = result.rel_labels.get(term.name, 0) + sign
             elif term.name in section.labels:
