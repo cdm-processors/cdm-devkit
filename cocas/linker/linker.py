@@ -69,7 +69,7 @@ def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[
     return used_sects
     
 
-def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[(ObjectSectionRecord, Entry)]]:
+def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tuple[ObjectSectionRecord, Entry]]]:
     # ret: id(ExternalLabelKey) -> (section, entry)
     ret: dict[int, Optional[tuple[ObjectSectionRecord, Entry]]] = {}
 
