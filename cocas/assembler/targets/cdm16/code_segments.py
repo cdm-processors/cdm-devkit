@@ -9,7 +9,7 @@ from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
 from ...ast_nodes import LabelNode, LabelDeclarationNode, RegisterNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
 from .. import IAlignedSegment, IAlignmentPaddingSegment, ICodeSegment, IVaryingLengthSegment
-from ...external_label_key import ExternalLabelKey
+from ....object_module.external_label_key import ExternalLabelKey
 from ....object_module.linkage import Linkage
 
 if TYPE_CHECKING:

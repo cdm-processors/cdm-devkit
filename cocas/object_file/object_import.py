@@ -7,7 +7,7 @@ import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, Attributes, Entry
-from cocas.assembler import ExternalLabelKey
+from cocas.object_module.external_label_key import ExternalLabelKey
 
 from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor

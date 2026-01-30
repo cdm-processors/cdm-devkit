@@ -8,9 +8,9 @@ class ExternalLabelKey:
     their string representation."""
 
     label: str
-    attrs: list(Attributes) = []
+    attrs: list[Attributes] = []
     key: str
-    
+
     def __init__(self, label: str,
                 linkage_attr: Optional[Linkage] = None,
                 attributes: Optional[list[Attributes]] = None):

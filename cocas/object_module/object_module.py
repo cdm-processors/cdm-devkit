@@ -6,8 +6,7 @@ from typing import Union
 from .external_entry import ExternalEntry
 from .location import CodeLocation
 from .entry import Entry
-
-from ..assembler.external_label_key import ExternalLabelKey
+from .external_label_key import ExternalLabelKey
 
 
 @dataclass
