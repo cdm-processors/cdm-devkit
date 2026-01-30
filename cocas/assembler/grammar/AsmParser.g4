@@ -76,8 +76,8 @@ line
     | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-labels_declaration: labels label_suffix ;
-labels: label (COMMA label)*;
+labels_declaration: labels label_suffix (Equals addr_expr)? ;
+labels: label (COMMA label)* ;
 arguments : argument (COMMA argument)* ;
 
 conditional : If NEWLINE+ conditions code_block else_clause? Fi NEWLINE+ ;

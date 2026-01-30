@@ -51,6 +51,7 @@ class LabelDeclarationNode(LocatableNode):
     label: LabelNode
     linkage: Optional[Linkage]
     external: bool
+    addr_expr: Optional[RelocatableExpressionNode]
 
 
 @dataclass

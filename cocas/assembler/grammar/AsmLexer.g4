@@ -20,6 +20,7 @@ Tplate : 'tplate' ;
 Until : 'until' ;
 Wend : 'wend' ;
 While : 'while' ;
+Equals : '=' ;
 
 DOT : '.' ;
 COMMA : ',' ;
