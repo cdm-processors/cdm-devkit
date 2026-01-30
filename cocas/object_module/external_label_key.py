@@ -8,29 +8,29 @@ class ExternalLabelKey:
     their string representation."""
 
     label: str
-    attrs: list[Attributes] = []
+    attributes: set[Attributes] = set()
     key: str
 
     def __init__(self, label: str,
                 linkage_attr: Optional[Linkage] = None,
                 attributes: Optional[list[Attributes]] = None):
         self.label: str = label
-        self.attrs: list(Attributes) = []
+        self.attributes: set(Attributes) = set()
         self.key: str = label
 
         if linkage_attr:
             attr: Attributes = linkage_attr.to_attribute()
             if attr != Attributes.NONE:
-                self.attrs.append(linkage_attr.to_attribute())
+                self.attributes.add(linkage_attr.to_attribute())
         
         if attributes:
-            self.attrs.extend(attributes)
+            self.attributes.update(attributes)
         
-        self.attrs = sorted(self.attrs)
+        self.attributes = sorted(self.attributes)
 
-        if len(self.attrs) > 0:
+        if len(self.attributes) > 0:
             # ATTR1 +ATTR2 ... +ATTRn
-            string = " +".join(map(str, self.attrs))
+            string = " +".join(map(str, self.attributes))
             # label +ATTR1 +ATTR2 ... +ATTRn
             self.key += f" +{string}"
     
@@ -49,4 +49,4 @@ class ExternalLabelKey:
         return str(self)
     
     def is_file_local(self):
-        return Attributes.LOCAL in self.attrs
+        return Attributes.LOCAL in self.attributes

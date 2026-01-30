@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import IntEnum
 
-class Attributes(Enum):
+class Attributes(IntEnum):
     NONE = 0,
     LOCAL = 1,
     WEAK = 2
@@ -15,4 +15,3 @@ class Attributes(Enum):
                 return ""
             case _:
                 pass # do something
-       
