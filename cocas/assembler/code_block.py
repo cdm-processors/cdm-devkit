@@ -70,10 +70,9 @@ class CodeBlock:
 
     def assemble_label_declaration(self, line: LabelDeclarationNode, __):
         label_name = line.label.name
-        label_linkage = line.linkage
         if (label_name in self.labels or
-                (label_name in self.ents and label_linkage == self.ents[label_name]) or
-                (label_name in self.exts and label_linkage == self.exts[label_name])):
+                label_name in self.ents or
+                label_name in self.exts):
             raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                      f'Duplicate label "{label_name}" declaration')
 
