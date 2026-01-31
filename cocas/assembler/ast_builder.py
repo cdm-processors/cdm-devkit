@@ -16,6 +16,7 @@ from .ast_nodes import (
     InstructionNode,
     LabelDeclarationNode,
     LabelNode,
+    StringLiteralNode,
     LocatableNode,
     Node,
     ProgramNode,
@@ -268,36 +269,39 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
         return LabelNode(ctx.getText())
 
-    def visitString(self, ctx: AsmParser.StringContext):
-        s = ctx.getText()[1:-1]
-        if '\\' in s:
-            return self.handle_esc_seq(s, self._ctx_location(ctx))
-        else:
-            return s
-
-    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
+    def visitString(self, ctx: AsmParser.StringContext) -> StringLiteralNode:
         loc = self._ctx_location(ctx)
-        s = self.handle_esc_seq(ctx.getText()[1:-1], loc)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
+        return StringLiteralNode(s)
+
+    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> StringLiteralNode:
+        loc = self._ctx_location(ctx)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
         if len(s) < 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
                                      "Empty character constant")
         elif len(s) > 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
-                                     "Multi-character character constant")
-        return s
+                                     "Multi-byte character constant")
+        return StringLiteralNode(s)
 
     @staticmethod
-    def handle_esc_seq(s: str, loc: CodeLocation):
-        x: str
+    def encode_string(s: str, loc: CodeLocation) -> bytes:
+        result: bytes
         warnings.filterwarnings("error")
+        result: bytes
         try:
-            x = codecs.unicode_escape_decode(s)[0]
+            result_ = codecs.escape_decode(codecs.encode(s, 'utf8'))[0]
+            if isinstance(result_, bytes):
+                result = result_
+            else:
+                result = codecs.encode(result_, "utf-8")
         except DeprecationWarning as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except UnicodeDecodeError as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         warnings.resetwarnings()
-        return x
+        return result
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))

@@ -4,7 +4,7 @@ import bitstruct
 
 from cocas.object_module import CodeLocation
 
-from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode, StringLiteralNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment
 from .branches import check_inverse_branch
@@ -189,14 +189,15 @@ def spmove_handler(opcode: int, arguments: list):
 
 
 def dc_handler(arguments: list):
-    assert_args(arguments, Union[RelocatableExpressionNode, str], single_type=True)
+    assert_args(arguments, Union[RelocatableExpressionNode, StringLiteralNode], single_type=True)
     if len(arguments) == 0:
         raise CdmTempException('At least one argument must be provided')
 
     segments = []
     for arg in arguments:
-        if isinstance(arg, str):
-            segments.append(BytesSegment(bytearray(arg, 'utf8')))
+        if isinstance(arg, StringLiteralNode):
+            data: bytes = arg.data
+            segments.append(BytesSegment(bytearray(data)))
         elif isinstance(arg, RelocatableExpressionNode):
             if arg.byte_specifier is None:
                 added_labels = list(filter(lambda t: isinstance(t, LabelNode), arg.add_terms))
