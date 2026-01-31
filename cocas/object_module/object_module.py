@@ -5,6 +5,8 @@ from typing import Union
 
 from .external_entry import ExternalEntry
 from .location import CodeLocation
+from .entry import Entry
+from .external_label_key import ExternalLabelKey
 
 
 @dataclass
@@ -16,15 +18,15 @@ class ObjectSectionRecord:
     """Address of the section. 0 for every relocatable section"""
     data: bytearray
     """Compiled binary image of that section before linking"""
-    entries: dict[str, int]
-    """Exported labels of this section and their addresses"""
+    entries: dict[str, Entry]
+    """Exported labels of this section and their Entries (address, attributes e.t.c.)"""
     relocatable: list[ExternalEntry]
     """Places where the address of this relocatable section should be added"""
     code_locations: dict[int, CodeLocation]
     """Mapping between addresses in binary image and locations in the source file"""
     alignment: int = field(default=1)
     """If the relocatable section should get address that is a multiple of some number"""
-    external: defaultdict[str, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
+    external: defaultdict[ExternalLabelKey, list[ExternalEntry]] = field(default_factory=lambda: defaultdict(list))
     """List of places in section where some external label is used"""
 
 

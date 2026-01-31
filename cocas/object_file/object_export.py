@@ -70,8 +70,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
                     if debug:
                         result += export_code_locations(asect.code_locations)
             for asect in obj.asects:
-                for label, address in asect.entries.items():
-                    result.append(f'NTRY {label} {address:02x}\n')
+                for label, entry in asect.entries.items():
+                    result.append(f'NTRY {label} {entry}\n')
         for rsect in obj.rsects:
             result.append(f'NAME {rsect.name}\n')
             if rsect.alignment != target_params.default_alignment:
@@ -81,8 +81,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
             if debug:
                 result += export_code_locations(rsect.code_locations)
             result.append(f'REL  {" ".join(map(str, rsect.relocatable))}\n')
-            for label, address in rsect.entries.items():
-                result.append(f'NTRY {label} {address:02x}\n')
+            for label, entry in rsect.entries.items():
+                result.append(f'NTRY {label} {entry}\n')
         external = defaultdict(list)
         for sect in (obj.asects if asects_exist else []) + obj.rsects:
             for label, entries in sect.external.items():

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Type
 
-from cocas.object_module import CodeLocation, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectSectionRecord, Linkage
 
 from .ast_nodes import (
     AbsoluteSectionNode,
@@ -19,6 +19,7 @@ from .ast_nodes import (
 )
 from .exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .targets import ICodeSegment, TargetInstructions
+from cocas.object_module.entry import Entry
 
 
 @dataclass
@@ -30,8 +31,8 @@ class CodeBlock:
         self.loop_stack: list = []
         self.segments: list[ICodeSegment] = []
         self.labels: dict[str, int] = dict()
-        self.ents: set[str] = set()
-        self.exts: set[str] = set()
+        self.ents: dict[str, Linkage] = dict()
+        self.exts: dict[str, Linkage] = dict()
         self.code_locations: dict[int, CodeLocation] = dict()
         temp_storage = dict()  # variable to save information for future lines
         self.assemble_lines(lines, temp_storage)
@@ -76,11 +77,11 @@ class CodeBlock:
                                      f'Duplicate label "{label_name}" declaration')
 
         if line.external:
-            self.exts.add(label_name)
+            self.exts[label_name] = line.linkage
         else:
             self.append_label(label_name)
-            if line.entry:
-                self.ents.add(label_name)
+            if line.linkage:
+                self.ents[label_name] = line.linkage
 
     def assemble_instruction(self, line: InstructionNode, temp_storage):
         for seg in self.target_instructions.assemble_instruction(line, temp_storage):
@@ -179,7 +180,13 @@ class Section(CodeBlock):
         super().__init__(address, sn.lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        entries = dict(p for p in self.labels.items() if p[0] in self.ents)
+        entries = {
+            key: (lambda: (entry := Entry(label), 
+                        entry.add_linkage_attribute(self.ents[key]), 
+                        entry)[2])()
+            for key, label in self.labels.items()
+            if key in self.ents
+        }
         out = ObjectSectionRecord(self.name, self.address, bytearray(), entries, [], self.code_locations)
         for seg in self.segments:
             seg.fill(out, self, labels, templates)

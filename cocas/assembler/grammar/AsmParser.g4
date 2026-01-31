@@ -58,12 +58,25 @@ continue_statement : Continue NEWLINE+ ;
 
 top_line: line;
 
+ext_type
+    : Ext   # globalExtType
+    | File  # fileExtType
+    | Weak  # weakExtType
+    ;
+
+label_suffix
+    : COLON         # localLabelSuffix
+    | ANGLE_BRACKET # globalLabelSuffix
+    | COLON_ANGLE   # fileLabelSuffix
+    | TILDE_ANGLE   # weakLabelSuffix
+    ;
+
 line
-    : labels_declaration Ext? NEWLINE+                    # standaloneLabels
+    : labels_declaration ext_type? NEWLINE+                    # standaloneLabels
     | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-labels_declaration: labels (COLON | ANGLE_BRACKET) ;
+labels_declaration: labels label_suffix ;
 labels: label (COMMA label)*;
 arguments : argument (COMMA argument)* ;
 
@@ -115,6 +128,8 @@ name
     | Else
     | End
     | Ext
+    | File
+    | Weak
     | Fi
     | If
     | Is

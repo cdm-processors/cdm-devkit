@@ -2,10 +2,11 @@ import codecs
 import warnings
 from base64 import b64decode
 from pathlib import Path
+from typing import Optional
 
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.object_module import CodeLocation
+from cocas.object_module import CodeLocation, Linkage
 
 from .ast_nodes import (
     AbsoluteSectionNode,
@@ -67,7 +68,7 @@ class BuildAstVisitor(AsmParserVisitor):
                 ret.top_instructions.extend(top)
         return ret
 
-    def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
+    def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelDeclarationNode], list[InstructionNode]]:
         shared_externals = []
         top_instructions = []
         for child in ctx.children:
@@ -90,7 +91,7 @@ class BuildAstVisitor(AsmParserVisitor):
                 labels = self.visitStandaloneLabels(child)
                 for i in labels:
                     self.check_label_is_ext(i)
-                    shared_externals.append(i.label)
+                    shared_externals.append(i)
         return shared_externals, top_instructions
 
     @staticmethod
@@ -250,18 +251,42 @@ class BuildAstVisitor(AsmParserVisitor):
                     add_terms.append(term)
         return RelocatableExpressionNode(None, add_terms, sub_terms, const_term)
 
+    def visitLocalLabelSuffix(self, ctx) -> Optional[Linkage]:
+        return None
+    
+    def visitGlobalLabelSuffix(self, ctx) -> Optional[Linkage]:
+        return Linkage.GLOBAL
+    
+    def visitFileLabelSuffix(self, ctx) -> Optional[Linkage]:
+        return Linkage.FILE_LOCAL
+    
+    def visitWeakLabelSuffix(self, ctx) -> Optional[Linkage]:
+        return Linkage.WEAK_GLOBAL
+
+    def visitGlobalExtType(self, ctx) -> Optional[Linkage]:
+        return Linkage.GLOBAL
+    
+    def visitFileExtType(self, ctx) -> Optional[Linkage]:
+        return Linkage.FILE_LOCAL
+    
+    def visitWeakExtType(self, ctx) -> Optional[Linkage]:
+        return Linkage.WEAK_GLOBAL
+
     def visitStandaloneLabels(self, ctx: AsmParser.StandaloneLabelsContext) -> list[LabelDeclarationNode]:
         label_decl = self.visitLabels_declaration(ctx.labels_declaration())
         for i in label_decl:
-            i.external = ctx.Ext() is not None
-            if i.entry and i.external:
+            if ctx.ext_type() is None:
+                continue
+            if i.linkage:
                 raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
                                          f'Label {i.label.name} cannot be both external and entry')
+            i.linkage = self.visit(ctx.ext_type())
+            i.external = True
         return label_decl
 
     def visitLabels_declaration(self, ctx: AsmParser.Labels_declarationContext) -> list[LabelDeclarationNode]:
-        is_entry = ctx.ANGLE_BRACKET() is not None
-        return [LabelDeclarationNode(i, is_entry, False) for i in self.visitLabels(ctx.labels())]
+        linkage = self.visit(ctx.label_suffix())
+        return [LabelDeclarationNode(i, linkage, False) for i in self.visitLabels(ctx.labels())]
 
     def visitLabels(self, ctx: AsmParser.LabelsContext):
         return [self.visitLabel(i) for i in ctx.label()]
