@@ -10,6 +10,7 @@ ALIG: 'ALIG';
 DATA: 'DATA' -> pushMode(IN_BYTES);
 REL : 'REL';
 XTRN: 'XTRN';
+ATTR: 'ATTR';
 
 WORD: [a-zA-Z_0-9]+;
 WORD_WITH_DOTS : [a-zA-Z_][a-zA-Z_0-9]* DOT [a-zA-Z_0-9.]* [a-zA-Z_0-9];

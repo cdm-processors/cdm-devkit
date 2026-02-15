@@ -107,16 +107,21 @@ class ContinueStatementNode(ExportLocationNode):
 
 @dataclass
 class SectionNode(Node):
-    lines: list
+    lines: list[Node]
 
 
 @dataclass
-class AbsoluteSectionNode(SectionNode):
+class AttributeMixin:
+    attributes: list[str]
+
+
+@dataclass
+class AbsoluteSectionNode(AttributeMixin, SectionNode):
     address: int
 
 
 @dataclass
-class RelocatableSectionNode(SectionNode):
+class RelocatableSectionNode(AttributeMixin, SectionNode):
     name: str
 
 

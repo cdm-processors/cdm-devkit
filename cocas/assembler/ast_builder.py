@@ -2,12 +2,11 @@ import codecs
 import warnings
 from base64 import b64decode
 from pathlib import Path
+from typing import Literal, overload
 
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.object_module import CodeLocation
-
-from .ast_nodes import (
+from cocas.assembler.ast_nodes import (
     AbsoluteSectionNode,
     BreakStatementNode,
     ConditionalStatementNode,
@@ -27,8 +26,9 @@ from .ast_nodes import (
     UntilLoopNode,
     WhileLoopNode,
 )
-from .exceptions import AntlrErrorListener, AssemblerException, AssemblerExceptionTag
-from .generated import AsmLexer, AsmParser, AsmParserVisitor
+from cocas.assembler.exceptions import AntlrErrorListener, AssemblerException, AssemblerExceptionTag
+from cocas.assembler.generated import AsmLexer, AsmParser, AsmParserVisitor
+from cocas.object_module import CodeLocation
 
 
 # noinspection PyPep8Naming
@@ -99,17 +99,35 @@ class BuildAstVisitor(AsmParserVisitor):
             raise AssemblerException(AssemblerExceptionTag.ASM, label.location.file, label.location.line,
                                      "Only external labels are allowed at the top of a file")
 
+    def visitSection_attr(self, ctx: AsmParser.Section_attrContext | None) -> str | None:
+        if ctx is None:
+            return None
+        
+        return ctx.WORD().getText()
+
+    def visitSection_attrs(self, ctx: AsmParser.Section_attrsContext | None) -> list[str]:
+        if ctx is None:
+            return []
+
+        return [
+            attribute
+            for sa in ctx.section_attr()
+            if (attribute := self.visitSection_attr(sa)) is not None
+        ]
+
     def visitAbsoluteSection(self, ctx: AsmParser.AbsoluteSectionContext) -> AbsoluteSectionNode:
         header = ctx.asect_header()
         lines = self.visitSection_body(ctx.section_body())
+        attributes = self.visitSection_attrs(header.section_attrs())
         address = self.visitNumber(header.number())
-        return AbsoluteSectionNode(lines, address)
+        return AbsoluteSectionNode(lines, attributes, address)
 
     def visitRelocatableSection(self, ctx: AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
         header = ctx.rsect_header()
         lines = self.visitSection_body(ctx.section_body())
+        attributes = self.visitSection_attrs(header.section_attrs())
         name = header.name().getText()
-        return RelocatableSectionNode(lines, name)
+        return RelocatableSectionNode(lines, attributes, name)
 
     def visitTemplateSection(self, ctx: AsmParser.TemplateSectionContext) -> TemplateSectionNode:
         header = ctx.tplate_header()
@@ -188,7 +206,11 @@ class BuildAstVisitor(AsmParserVisitor):
         mnemonic = ctx.branch_mnemonic()
         return UntilLoopNode(lines, mnemonic.getText(), self._ctx_location(mnemonic))
 
-    def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations=False):
+    @overload
+    def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations: Literal[True]) -> tuple[list, list]: ...
+    @overload
+    def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations: Literal[False] = False) -> list: ...
+    def visitCode_block(self, ctx: AsmParser.Code_blockContext, return_locations: bool = False):
         if ctx.children is None:
             if return_locations:
                 return [], []
@@ -319,7 +341,7 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitArgument(i) for i in ctx.children if isinstance(i, AsmParser.ArgumentContext)]
 
 
-def build_ast(input_stream: InputStream, filepath: Path):
+def build_ast(input_stream: InputStream, filepath: Path) -> Node:
     str_path = filepath.absolute().as_posix()
     lexer = AsmLexer(input_stream)
     lexer.removeErrorListeners()
