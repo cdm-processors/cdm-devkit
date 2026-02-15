@@ -304,7 +304,11 @@ def parse_expression(expr: RelocatableExpressionNode, section: "Section", labels
     result = ParsedExpression(expr.const_term)
     for term, sign in [(t, 1) for t in expr.add_terms] + [(t, -1) for t in expr.sub_terms]:
         if isinstance(term, LabelNode):
-            if term.name in section.exts:
+            if term.name in section.aliases:
+                alias_expr : ParsedExpression = \
+                    parse_expression(section.aliases[term.name], section, labels, templates, segment)
+                result.asect[term.name] = calculate_expression(alias_expr, section, labels)
+            elif term.name in section.exts:
                 result.ext_labels[term.name] = result.ext_labels.get(term.name, 0) + sign
             elif term.name in section.labels and section.name != '$abs':
                 result.rel_labels[term.name] = result.rel_labels.get(term.name, 0) + sign

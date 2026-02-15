@@ -46,4 +46,4 @@ SLASH : '/' ;
 APOSTROPHE : '\'' ;
 DOLLAR_SIGN : '$' ;
 
-OTHER : [-+()]+ ;
+OTHER : [-+()=]+ ;

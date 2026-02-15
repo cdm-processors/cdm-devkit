@@ -62,6 +62,11 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by AsmParser#aliases_declaration.
+    def visitAliases_declaration(self, ctx:AsmParser.Aliases_declarationContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by AsmParser#line_mark.
     def visitLine_mark(self, ctx:AsmParser.Line_markContext):
         return self.visitChildren(ctx)

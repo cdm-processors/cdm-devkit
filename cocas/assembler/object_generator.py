@@ -12,7 +12,7 @@ from .ast_nodes import (
     ProgramNode,
     RelocatableExpressionNode,
     TemplateFieldNode,
-    TemplateSectionNode,
+    TemplateSectionNode
 )
 from .code_block import Section
 from .exceptions import AssemblerException, AssemblerExceptionTag

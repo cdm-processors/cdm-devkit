@@ -16,6 +16,8 @@ from .ast_nodes import (
     SectionNode,
     UntilLoopNode,
     WhileLoopNode,
+    RelocatableExpressionNode,
+    AliasDeclarationNode
 )
 from .exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .targets import ICodeSegment, TargetInstructions
@@ -32,6 +34,7 @@ class CodeBlock:
         self.labels: dict[str, int] = dict()
         self.ents: dict[str, Linkage] = dict()
         self.exts: dict[str, Linkage] = dict()
+        self.aliases: dict[str, RelocatableExpressionNode] = dict()
         self.code_locations: dict[int, CodeLocation] = dict()
         temp_storage = dict()  # variable to save information for future lines
         self.assemble_lines(lines, temp_storage)
@@ -61,6 +64,7 @@ class CodeBlock:
             UntilLoopNode: self.assemble_until_loop,
             BreakStatementNode: self.assemble_break_statement,
             ContinueStatementNode: self.assemble_continue_statement,
+            AliasDeclarationNode: self.assemble_alias_declaration,
         }
         for line in lines:
             if isinstance(line, ExportLocationNode):
@@ -81,6 +85,19 @@ class CodeBlock:
             self.append_label(label_name)
             if line.linkage:
                 self.ents[label_name] = line.linkage
+
+    
+    def assemble_alias_declaration(self, line: AliasDeclarationNode, __):
+        alias_name = line.label.name
+        if (alias_name in self.labels or
+                alias_name in self.ents or
+                alias_name in self.exts or
+                alias_name in self.aliases):
+            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                     f'Duplicate label or aliases "{alias_name}" declaration')
+        
+        self.append_label(alias_name)
+        self.aliases[alias_name] = line.addr_expr
 
     def assemble_instruction(self, line: InstructionNode, temp_storage):
         for seg in self.target_instructions.assemble_instruction(line, temp_storage):

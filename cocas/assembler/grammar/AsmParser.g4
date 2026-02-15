@@ -31,6 +31,7 @@ code_block
     :
     ( break_statement
     | continue_statement
+    | aliases_declaration
     | line
     | conditional
     | while_loop
@@ -38,6 +39,8 @@ code_block
     | line_mark
     )*
     ;
+
+aliases_declaration : labels label_suffix Equals addr_expr NEWLINE+ ;
 
 line_mark locals [
 source_file = '',
@@ -76,7 +79,7 @@ line
     | labels_declaration? instruction arguments? NEWLINE+ # instructionLine
     ;
 
-labels_declaration: labels label_suffix (Equals addr_expr)? ;
+labels_declaration: labels label_suffix ;
 labels: label (COMMA label)* ;
 arguments : argument (COMMA argument)* ;
 

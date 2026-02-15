@@ -25,6 +25,7 @@ from .ast_nodes import (
     TemplateSectionNode,
     UntilLoopNode,
     WhileLoopNode,
+    AliasDeclarationNode
 )
 from .exceptions import AntlrErrorListener, AssemblerException, AssemblerExceptionTag
 from .generated import AsmLexer, AsmParser, AsmParserVisitor
@@ -201,6 +202,9 @@ class BuildAstVisitor(AsmParserVisitor):
             if isinstance(c, AsmParser.StandaloneLabelsContext):
                 for i in self.visitStandaloneLabels(c):
                     nodes.append(i)
+            elif isinstance(c, AsmParser.Aliases_declarationContext):
+                for i in self.visitAliases_declaration(c):
+                    nodes.append(i)
             elif isinstance(c, AsmParser.InstructionLineContext):
                 nodes += self.visitInstructionLine(c)
             elif isinstance(c, AsmParser.ConditionalContext):
@@ -269,6 +273,17 @@ class BuildAstVisitor(AsmParserVisitor):
     
     def visitWeakExtType(self, ctx) -> Linkage:
         return Linkage.WEAK_GLOBAL
+    
+    def visitAliases_declaration(self, ctx: AsmParser.Aliases_declarationContext) -> list[AliasDeclarationNode]:
+        linkage = self.visit(ctx.label_suffix())
+        addr_expr = self.visit(ctx.addr_expr())
+        labels = self.visitLabels(ctx.labels())
+
+        if linkage is Linkage.WEAK_GLOBAL or linkage is Linkage.GLOBAL:
+            labels_names: str = [label.name for label in labels]
+            raise AssemblerException(AssemblerExceptionTag.ASM, self.source_path, ctx.start.line - self.line_offset,
+                                         f'Label(s) {labels_names} cannot be both external and alias')
+        return [AliasDeclarationNode(i, linkage, addr_expr) for i in self.visitLabels(ctx.labels())]
 
     def visitStandaloneLabels(self, ctx: AsmParser.StandaloneLabelsContext) -> list[LabelDeclarationNode]:
         label_decl = self.visitLabels_declaration(ctx.labels_declaration())
