@@ -5,7 +5,7 @@ Break : 'break' ;
 Continue : 'continue' ;
 Do : 'do' ;
 Else : 'else' ;
-End : 'end' ;
+End : 'end' '.'? ;
 Ext : 'ext' ;
 Fi : 'fi' ;
 If : 'if' ;

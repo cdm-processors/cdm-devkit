@@ -167,7 +167,7 @@ class AsmParser ( Parser ):
     sharedContextCache = PredictionContextCache()
 
     literalNames = [ "<INVALID>", "'asect'", "'break'", "'continue'", "'do'", 
-                     "'else'", "'end'", "'ext'", "'fi'", "'if'", "'is'", 
+                     "'else'", "<INVALID>", "'ext'", "'fi'", "'if'", "'is'", 
                      "'macro'", "'rsect'", "'stays'", "'then'", "'tplate'", 
                      "'until'", "'wend'", "'while'", "','", "'+'", "'-'", 
                      "':'", "'*'", "'>'", "'('", "')'", "'-|'" ]
