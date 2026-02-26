@@ -108,13 +108,17 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitRelocatableSection(self, ctx: AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
         header = ctx.rsect_header()
         lines = self.visitSection_body(ctx.section_body())
-        name = header.name().getText()
+        name = self.visitName(header.name())
         return RelocatableSectionNode(lines, name)
 
     def visitTemplateSection(self, ctx: AsmParser.TemplateSectionContext) -> TemplateSectionNode:
+        loc = self._ctx_location(ctx)
         header = ctx.tplate_header()
         lines = self.visitSection_body(ctx.section_body())
-        name = header.name().getText()
+        name = self.visitName(header.name())
+        if '.' in name:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Template section names cannot contain dots")
         return TemplateSectionNode(lines, name)
 
     def visitLine_mark(self, ctx: AsmParser.Line_markContext):
@@ -133,6 +137,14 @@ class BuildAstVisitor(AsmParserVisitor):
                 self.in_macro = True
             elif info == 'mstop':
                 self.in_macro = False
+
+    def visitName(self, ctx: AsmParser.NameContext) -> str:
+        loc = self._ctx_location(ctx)
+        text = ctx.getText()
+        if text == '.':
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "The name '.' is reserved")
+        return text
 
     def visitNumber(self, ctx: AsmParser.NumberContext) -> int:
         return int(ctx.getText(), base=0)
@@ -267,7 +279,7 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitLabel(i) for i in ctx.label()]
 
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
-        return LabelNode(ctx.getText())
+        return LabelNode(self.visitName(ctx.name()))
 
     def visitString(self, ctx: AsmParser.StringContext) -> StringLiteralNode:
         loc = self._ctx_location(ctx)
