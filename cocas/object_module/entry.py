@@ -1,19 +1,19 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .attributes import Attributes
+from .symbol_attribute import SymbolAttribute
 from .linkage import Linkage
 
 @dataclass
 class Entry:
     address: int
-    attrs: list[Attributes] = field(default_factory=list)
+    attrs: list[SymbolAttribute] = field(default_factory=list)
 
     def add_linkage_attribute(self, linkage: Optional[Linkage]):
         if linkage:
-            attr: Attributes = linkage.to_attribute()
-            if attr != Attributes.NONE:
-                self.attrs.append(linkage.to_attribute())
+            attr: Optional[SymbolAttribute] = linkage.to_attribute()
+            if attr:
+                self.attrs.append(attr)
 
     def __str__(self):
         string = ""

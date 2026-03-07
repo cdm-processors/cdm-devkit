@@ -1,5 +1,5 @@
 from cocas.object_module.linkage import Linkage
-from cocas.object_module.attributes import Attributes
+from cocas.object_module.symbol_attribute import SymbolAttribute
 from typing import Optional
 
 class ExternalLabelKey:
@@ -8,20 +8,20 @@ class ExternalLabelKey:
     their string representation."""
 
     label: str
-    attributes: set[Attributes]
+    attributes: set[SymbolAttribute]
     key: str
 
     def __init__(self, label: str,
                 linkage_attr: Optional[Linkage] = None,
-                attributes: Optional[list[Attributes]] = None):
+                attributes: Optional[list[SymbolAttribute]] = None):
         self.label = label
         self.attributes = set()
         self.key = label
 
         if linkage_attr:
-            attr: Attributes = linkage_attr.to_attribute()
-            if attr != Attributes.NONE:
-                self.attributes.add(linkage_attr.to_attribute())
+            attr: Optional[SymbolAttribute] = linkage_attr.to_attribute()
+            if attr:
+                self.attributes.add(attr)
         
         if attributes:
             self.attributes.update(attributes)
@@ -47,4 +47,4 @@ class ExternalLabelKey:
         return str(self)
     
     def is_file_local(self):
-        return Attributes.LOCAL in self.attributes
+        return SymbolAttribute.LOCAL in self.attributes

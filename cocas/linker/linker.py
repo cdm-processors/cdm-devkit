@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Attributes, Entry
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, SymbolAttribute, Entry
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
@@ -81,11 +81,11 @@ def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tup
     for module in modules:
         for sect in (module.rsects + module.asects):
             for name, entry in sect.entries.items():
-                if Attributes.LOCAL in entry.attrs:
+                if SymbolAttribute.LOCAL in entry.attrs:
                     if id(module) in modules_scope and name in modules_scope[id(module)]:
                         raise LinkerException(f"File-local entry {name} is declared in multiple sections of the same object module")
                     modules_scope.setdefault(id(module), {})[name] = (sect, entry)
-                elif Attributes.WEAK in entry.attrs:
+                elif SymbolAttribute.WEAK in entry.attrs:
                     weak_global_scope.setdefault(name, []).append((sect, entry))
                 else:
                     if name in global_scope:
@@ -95,11 +95,11 @@ def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tup
     for module in modules:
         for sect in (module.rsects + module.asects):
             for ext in sect.external:
-                if Attributes.LOCAL in ext.attributes:
+                if SymbolAttribute.LOCAL in ext.attributes:
                     if (not id(module) in modules_scope) or (not ext.label in modules_scope[id(module)]):
                         raise LinkerException(f'Unresolved file-local ext "{ext.label}"')
                     ret[id(ext)] = modules_scope[id(module)][ext.label]
-                elif Attributes.WEAK in ext.attributes:
+                elif SymbolAttribute.WEAK in ext.attributes:
                     if ext.label in global_scope:
                         ret[id(ext)] = global_scope[ext.label]
                     elif ext.label in weak_global_scope:

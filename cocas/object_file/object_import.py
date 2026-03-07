@@ -6,7 +6,7 @@ from typing import Optional, Union
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, Attributes, Entry
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, SymbolAttribute, Entry
 from cocas.object_module.external_label_key import ExternalLabelKey
 
 from .exceptions import AntlrErrorListener, ObjectFileException
@@ -142,15 +142,15 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         return res
 
     def visitWeak(self, ctx: ObjectFileParser.WeakContext):
-        return Attributes.WEAK
+        return SymbolAttribute.WEAK
 
     def visitLocal(self, ctx: ObjectFileParser.LocalContext):
-        return Attributes.LOCAL
+        return SymbolAttribute.LOCAL
 
     def visitAttributes(self, attributes: list[ObjectFileParser.AttributeContext]):
         parsed = list(map(self.visit, attributes))
 
-        if Attributes.WEAK in parsed and Attributes.LOCAL in parsed:
+        if SymbolAttribute.WEAK in parsed and SymbolAttribute.LOCAL in parsed:
              raise ObjectFileException(self.file, attributes[0].start.line, 'Symbol cannot have WEAK and LOCAL attributes at the same time')
         
         return parsed
