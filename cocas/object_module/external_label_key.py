@@ -8,15 +8,15 @@ class ExternalLabelKey:
     their string representation."""
 
     label: str
-    attributes: set[Attributes] = set()
+    attributes: set[Attributes]
     key: str
 
     def __init__(self, label: str,
                 linkage_attr: Optional[Linkage] = None,
                 attributes: Optional[list[Attributes]] = None):
-        self.label: str = label
-        self.attributes: set(Attributes) = set()
-        self.key: str = label
+        self.label = label
+        self.attributes = set()
+        self.key = label
 
         if linkage_attr:
             attr: Attributes = linkage_attr.to_attribute()
@@ -26,11 +26,9 @@ class ExternalLabelKey:
         if attributes:
             self.attributes.update(attributes)
         
-        self.attributes = sorted(self.attributes)
-
         if len(self.attributes) > 0:
             # ATTR1 +ATTR2 ... +ATTRn
-            string = " +".join(map(str, self.attributes))
+            string = " +".join(map(str, sorted(self.attributes)))
             # label +ATTR1 +ATTR2 ... +ATTRn
             self.key += f" +{string}"
     
