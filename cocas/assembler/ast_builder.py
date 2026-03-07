@@ -68,8 +68,8 @@ class BuildAstVisitor(AsmParserVisitor):
         return ret
 
     def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelDeclarationNode], list[InstructionNode]]:
-        shared_externals = []
-        top_instructions = []
+        shared_externals: list[LabelDeclarationNode] = []
+        top_instructions: list[InstructionNode] = []
         for child in ctx.children:
             if isinstance(child, AsmParser.InstructionLineContext):
                 nodes = self.visitInstructionLine(child)
@@ -83,7 +83,7 @@ class BuildAstVisitor(AsmParserVisitor):
                             top_instructions.append(i)
                     elif isinstance(i, LabelDeclarationNode):
                         self.check_label_is_ext(i)
-                        shared_externals.append(i.label)
+                        shared_externals.append(i)
                     else:
                         raise Exception(f"Unexpected node from top line: {i}")
             elif isinstance(child, AsmParser.StandaloneLabelsContext):
