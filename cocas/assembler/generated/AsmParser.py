@@ -1,4 +1,4 @@
-# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.1
+# Generated from assembler/grammar/AsmParser.g4 by ANTLR 4.13.2
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -13,7 +13,7 @@ from base64 import b64decode
 
 def serializedATN():
     return [
-        4,1,41,398,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,40,398,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
@@ -49,8 +49,8 @@ def serializedATN():
         34,1,34,1,35,1,35,1,36,1,36,1,37,1,37,1,38,1,38,1,39,1,39,1,40,1,
         40,1,41,1,41,1,41,0,0,42,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,
         30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,
-        74,76,78,80,82,0,4,2,0,23,23,25,25,1,0,21,22,1,0,32,34,2,0,1,18,
-        30,31,407,0,87,1,0,0,0,2,107,1,0,0,0,4,138,1,0,0,0,6,140,1,0,0,0,
+        74,76,78,80,82,0,4,2,0,22,22,24,24,1,0,20,21,1,0,31,33,2,0,1,18,
+        29,30,407,0,87,1,0,0,0,2,107,1,0,0,0,4,138,1,0,0,0,6,140,1,0,0,0,
         8,147,1,0,0,0,10,154,1,0,0,0,12,161,1,0,0,0,14,172,1,0,0,0,16,175,
         1,0,0,0,18,192,1,0,0,0,20,194,1,0,0,0,22,196,1,0,0,0,24,202,1,0,
         0,0,26,208,1,0,0,0,28,231,1,0,0,0,30,233,1,0,0,0,32,236,1,0,0,0,
@@ -59,13 +59,13 @@ def serializedATN():
         0,0,52,334,1,0,0,0,54,336,1,0,0,0,56,355,1,0,0,0,58,357,1,0,0,0,
         60,362,1,0,0,0,62,370,1,0,0,0,64,374,1,0,0,0,66,379,1,0,0,0,68,381,
         1,0,0,0,70,383,1,0,0,0,72,385,1,0,0,0,74,387,1,0,0,0,76,389,1,0,
-        0,0,78,391,1,0,0,0,80,393,1,0,0,0,82,395,1,0,0,0,84,86,5,37,0,0,
+        0,0,78,391,1,0,0,0,80,393,1,0,0,0,82,395,1,0,0,0,84,86,5,36,0,0,
         85,84,1,0,0,0,86,89,1,0,0,0,87,85,1,0,0,0,87,88,1,0,0,0,88,93,1,
         0,0,0,89,87,1,0,0,0,90,92,3,26,13,0,91,90,1,0,0,0,92,95,1,0,0,0,
         93,91,1,0,0,0,93,94,1,0,0,0,94,99,1,0,0,0,95,93,1,0,0,0,96,98,3,
         4,2,0,97,96,1,0,0,0,98,101,1,0,0,0,99,97,1,0,0,0,99,100,1,0,0,0,
         100,102,1,0,0,0,101,99,1,0,0,0,102,103,5,6,0,0,103,1,1,0,0,0,104,
-        106,5,37,0,0,105,104,1,0,0,0,106,109,1,0,0,0,107,105,1,0,0,0,107,
+        106,5,36,0,0,105,104,1,0,0,0,106,109,1,0,0,0,107,105,1,0,0,0,107,
         108,1,0,0,0,108,111,1,0,0,0,109,107,1,0,0,0,110,112,3,16,8,0,111,
         110,1,0,0,0,112,113,1,0,0,0,113,111,1,0,0,0,113,114,1,0,0,0,114,
         118,1,0,0,0,115,117,3,26,13,0,116,115,1,0,0,0,117,120,1,0,0,0,118,
@@ -76,80 +76,80 @@ def serializedATN():
         3,8,4,0,133,134,3,12,6,0,134,139,1,0,0,0,135,136,3,10,5,0,136,137,
         3,12,6,0,137,139,1,0,0,0,138,129,1,0,0,0,138,132,1,0,0,0,138,135,
         1,0,0,0,139,5,1,0,0,0,140,141,5,1,0,0,141,143,3,80,40,0,142,144,
-        5,37,0,0,143,142,1,0,0,0,144,145,1,0,0,0,145,143,1,0,0,0,145,146,
+        5,36,0,0,143,142,1,0,0,0,144,145,1,0,0,0,145,143,1,0,0,0,145,146,
         1,0,0,0,146,7,1,0,0,0,147,148,5,12,0,0,148,150,3,82,41,0,149,151,
-        5,37,0,0,150,149,1,0,0,0,151,152,1,0,0,0,152,150,1,0,0,0,152,153,
+        5,36,0,0,150,149,1,0,0,0,151,152,1,0,0,0,152,150,1,0,0,0,152,153,
         1,0,0,0,153,9,1,0,0,0,154,155,5,15,0,0,155,157,3,82,41,0,156,158,
-        5,37,0,0,157,156,1,0,0,0,158,159,1,0,0,0,159,157,1,0,0,0,159,160,
+        5,36,0,0,157,156,1,0,0,0,158,159,1,0,0,0,159,157,1,0,0,0,159,160,
         1,0,0,0,160,11,1,0,0,0,161,162,3,14,7,0,162,13,1,0,0,0,163,171,3,
         22,11,0,164,171,3,24,12,0,165,171,3,28,14,0,166,171,3,36,18,0,167,
         171,3,50,25,0,168,171,3,54,27,0,169,171,3,16,8,0,170,163,1,0,0,0,
         170,164,1,0,0,0,170,165,1,0,0,0,170,166,1,0,0,0,170,167,1,0,0,0,
         170,168,1,0,0,0,170,169,1,0,0,0,171,174,1,0,0,0,172,170,1,0,0,0,
-        172,173,1,0,0,0,173,15,1,0,0,0,174,172,1,0,0,0,175,176,5,28,0,0,
-        176,177,3,18,9,0,177,179,3,20,10,0,178,180,5,30,0,0,179,178,1,0,
-        0,0,179,180,1,0,0,0,180,182,1,0,0,0,181,183,5,37,0,0,182,181,1,0,
+        172,173,1,0,0,0,173,15,1,0,0,0,174,172,1,0,0,0,175,176,5,27,0,0,
+        176,177,3,18,9,0,177,179,3,20,10,0,178,180,5,29,0,0,179,178,1,0,
+        0,0,179,180,1,0,0,0,180,182,1,0,0,0,181,183,5,36,0,0,182,181,1,0,
         0,0,183,184,1,0,0,0,184,182,1,0,0,0,184,185,1,0,0,0,185,186,1,0,
         0,0,186,187,6,8,-1,0,187,188,6,8,-1,0,188,189,6,8,-1,0,189,190,6,
-        8,-1,0,190,191,6,8,-1,0,191,17,1,0,0,0,192,193,5,32,0,0,193,19,1,
-        0,0,0,194,195,5,40,0,0,195,21,1,0,0,0,196,198,5,2,0,0,197,199,5,
-        37,0,0,198,197,1,0,0,0,199,200,1,0,0,0,200,198,1,0,0,0,200,201,1,
-        0,0,0,201,23,1,0,0,0,202,204,5,3,0,0,203,205,5,37,0,0,204,203,1,
+        8,-1,0,190,191,6,8,-1,0,191,17,1,0,0,0,192,193,5,31,0,0,193,19,1,
+        0,0,0,194,195,5,39,0,0,195,21,1,0,0,0,196,198,5,2,0,0,197,199,5,
+        36,0,0,198,197,1,0,0,0,199,200,1,0,0,0,200,198,1,0,0,0,200,201,1,
+        0,0,0,201,23,1,0,0,0,202,204,5,3,0,0,203,205,5,36,0,0,204,203,1,
         0,0,0,205,206,1,0,0,0,206,204,1,0,0,0,206,207,1,0,0,0,207,25,1,0,
         0,0,208,209,3,28,14,0,209,27,1,0,0,0,210,212,3,30,15,0,211,213,5,
         7,0,0,212,211,1,0,0,0,212,213,1,0,0,0,213,215,1,0,0,0,214,216,5,
-        37,0,0,215,214,1,0,0,0,216,217,1,0,0,0,217,215,1,0,0,0,217,218,1,
+        36,0,0,215,214,1,0,0,0,216,217,1,0,0,0,217,215,1,0,0,0,217,218,1,
         0,0,0,218,232,1,0,0,0,219,221,3,30,15,0,220,219,1,0,0,0,220,221,
         1,0,0,0,221,222,1,0,0,0,222,224,3,72,36,0,223,225,3,34,17,0,224,
-        223,1,0,0,0,224,225,1,0,0,0,225,227,1,0,0,0,226,228,5,37,0,0,227,
+        223,1,0,0,0,224,225,1,0,0,0,225,227,1,0,0,0,226,228,5,36,0,0,227,
         226,1,0,0,0,228,229,1,0,0,0,229,227,1,0,0,0,229,230,1,0,0,0,230,
         232,1,0,0,0,231,210,1,0,0,0,231,220,1,0,0,0,232,29,1,0,0,0,233,234,
         3,32,16,0,234,235,7,0,0,0,235,31,1,0,0,0,236,241,3,70,35,0,237,238,
-        5,20,0,0,238,240,3,70,35,0,239,237,1,0,0,0,240,243,1,0,0,0,241,239,
+        5,19,0,0,238,240,3,70,35,0,239,237,1,0,0,0,240,243,1,0,0,0,241,239,
         1,0,0,0,241,242,1,0,0,0,242,33,1,0,0,0,243,241,1,0,0,0,244,249,3,
-        56,28,0,245,246,5,20,0,0,246,248,3,56,28,0,247,245,1,0,0,0,248,251,
+        56,28,0,245,246,5,19,0,0,246,248,3,56,28,0,247,245,1,0,0,0,248,251,
         1,0,0,0,249,247,1,0,0,0,249,250,1,0,0,0,250,35,1,0,0,0,251,249,1,
-        0,0,0,252,254,5,9,0,0,253,255,5,37,0,0,254,253,1,0,0,0,255,256,1,
+        0,0,0,252,254,5,9,0,0,253,255,5,36,0,0,254,253,1,0,0,0,255,256,1,
         0,0,0,256,254,1,0,0,0,256,257,1,0,0,0,257,258,1,0,0,0,258,259,3,
         38,19,0,259,261,3,14,7,0,260,262,3,44,22,0,261,260,1,0,0,0,261,262,
-        1,0,0,0,262,263,1,0,0,0,263,265,5,8,0,0,264,266,5,37,0,0,265,264,
+        1,0,0,0,262,263,1,0,0,0,263,265,5,8,0,0,264,266,5,36,0,0,265,264,
         1,0,0,0,266,267,1,0,0,0,267,265,1,0,0,0,267,268,1,0,0,0,268,37,1,
         0,0,0,269,271,3,40,20,0,270,269,1,0,0,0,271,274,1,0,0,0,272,270,
         1,0,0,0,272,273,1,0,0,0,273,275,1,0,0,0,274,272,1,0,0,0,275,277,
-        3,42,21,0,276,278,5,37,0,0,277,276,1,0,0,0,278,279,1,0,0,0,279,277,
+        3,42,21,0,276,278,5,36,0,0,277,276,1,0,0,0,278,279,1,0,0,0,279,277,
         1,0,0,0,279,280,1,0,0,0,280,287,1,0,0,0,281,283,5,14,0,0,282,284,
-        5,37,0,0,283,282,1,0,0,0,284,285,1,0,0,0,285,283,1,0,0,0,285,286,
+        5,36,0,0,283,282,1,0,0,0,284,285,1,0,0,0,285,283,1,0,0,0,285,286,
         1,0,0,0,286,288,1,0,0,0,287,281,1,0,0,0,287,288,1,0,0,0,288,39,1,
-        0,0,0,289,290,3,42,21,0,290,291,5,20,0,0,291,293,3,48,24,0,292,294,
-        5,37,0,0,293,292,1,0,0,0,294,295,1,0,0,0,295,293,1,0,0,0,295,296,
+        0,0,0,289,290,3,42,21,0,290,291,5,19,0,0,291,293,3,48,24,0,292,294,
+        5,36,0,0,293,292,1,0,0,0,294,295,1,0,0,0,295,293,1,0,0,0,295,296,
         1,0,0,0,296,41,1,0,0,0,297,298,3,14,7,0,298,299,5,10,0,0,299,300,
-        3,46,23,0,300,43,1,0,0,0,301,303,5,5,0,0,302,304,5,37,0,0,303,302,
+        3,46,23,0,300,43,1,0,0,0,301,303,5,5,0,0,302,304,5,36,0,0,303,302,
         1,0,0,0,304,305,1,0,0,0,305,303,1,0,0,0,305,306,1,0,0,0,306,307,
-        1,0,0,0,307,308,3,14,7,0,308,45,1,0,0,0,309,310,5,30,0,0,310,47,
-        1,0,0,0,311,312,5,30,0,0,312,49,1,0,0,0,313,315,5,18,0,0,314,316,
-        5,37,0,0,315,314,1,0,0,0,316,317,1,0,0,0,317,315,1,0,0,0,317,318,
+        1,0,0,0,307,308,3,14,7,0,308,45,1,0,0,0,309,310,5,29,0,0,310,47,
+        1,0,0,0,311,312,5,29,0,0,312,49,1,0,0,0,313,315,5,18,0,0,314,316,
+        5,36,0,0,315,314,1,0,0,0,316,317,1,0,0,0,317,315,1,0,0,0,317,318,
         1,0,0,0,318,319,1,0,0,0,319,320,3,52,26,0,320,321,5,13,0,0,321,323,
-        3,46,23,0,322,324,5,37,0,0,323,322,1,0,0,0,324,325,1,0,0,0,325,323,
+        3,46,23,0,322,324,5,36,0,0,323,322,1,0,0,0,324,325,1,0,0,0,325,323,
         1,0,0,0,325,326,1,0,0,0,326,327,1,0,0,0,327,328,3,14,7,0,328,330,
-        5,17,0,0,329,331,5,37,0,0,330,329,1,0,0,0,331,332,1,0,0,0,332,330,
+        5,17,0,0,329,331,5,36,0,0,330,329,1,0,0,0,331,332,1,0,0,0,332,330,
         1,0,0,0,332,333,1,0,0,0,333,51,1,0,0,0,334,335,3,14,7,0,335,53,1,
-        0,0,0,336,338,5,4,0,0,337,339,5,37,0,0,338,337,1,0,0,0,339,340,1,
+        0,0,0,336,338,5,4,0,0,337,339,5,36,0,0,338,337,1,0,0,0,339,340,1,
         0,0,0,340,338,1,0,0,0,340,341,1,0,0,0,341,342,1,0,0,0,342,343,3,
-        14,7,0,343,344,5,16,0,0,344,346,3,46,23,0,345,347,5,37,0,0,346,345,
+        14,7,0,343,344,5,16,0,0,344,346,3,46,23,0,345,347,5,36,0,0,346,345,
         1,0,0,0,347,348,1,0,0,0,348,346,1,0,0,0,348,349,1,0,0,0,349,55,1,
         0,0,0,350,356,3,78,39,0,351,356,3,74,37,0,352,356,3,76,38,0,353,
         356,3,60,30,0,354,356,3,58,29,0,355,350,1,0,0,0,355,351,1,0,0,0,
         355,352,1,0,0,0,355,353,1,0,0,0,355,354,1,0,0,0,356,57,1,0,0,0,357,
-        358,3,68,34,0,358,359,5,26,0,0,359,360,3,60,30,0,360,361,5,27,0,
+        358,3,68,34,0,358,359,5,25,0,0,359,360,3,60,30,0,360,361,5,26,0,
         0,361,59,1,0,0,0,362,366,3,62,31,0,363,365,3,64,32,0,364,363,1,0,
         0,0,365,368,1,0,0,0,366,364,1,0,0,0,366,367,1,0,0,0,367,61,1,0,0,
         0,368,366,1,0,0,0,369,371,7,1,0,0,370,369,1,0,0,0,370,371,1,0,0,
         0,371,372,1,0,0,0,372,373,3,66,33,0,373,63,1,0,0,0,374,375,7,1,0,
         0,375,376,3,66,33,0,376,65,1,0,0,0,377,380,3,80,40,0,378,380,3,70,
-        35,0,379,377,1,0,0,0,379,378,1,0,0,0,380,67,1,0,0,0,381,382,3,82,
-        41,0,382,69,1,0,0,0,383,384,3,82,41,0,384,71,1,0,0,0,385,386,5,30,
-        0,0,386,73,1,0,0,0,387,388,5,35,0,0,388,75,1,0,0,0,389,390,5,29,
-        0,0,390,77,1,0,0,0,391,392,5,36,0,0,392,79,1,0,0,0,393,394,7,2,0,
+        35,0,379,377,1,0,0,0,379,378,1,0,0,0,380,67,1,0,0,0,381,382,5,29,
+        0,0,382,69,1,0,0,0,383,384,3,82,41,0,384,71,1,0,0,0,385,386,5,29,
+        0,0,386,73,1,0,0,0,387,388,5,34,0,0,388,75,1,0,0,0,389,390,5,28,
+        0,0,390,77,1,0,0,0,391,392,5,35,0,0,392,79,1,0,0,0,393,394,7,2,0,
         0,394,81,1,0,0,0,395,396,7,3,0,0,396,83,1,0,0,0,43,87,93,99,107,
         113,118,124,138,145,152,159,170,172,179,184,200,206,212,217,220,
         224,229,231,241,249,256,261,267,272,279,285,287,295,305,317,325,
@@ -167,19 +167,19 @@ class AsmParser ( Parser ):
     sharedContextCache = PredictionContextCache()
 
     literalNames = [ "<INVALID>", "'asect'", "'break'", "'continue'", "'do'", 
-                     "'else'", "'end'", "'ext'", "'fi'", "'if'", "'is'", 
+                     "'else'", "<INVALID>", "'ext'", "'fi'", "'if'", "'is'", 
                      "'macro'", "'rsect'", "'stays'", "'then'", "'tplate'", 
-                     "'until'", "'wend'", "'while'", "'.'", "','", "'+'", 
-                     "'-'", "':'", "'*'", "'>'", "'('", "')'", "'-|'" ]
+                     "'until'", "'wend'", "'while'", "','", "'+'", "'-'", 
+                     "':'", "'*'", "'>'", "'('", "')'", "'-|'" ]
 
     symbolicNames = [ "<INVALID>", "Asect", "Break", "Continue", "Do", "Else", 
                       "End", "Ext", "Fi", "If", "Is", "Macro", "Rsect", 
                       "Stays", "Then", "Tplate", "Until", "Wend", "While", 
-                      "DOT", "COMMA", "PLUS", "MINUS", "COLON", "ASTERISK", 
-                      "ANGLE_BRACKET", "OPEN_PAREN", "CLOSE_PAREN", "LINE_MARK_MARKER", 
-                      "REGISTER", "WORD", "WORD_WITH_DOTS", "DECIMAL_NUMBER", 
-                      "BINARY_NUMBER", "HEX_NUMBER", "STRING", "CHAR", "NEWLINE", 
-                      "COMMENT", "WS", "BASE64", "UNEXPECTED_TOKEN" ]
+                      "COMMA", "PLUS", "MINUS", "COLON", "ASTERISK", "ANGLE_BRACKET", 
+                      "OPEN_PAREN", "CLOSE_PAREN", "LINE_MARK_MARKER", "REGISTER", 
+                      "WORD", "WORD_WITH_DOTS", "DECIMAL_NUMBER", "BINARY_NUMBER", 
+                      "HEX_NUMBER", "STRING", "CHAR", "NEWLINE", "COMMENT", 
+                      "WS", "BASE64", "UNEXPECTED_TOKEN" ]
 
     RULE_program_nomacros = 0
     RULE_program = 1
@@ -254,33 +254,32 @@ class AsmParser ( Parser ):
     Until=16
     Wend=17
     While=18
-    DOT=19
-    COMMA=20
-    PLUS=21
-    MINUS=22
-    COLON=23
-    ASTERISK=24
-    ANGLE_BRACKET=25
-    OPEN_PAREN=26
-    CLOSE_PAREN=27
-    LINE_MARK_MARKER=28
-    REGISTER=29
-    WORD=30
-    WORD_WITH_DOTS=31
-    DECIMAL_NUMBER=32
-    BINARY_NUMBER=33
-    HEX_NUMBER=34
-    STRING=35
-    CHAR=36
-    NEWLINE=37
-    COMMENT=38
-    WS=39
-    BASE64=40
-    UNEXPECTED_TOKEN=41
+    COMMA=19
+    PLUS=20
+    MINUS=21
+    COLON=22
+    ASTERISK=23
+    ANGLE_BRACKET=24
+    OPEN_PAREN=25
+    CLOSE_PAREN=26
+    LINE_MARK_MARKER=27
+    REGISTER=28
+    WORD=29
+    WORD_WITH_DOTS=30
+    DECIMAL_NUMBER=31
+    BINARY_NUMBER=32
+    HEX_NUMBER=33
+    STRING=34
+    CHAR=35
+    NEWLINE=36
+    COMMENT=37
+    WS=38
+    BASE64=39
+    UNEXPECTED_TOKEN=40
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.13.1")
+        self.checkVersion("4.13.2")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -344,7 +343,7 @@ class AsmParser ( Parser ):
             self.state = 87
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==37:
+            while _la==36:
                 self.state = 84
                 self.match(AsmParser.NEWLINE)
                 self.state = 89
@@ -442,7 +441,7 @@ class AsmParser ( Parser ):
             self.state = 107
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==37:
+            while _la==36:
                 self.state = 104
                 self.match(AsmParser.NEWLINE)
                 self.state = 109
@@ -458,7 +457,7 @@ class AsmParser ( Parser ):
                 self.state = 113 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==28):
+                if not (_la==27):
                     break
 
             self.state = 118
@@ -667,7 +666,7 @@ class AsmParser ( Parser ):
                 self.state = 145 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -731,7 +730,7 @@ class AsmParser ( Parser ):
                 self.state = 152 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -795,7 +794,7 @@ class AsmParser ( Parser ):
                 self.state = 159 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -1037,7 +1036,7 @@ class AsmParser ( Parser ):
             self.state = 179
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==30:
+            if _la==29:
                 self.state = 178
                 self.match(AsmParser.WORD)
 
@@ -1051,7 +1050,7 @@ class AsmParser ( Parser ):
                 self.state = 184 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.current_line = int((None if localctx._line_number is None else self._input.getText(localctx._line_number.start,localctx._line_number.stop)))
@@ -1192,7 +1191,7 @@ class AsmParser ( Parser ):
                 self.state = 200 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -1250,7 +1249,7 @@ class AsmParser ( Parser ):
                 self.state = 206 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -1403,7 +1402,7 @@ class AsmParser ( Parser ):
                     self.state = 217 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==37):
+                    if not (_la==36):
                         break
 
                 pass
@@ -1424,7 +1423,7 @@ class AsmParser ( Parser ):
                 self.state = 224
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 136908898302) != 0):
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 68454711294) != 0):
                     self.state = 223
                     self.arguments()
 
@@ -1438,7 +1437,7 @@ class AsmParser ( Parser ):
                     self.state = 229 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==37):
+                    if not (_la==36):
                         break
 
                 pass
@@ -1493,7 +1492,7 @@ class AsmParser ( Parser ):
             self.labels()
             self.state = 234
             _la = self._input.LA(1)
-            if not(_la==23 or _la==25):
+            if not(_la==22 or _la==24):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1551,7 +1550,7 @@ class AsmParser ( Parser ):
             self.state = 241
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==20:
+            while _la==19:
                 self.state = 237
                 self.match(AsmParser.COMMA)
                 self.state = 238
@@ -1613,7 +1612,7 @@ class AsmParser ( Parser ):
             self.state = 249
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==20:
+            while _la==19:
                 self.state = 245
                 self.match(AsmParser.COMMA)
                 self.state = 246
@@ -1692,7 +1691,7 @@ class AsmParser ( Parser ):
                 self.state = 256 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 258
@@ -1718,7 +1717,7 @@ class AsmParser ( Parser ):
                 self.state = 267 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -1798,7 +1797,7 @@ class AsmParser ( Parser ):
                 self.state = 279 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 287
@@ -1816,7 +1815,7 @@ class AsmParser ( Parser ):
                     self.state = 285 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==37):
+                    if not (_la==36):
                         break
 
 
@@ -1888,7 +1887,7 @@ class AsmParser ( Parser ):
                 self.state = 295 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -2001,7 +2000,7 @@ class AsmParser ( Parser ):
                 self.state = 305 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 307
@@ -2157,7 +2156,7 @@ class AsmParser ( Parser ):
                 self.state = 317 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 319
@@ -2175,7 +2174,7 @@ class AsmParser ( Parser ):
                 self.state = 325 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 327
@@ -2191,7 +2190,7 @@ class AsmParser ( Parser ):
                 self.state = 332 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -2300,7 +2299,7 @@ class AsmParser ( Parser ):
                 self.state = 340 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
             self.state = 342
@@ -2318,7 +2317,7 @@ class AsmParser ( Parser ):
                 self.state = 348 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==37):
+                if not (_la==36):
                     break
 
         except RecognitionException as re:
@@ -2515,7 +2514,7 @@ class AsmParser ( Parser ):
             self.state = 366
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==21 or _la==22:
+            while _la==20 or _la==21:
                 self.state = 363
                 self.add_term()
                 self.state = 368
@@ -2570,10 +2569,10 @@ class AsmParser ( Parser ):
             self.state = 370
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==21 or _la==22:
+            if _la==20 or _la==21:
                 self.state = 369
                 _la = self._input.LA(1)
-                if not(_la==21 or _la==22):
+                if not(_la==20 or _la==21):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2629,7 +2628,7 @@ class AsmParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 374
             _la = self._input.LA(1)
-            if not(_la==21 or _la==22):
+            if not(_la==20 or _la==21):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2680,12 +2679,12 @@ class AsmParser ( Parser ):
             self.state = 379
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [32, 33, 34]:
+            if token in [31, 32, 33]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 377
                 self.number()
                 pass
-            elif token in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 30, 31]:
+            elif token in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 29, 30]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 378
                 self.label()
@@ -2709,9 +2708,8 @@ class AsmParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def name(self):
-            return self.getTypedRuleContext(AsmParser.NameContext,0)
-
+        def WORD(self):
+            return self.getToken(AsmParser.WORD, 0)
 
         def getRuleIndex(self):
             return AsmParser.RULE_byte_specifier
@@ -2732,7 +2730,7 @@ class AsmParser ( Parser ):
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 381
-            self.name()
+            self.match(AsmParser.WORD)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -2975,7 +2973,7 @@ class AsmParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 393
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 30064771072) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 15032385536) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -3077,7 +3075,7 @@ class AsmParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 395
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 3221749758) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 1611137022) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)

@@ -43,10 +43,20 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
                         t = copy(i)
                         t.offset += prev_size
                         new.external[label].append(t)
-                for i in rsect.relocatable:
-                    t = copy(i)
+                for entry in rsect.relocatable:
+                    t = copy(entry)
                     t.offset += prev_size
                     new.relocatable.append(t)
+                    lower_limit = 1 << 8 * entry.entry_bytes.start
+                    pos = t.offset
+                    val = int.from_bytes(new.data[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
+                    val += entry.lower_part
+                    val += prev_size
+                    val %= (1 << 8 * entry.entry_bytes.stop)
+                    if entry.entry_bytes.start > 0:
+                        entry.lower_part = val % lower_limit
+                    new.data[pos:pos + len(entry.entry_bytes)] = \
+                        (val // lower_limit).to_bytes(len(entry.entry_bytes), 'little', signed=False)
                 prev_size += len(rsect.data)
             ret.append(new)
     return ret

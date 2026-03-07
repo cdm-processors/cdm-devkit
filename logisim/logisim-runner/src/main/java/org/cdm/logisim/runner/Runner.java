@@ -12,7 +12,6 @@ import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.instance.Instance;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.std.memory.Rom;
 import com.cburch.logisim.std.wiring.Pin;
 import org.cdm.logisim.memory.BankedMemState;
 import org.cdm.logisim.memory.BankedRAM;
@@ -83,24 +82,17 @@ public class Runner {
             throw new RunnerException("Unable to find halt pin");
         } else {
             CircuitState circuitState = new CircuitState(logisimProject, circuit);
-            Propagator propagator = circuitState.getPropagator();
-            Component romComponent = circuit
-                    .getNonWires()
-                    .stream()
-                    .filter(x -> x.getFactory() instanceof BankedROM)
-                    .findFirst()
-                    .orElse(null);
-            if (romComponent == null) {
-                throw new RunnerException("Unable to find BankedROM");
-            }
 
+            Propagator propagator = circuitState.getPropagator();
             propagator.propagate();
 
-            try {
-                ((BankedROM) romComponent.getFactory())
-                        .loadImage(circuitState.getInstanceState(romComponent), inputFile);
-            } catch (IOException e) {
-                throw new RunnerException("Failed to load image");
+            switch (getMemoryArchitecture(configProperties)) {
+                case HARVARD:
+                    loadRom(inputFile, circuit, circuitState);
+                    break;
+                case VON_NEUMANN:
+                    loadRam(inputFile, circuit, circuitState);
+                    break;
             }
 
             propagator.propagate();
@@ -136,15 +128,66 @@ public class Runner {
         return Pin.FACTORY.getValue(state).toIntValue();
     }
 
-    private HexModel getRamContents(Circuit circuit, CircuitState circuitState) {
-        Component ramComponent = circuit
+    private Component getComponent(Circuit circuit, Class cls) {
+        return circuit
                 .getNonWires()
                 .stream()
-                .filter(x -> x.getFactory() instanceof BankedRAM)
+                .filter(x -> cls.isInstance(x.getFactory()))
                 .findFirst()
-                .orElseThrow();
+                .orElse(null);
+    }
+
+    private void loadRam(File inputFile, Circuit circuit, CircuitState circuitState) throws RunnerException {
+        Component ramComponent = getComponent(circuit, BankedRAM.class);
+        if (ramComponent == null) {
+            throw new RunnerException("Unable to find BankedRAM");
+        }
+
+        try {
+            ((BankedRAM) ramComponent.getFactory())
+                    .loadImage(circuitState.getInstanceState(ramComponent), inputFile);
+        } catch (IOException e) {
+            throw new RunnerException("Failed to load image");
+        }
+    }
+
+    private void loadRom(File inputFile, Circuit circuit, CircuitState circuitState) throws RunnerException {
+        Component romComponent = getComponent(circuit, BankedROM.class);
+        if (romComponent == null) {
+            throw new RunnerException("Unable to find BankedROM");
+        }
+
+        try {
+            ((BankedROM) romComponent.getFactory())
+                    .loadImage(circuitState.getInstanceState(romComponent), inputFile);
+        } catch (IOException e) {
+            throw new RunnerException("Failed to load image");
+        }
+    }
+
+    private HexModel getRamContents(Circuit circuit, CircuitState circuitState) throws RunnerException {
+        Component ramComponent = getComponent(circuit, BankedRAM.class);
+        if (ramComponent == null) {
+            throw new RunnerException("Unable to find BankedRAM");
+        }
+
         BankedMemState ramState = ((BankedRAM) ramComponent.getFactory())
                 .getState(circuitState.getInstanceState(ramComponent));
         return ramState.getContents();
+    }
+
+    private MemoryArchitecture getMemoryArchitecture(Properties configProperties) throws RunnerException {
+        String memoryArchitectureProperty = configProperties.getProperty("memory_architecture");
+        if (memoryArchitectureProperty == null) {
+            memoryArchitectureProperty = "hv";
+        }
+
+        MemoryArchitecture memoryArchitecture =
+                MemoryArchitecture.fromString(memoryArchitectureProperty);
+        if (memoryArchitecture == null) {
+            throw new RunnerException("Invalid memory architecture " + memoryArchitectureProperty);
+        }
+
+        return memoryArchitecture;
     }
 }

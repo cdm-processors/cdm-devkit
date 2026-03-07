@@ -16,6 +16,7 @@ from .ast_nodes import (
     InstructionNode,
     LabelDeclarationNode,
     LabelNode,
+    StringLiteralNode,
     LocatableNode,
     Node,
     ProgramNode,
@@ -61,7 +62,9 @@ class BuildAstVisitor(AsmParserVisitor):
             elif isinstance(child, AsmParser.Line_markContext):
                 self.visitLine_mark(child)
             elif isinstance(child, AsmParser.Top_lineContext):
-                ret.shared_externals, ret.top_instructions = self.visitTop_line(child)
+                shared, top = self.visitTop_line(child)
+                ret.shared_externals.extend(shared)
+                ret.top_instructions.extend(top)
         return ret
 
     def visitTop_line(self, ctx: AsmParser.Top_lineContext) -> tuple[list[LabelNode], list[InstructionNode]]:
@@ -105,13 +108,17 @@ class BuildAstVisitor(AsmParserVisitor):
     def visitRelocatableSection(self, ctx: AsmParser.RelocatableSectionContext) -> RelocatableSectionNode:
         header = ctx.rsect_header()
         lines = self.visitSection_body(ctx.section_body())
-        name = header.name().getText()
+        name = self.visitName(header.name())
         return RelocatableSectionNode(lines, name)
 
     def visitTemplateSection(self, ctx: AsmParser.TemplateSectionContext) -> TemplateSectionNode:
+        loc = self._ctx_location(ctx)
         header = ctx.tplate_header()
         lines = self.visitSection_body(ctx.section_body())
-        name = header.name().getText()
+        name = self.visitName(header.name())
+        if '.' in name:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "Template section names cannot contain dots")
         return TemplateSectionNode(lines, name)
 
     def visitLine_mark(self, ctx: AsmParser.Line_markContext):
@@ -130,6 +137,14 @@ class BuildAstVisitor(AsmParserVisitor):
                 self.in_macro = True
             elif info == 'mstop':
                 self.in_macro = False
+
+    def visitName(self, ctx: AsmParser.NameContext) -> str:
+        loc = self._ctx_location(ctx)
+        text = ctx.getText()
+        if text == '.':
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
+                                     "The name '.' is reserved")
+        return text
 
     def visitNumber(self, ctx: AsmParser.NumberContext) -> int:
         return int(ctx.getText(), base=0)
@@ -264,38 +279,41 @@ class BuildAstVisitor(AsmParserVisitor):
         return [self.visitLabel(i) for i in ctx.label()]
 
     def visitLabel(self, ctx: AsmParser.LabelContext) -> LabelNode:
-        return LabelNode(ctx.getText())
+        return LabelNode(self.visitName(ctx.name()))
 
-    def visitString(self, ctx: AsmParser.StringContext):
-        s = ctx.getText()[1:-1]
-        if '\\' in s:
-            return self.handle_esc_seq(s, self._ctx_location(ctx))
-        else:
-            return s
-
-    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> str:
+    def visitString(self, ctx: AsmParser.StringContext) -> StringLiteralNode:
         loc = self._ctx_location(ctx)
-        s = self.handle_esc_seq(ctx.getText()[1:-1], loc)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
+        return StringLiteralNode(s)
+
+    def visitCharacter(self, ctx: AsmParser.CharacterContext) -> StringLiteralNode:
+        loc = self._ctx_location(ctx)
+        s = self.encode_string(ctx.getText()[1:-1], loc)
         if len(s) < 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
                                      "Empty character constant")
         elif len(s) > 1:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line,
-                                     "Multi-character character constant")
-        return s
+                                     "Multi-byte character constant")
+        return StringLiteralNode(s)
 
     @staticmethod
-    def handle_esc_seq(s: str, loc: CodeLocation):
-        x: str
+    def encode_string(s: str, loc: CodeLocation) -> bytes:
+        result: bytes
         warnings.filterwarnings("error")
+        result: bytes
         try:
-            x = codecs.unicode_escape_decode(s)[0]
+            result_ = codecs.escape_decode(codecs.encode(s, 'utf8'))[0]
+            if isinstance(result_, bytes):
+                result = result_
+            else:
+                result = codecs.encode(result_, "utf-8")
         except DeprecationWarning as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except UnicodeDecodeError as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         warnings.resetwarnings()
-        return x
+        return result
 
     def visitRegister(self, ctx: AsmParser.RegisterContext):
         return RegisterNode(int(ctx.getText()[1:]))
