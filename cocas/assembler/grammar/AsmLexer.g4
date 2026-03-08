@@ -5,7 +5,7 @@ Break : 'break' ;
 Continue : 'continue' ;
 Do : 'do' ;
 Else : 'else' ;
-End : 'end' ;
+End : 'end' '.'? ;
 Ext : 'ext' ;
 File : 'file' ;
 Fi : 'fi' ;
@@ -20,7 +20,6 @@ Until : 'until' ;
 Wend : 'wend' ;
 While : 'while' ;
 
-DOT : '.' ;
 COMMA : ',' ;
 PLUS : '+' ;
 MINUS : '-' ;
@@ -35,7 +34,7 @@ LINE_MARK_MARKER: '-|';
 
 REGISTER : 'r'DECIMAL_NUMBER ;
 WORD : [a-zA-Z_][a-zA-Z_0-9]* ;
-WORD_WITH_DOTS : [a-zA-Z_][a-zA-Z_0-9]* DOT [a-zA-Z_0-9.]* [a-zA-Z_0-9] ;
+WORD_WITH_DOTS : [a-zA-Z_.][a-zA-Z_.0-9]* ;
 DECIMAL_NUMBER : [0-9]+  ;
 BINARY_NUMBER : '0b'[01]+ ;
 HEX_NUMBER : '0x'[0-9a-fA-F]+ ;

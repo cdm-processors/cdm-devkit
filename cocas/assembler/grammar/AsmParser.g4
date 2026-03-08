@@ -107,7 +107,7 @@ addr_expr : first_term add_term* ;
 first_term : (PLUS | MINUS)? term ;
 add_term : (PLUS | MINUS) term ;
 term : number | label ;
-byte_specifier : name;
+byte_specifier : WORD;
 
 label : name ;
 instruction : WORD ;

@@ -64,5 +64,5 @@ location: number COLON number COLON number;
 abs_address: WORD_ABS;
 number: WORD;
 label: WORD | WORD_WITH_DOTS;
-section: WORD | ABS_SECTION;
+section: WORD | WORD_WITH_DOTS | ABS_SECTION;
 minus: MINUS;

@@ -3,7 +3,7 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Callable, Union, get_args, get_origin
 
-from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode
+from ...ast_nodes import InstructionNode, LabelNode, RegisterNode, RelocatableExpressionNode, StringLiteralNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag, CdmTempException
 from .. import ICodeSegment
 from .code_segments import (
@@ -102,12 +102,12 @@ def dc(line: InstructionNode, _, __):
                     raise CdmTempException(f'Number is not a byte: {arg.const_term}')
             else:
                 segments.append(ExpressionSegment(arg, line.location))
-        elif isinstance(arg, str):
+        elif isinstance(arg, StringLiteralNode):
+            data: bytes = arg.data
             if command == 'dw':
                 raise CdmTempException('Currently "dw" doesn\'t support strings')
-            encoded = arg.encode('utf-8')
-            segments.append(BytesSegment(encoded, line.location))
-            size += len(encoded)
+            segments.append(BytesSegment(data, line.location))
+            size += len(data)
         else:
             raise CdmTempException(f'Incompatible argument type: {type(arg)}')
     return segments
@@ -335,9 +335,9 @@ def special(line: InstructionNode, temp_storage: dict, _):
         arg = line.arguments[0]
         if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
             raise CdmTempException('Const number expected')
-        if arg.const_term < 0:
-            raise CdmTempException('Interrupt number must be not negative')
-        return [InstructionBytesSegment(pack("u3u4s9", 0b100, 0, arg.const_term), line.location)]
+        if not 0 <= arg.const_term < 512:
+            raise CdmTempException('Interrupt number out of range')
+        return [InstructionBytesSegment(pack("u3u4u9", 0b100, 0, arg.const_term), line.location)]
     elif line.mnemonic == 'reset':
         if len(line.arguments) == 0:
             arg = RelocatableExpressionNode(None, [], [], 0)
@@ -348,9 +348,9 @@ def special(line: InstructionNode, temp_storage: dict, _):
             raise CdmTempException(f'Expected 0 or 1 arguments, found {len(line.arguments)}')
         if len(arg.add_terms) != 0 or len(arg.sub_terms) != 0:
             raise CdmTempException('Const number expected')
-        if arg.const_term < 0:
-            raise CdmTempException('Vector number must be not negative')
-        return [InstructionBytesSegment(pack("u3u4s9", 0b100, 1, arg.const_term), line.location)]
+        if not 0 <= arg.const_term < 512:
+            raise CdmTempException('Vector number out of range')
+        return [InstructionBytesSegment(pack("u3u4u9", 0b100, 1, arg.const_term), line.location)]
     elif line.mnemonic == 'addsp':
         assert_count_args(line.arguments, Union[RelocatableExpressionNode, RegisterNode])
         if isinstance(line.arguments[0], RelocatableExpressionNode):
