@@ -59,16 +59,16 @@ continue_statement : Continue NEWLINE+ ;
 top_line: line;
 
 ext_type
-    : Ext   # globalExtType
-    | File  # fileExtType
-    | Weak  # weakExtType
+    : Ext           # globalExtType
+    | File          # fileExtType
+    | Ext QUESTION  # weakExtType
     ;
 
 label_suffix
     : COLON         # localLabelSuffix
     | ANGLE_BRACKET # globalLabelSuffix
     | COLON_ANGLE   # fileLabelSuffix
-    | TILDE_ANGLE   # weakLabelSuffix
+    | QUESTION_ANGLE   # weakLabelSuffix
     ;
 
 line
@@ -129,7 +129,6 @@ name
     | End
     | Ext
     | File
-    | Weak
     | Fi
     | If
     | Is
