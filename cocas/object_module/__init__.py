@@ -4,7 +4,4 @@ from .concat_rsects import concat_rsects
 from .external_entry import ExternalEntry
 from .location import CodeLocation
 from .object_module import ObjectModule, ObjectSectionRecord
-from .linkage import Linkage
-from .external_label_key import ExternalLabelKey
-from .entry import Entry
-from .symbol_attribute import SymbolAttribute
+from .entry import Entry, EntryKey, Linkage

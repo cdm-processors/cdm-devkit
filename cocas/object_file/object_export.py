@@ -2,16 +2,16 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Union
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, EntryKey
 
 from .targets import TargetParams, import_target
 
 
-def data_to_str(array: bytearray):
+def data_to_str(array: bytearray) -> str:
     return ' '.join(map(lambda x: f'{x:02x}', array))
 
 
-def sect_entry_to_str(pair: tuple[str, ExternalEntry]):
+def sect_entry_to_str(pair: tuple[str, ExternalEntry]) -> str:
     name, entry = pair
     return f'{name} {entry}'
 
@@ -70,8 +70,8 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
                     if debug:
                         result += export_code_locations(asect.code_locations)
             for asect in obj.asects:
-                for label, entry in asect.entries.items():
-                    result.append(f'NTRY {label} {entry}\n')
+                for key, entry in asect.entries.items():
+                    result.append(f'NTRY {key} {entry}\n')
         for rsect in obj.rsects:
             result.append(f'NAME {rsect.name}\n')
             if rsect.alignment != target_params.default_alignment:
@@ -81,15 +81,16 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
             if debug:
                 result += export_code_locations(rsect.code_locations)
             result.append(f'REL  {" ".join(map(str, rsect.relocatable))}\n')
-            for label, entry in rsect.entries.items():
-                result.append(f'NTRY {label} {entry}\n')
-        external = defaultdict(list)
+            for key, entry in rsect.entries.items():
+                result.append(f'NTRY {key} {entry}\n')
+
+        object_exts: dict[EntryKey, list[tuple[str, ExternalEntry]]] = defaultdict(list)
         for sect in (obj.asects if asects_exist else []) + obj.rsects:
-            for label, entries in sect.external.items():
-                for entry in entries:
-                    external[label].append((sect.name, entry))
-        for label, entries in external.items():
-            result.append(f'XTRN {label}: {" ".join(map(sect_entry_to_str, entries))}\n')
+            for key, sect_exts in sect.external.items():
+                for ext in sect_exts:
+                    object_exts[key].append((sect.name, ext))
+        for key, sect_ext_pairs in object_exts.items():
+            result.append(f'XTRN {key}: {" ".join(map(sect_entry_to_str, sect_ext_pairs))}\n')
             pass
     return result
 

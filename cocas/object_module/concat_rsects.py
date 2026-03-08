@@ -34,7 +34,7 @@ def concat_rsects(rsects: Iterable["ObjectSectionRecord"]) -> list["ObjectSectio
                 prev_size = (prev_size + rsect.alignment - 1) // rsect.alignment * rsect.alignment
                 new.data.extend(bytearray(prev_size - len(new.data)))
                 new.data += rsect.data
-                new.entries.update({name: Entry(entry.address + prev_size, entry.attrs) for name, entry in rsect.entries.items()})
+                new.entries.update({key: Entry(entry.address + prev_size) for key, entry in rsect.entries.items()})
                 for pos, loc in rsect.code_locations.items():
                     new.code_locations[pos + prev_size] = loc
                 for label, exts in rsect.external.items():

@@ -11,6 +11,7 @@ DATA: 'DATA' -> pushMode(IN_BYTES);
 REL : 'REL';
 XTRN: 'XTRN';
 
+GLOBAL: 'GLOBAL';
 WEAK: 'WEAK';
 LOCAL: 'LOCAL';
 

@@ -6,8 +6,7 @@ from typing import Optional, Union
 import antlr4
 from antlr4 import CommonTokenStream, InputStream
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, SymbolAttribute, Entry
-from cocas.object_module.external_label_key import ExternalLabelKey
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord, Linkage, Entry, EntryKey
 
 from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor
@@ -61,7 +60,7 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
 
         xtrn: ObjectFileParser.Xtrn_recordContext
         for xtrn in ctx.xtrn_record():
-            label, entries, attributes = self.visitXtrn_record(xtrn)
+            key, entries = self.visitXtrn_record(xtrn)
             for sect, entry in entries:
                 if sect == '$abs':
                     if not asects:
@@ -69,9 +68,9 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
                                                   'No absolute sections found, but needed for xtrn entry')
                     # what is this?
                     ind = max(bisect.bisect_right(asect_addr, entry.offset) - 1, 0)
-                    asects[asect_addr[ind]].external[ExternalLabelKey(label, attributes=attributes)].append(entry)
+                    asects[asect_addr[ind]].external[key].append(entry)
                 elif sect in rsects:
-                    rsects[sect].external[ExternalLabelKey(label, attributes=attributes)].append(entry)
+                    rsects[sect].external[key].append(entry)
                 else:
                     raise ObjectFileException(self.file, xtrn.start.line, f'Section not found: {sect}')
         if filename:
@@ -93,9 +92,9 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         if not asects and ctx.ntry_record():
             asects[0] = ObjectSectionRecord('$abs', 0, bytearray(), {}, [], {}, 1)
         asect_addr = sorted(asects.keys())
-        for label, addr, attributes in map(self.visitNtry_record, ctx.ntry_record()):
+        for key, entry in map(self.visitNtry_record, ctx.ntry_record()):
             ind = max(bisect.bisect_right(asect_addr, addr) - 1, 0)
-            asects[asect_addr[ind]].entries[label] = Entry(addr, attributes)
+            asects[asect_addr[ind]].entries[key] = entry 
         return asects, asect_addr
 
     def visitAbs_block(self, ctx: ObjectFileParser.Abs_blockContext):
@@ -117,8 +116,8 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
         else:
             rel = []
         entries = {}
-        for label, address, attributes in map(self.visitNtry_record, ctx.ntry_record()):
-            entries[label] = Entry(address, attributes)
+        for key, entry in map(self.visitNtry_record, ctx.ntry_record()):
+            entries[key] = entry 
         code_locations = {}
         for cl in map(self.visitLoc_record, ctx.loc_record()):
             code_locations |= cl
@@ -141,25 +140,23 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
             res[byte] = CodeLocation(None, line, col)
         return res
 
+    def visitGlobal(self, ctx: ObjectFileParser.GlobalContext):
+        return Linkage.GLOBAL
+
     def visitWeak(self, ctx: ObjectFileParser.WeakContext):
-        return SymbolAttribute.WEAK
+        return Linkage.WEAK_GLOBAL
 
     def visitLocal(self, ctx: ObjectFileParser.LocalContext):
-        return SymbolAttribute.LOCAL
+        return Linkage.FILE_LOCAL
 
-    def visitAttributes(self, attributes: list[ObjectFileParser.AttributeContext]):
-        parsed = list(map(self.visit, attributes))
+    def visitLinkage_spec(self, ctx: ObjectFileParser.Linkage_specContext):
+        return self.visit(ctx.linkage()) if ctx.linkage() else Linkage.GLOBAL
 
-        if SymbolAttribute.WEAK in parsed and SymbolAttribute.LOCAL in parsed:
-             raise ObjectFileException(self.file, attributes[0].start.line, 'Symbol cannot have WEAK and LOCAL attributes at the same time')
-        
-        return parsed
-
-    def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext):
+    def visitNtry_record(self, ctx: ObjectFileParser.Ntry_recordContext) -> tuple[EntryKey, Entry]:
         label = self.visitLabel(ctx.label())
         address = self.visitNumber(ctx.number())
-        attributes = self.visitAttributes(ctx.attribute())
-        return label, address, attributes
+        linkage = self.visitLinkage_spec(ctx.linkage_spec())
+        return EntryKey(label, linkage), Entry(address)
 
     def visitName_record(self, ctx: ObjectFileParser.Name_recordContext):
         return self.visitSection(ctx.section())
@@ -176,12 +173,12 @@ class ImportObjectFileVisitor(ObjectFileParserVisitor):
     def visitRel_record(self, ctx: ObjectFileParser.Rel_recordContext):
         return [self.visitEntry_usage(eu) for eu in ctx.entry_usage()]
 
-    def visitXtrn_record(self, ctx: ObjectFileParser.Xtrn_recordContext):
+    def visitXtrn_record(self, ctx: ObjectFileParser.Xtrn_recordContext) -> tuple[str, Linkage, list[tuple[str, ExternalEntry]]]:
         label = self.visitLabel(ctx.label())
+        linkage = self.visitLinkage_spec(ctx.linkage_spec())
         entries = [(self.visitSection(n), self.visitEntry_usage(e))
                    for (n, e) in zip(ctx.section(), ctx.entry_usage())]
-        attributes = self.visitAttributes(ctx.attribute())
-        return label, entries, attributes
+        return EntryKey(label, linkage), entries
 
     def parse_byte(self, byte: str, ctx: ObjectFileParser.DataContext):
         try:

@@ -2,8 +2,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Any, Union
 
-from cocas.object_module import CodeLocation, ObjectModule, concat_rsects
-from cocas.object_module.linkage import Linkage
+from cocas.object_module import CodeLocation, ObjectModule, Linkage, concat_rsects
 
 from .ast_nodes import (
     InstructionNode,
@@ -106,7 +105,7 @@ def label_or_template(label: Union[LabelNode, Any], template_fields: dict[str, d
 def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
-    file_local_labels: dict[str, tuple[str, int]] = dict()
+    undefined_file_locals: dict[str, CodeLocation] = dict()
 
     # LabelDeclarationNode
     # InstructionNode
@@ -123,20 +122,25 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
                     if prefix in template_fields:
                         raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                                  f"Label {line.label.name} conflicts with template {prefix}")
-                if line.linkage == Linkage.FILE_LOCAL:
-                    file_local_labels[line.label.name] = (line.location.file, line.location.line)
+                if line.external and line.linkage == Linkage.FILE_LOCAL:
+                    undefined_file_locals[line.label.name] = line.location
             elif isinstance(line, InstructionNode):
                 for arg in line.arguments:
                     if isinstance(arg, RelocatableExpressionNode):
                         arg.add_terms = list(
                             map(lambda x: label_or_template(x, template_fields), arg.add_terms))
 
-    asects = [Section(asect, target_instructions) for asect in pn.absolute_sections]
+    asects = sorted((Section(asect, target_instructions) for asect in pn.absolute_sections), key=lambda s: s.address)
     rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]
+
     shared_externals = dict(map(lambda x: (x.label.name, x.linkage), pn.shared_externals))
     for i in itertools.chain(asects, rsects):
         i.exts |= shared_externals
-    asects.sort(key=lambda s: s.address)
+    undefined_file_locals |= { 
+        decl.label.name: decl.location 
+        for decl in pn.shared_externals 
+        if decl.linkage == Linkage.FILE_LOCAL
+    }
 
     for _ in pn.top_instructions:
         pass  # do something
@@ -146,17 +150,17 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
     for rsect in rsects:
         update_varying_length([rsect], all_labels, template_fields)
 
-    asect_objects = [asect.to_object_section_record(all_labels, template_fields) for asect in asects]
-    rsect_objects = concat_rsects(map(lambda x: x.to_object_section_record(all_labels, template_fields), rsects))
+    asect_records = [asect.to_object_section_record(all_labels, template_fields) for asect in asects]
+    rsect_records = concat_rsects(map(lambda x: x.to_object_section_record(all_labels, template_fields), rsects))
+ 
+    for section in itertools.chain(asect_records, rsect_records):
+        for label in section.entries.keys():
+            if label.name in undefined_file_locals:
+                undefined_file_locals.pop(label.name)
     
-    for obj in itertools.chain(asect_objects, rsect_objects):
-        for label in obj.entries.keys():
-            if label in file_local_labels:
-                file_local_labels.pop(label)
-    
-    if not len(file_local_labels) == 0:
-        label, (file, line) = next(iter(file_local_labels.items()))
-        raise AssemblerException(AssemblerExceptionTag.ASM, file, line,
-                                    f'Not found file local label(s) implementation: "{label}"')
+    if undefined_file_locals:
+        label, location = next(iter(undefined_file_locals.items()))
+        raise AssemblerException(AssemblerExceptionTag.ASM, location.file, location.line,
+                                    f'Undefined file-local label: {label}')
 
-    return ObjectModule(asect_objects, rsect_objects)
+    return ObjectModule(asect_records, rsect_records)

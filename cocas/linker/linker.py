@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, SymbolAttribute, Entry
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Entry, EntryKey, Linkage
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
@@ -70,7 +70,6 @@ def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[
     
 
 def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tuple[ObjectSectionRecord, Entry]]]:
-    # ret: id(ExternalLabelKey) -> (section, entry)
     ret: dict[int, Optional[tuple[ObjectSectionRecord, Entry]]] = {}
 
     # modules_scope: id(ObjectModule) -> (label -> (section, entry))
@@ -80,39 +79,39 @@ def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tup
 
     for module in modules:
         for sect in (module.rsects + module.asects):
-            for name, entry in sect.entries.items():
-                if SymbolAttribute.LOCAL in entry.attrs:
-                    if id(module) in modules_scope and name in modules_scope[id(module)]:
-                        raise LinkerException(f"File-local entry {name} is declared in multiple sections of the same object module")
-                    modules_scope.setdefault(id(module), {})[name] = (sect, entry)
-                elif SymbolAttribute.WEAK in entry.attrs:
-                    weak_global_scope.setdefault(name, []).append((sect, entry))
+            for key, entry in sect.entries.items():
+                if key.linkage == Linkage.FILE_LOCAL:
+                    if id(module) in modules_scope and key.name in modules_scope[id(module)]:
+                        raise LinkerException(f"File-local entry {key.name} is declared in multiple sections of the same object module")
+                    modules_scope.setdefault(id(module), {})[key.name] = (sect, entry)
+                elif key.linkage == Linkage.WEAK_GLOBAL:
+                    weak_global_scope.setdefault(key.name, []).append((sect, entry))
                 else:
-                    if name in global_scope:
-                        raise LinkerException(f"Global entry {name} is declared in multiple sections")
-                    global_scope[name] = (sect, entry)
+                    if key.name in global_scope:
+                        raise LinkerException(f"Global entry {key.name} is declared in multiple sections")
+                    global_scope[key.name] = (sect, entry)
 
     for module in modules:
         for sect in (module.rsects + module.asects):
-            for ext in sect.external:
-                if SymbolAttribute.LOCAL in ext.attributes:
-                    if (not id(module) in modules_scope) or (not ext.label in modules_scope[id(module)]):
-                        raise LinkerException(f'Unresolved file-local ext "{ext.label}"')
-                    ret[id(ext)] = modules_scope[id(module)][ext.label]
-                elif SymbolAttribute.WEAK in ext.attributes:
-                    if ext.label in global_scope:
-                        ret[id(ext)] = global_scope[ext.label]
-                    elif ext.label in weak_global_scope:
-                        ret[id(ext)] = weak_global_scope[ext.label][0]
+            for key in sect.external:
+                if key.linkage == Linkage.FILE_LOCAL:
+                    if (not id(module) in modules_scope) or (not key.name in modules_scope[id(module)]):
+                        raise LinkerException(f'Unresolved file-local ext "{key.name}"')
+                    ret[id(key)] = modules_scope[id(module)][key.name]
+                elif key.linkage == Linkage.WEAK_GLOBAL:
+                    if key.name in global_scope:
+                        ret[id(key)] = global_scope[key.name]
+                    elif key.name in weak_global_scope:
+                        ret[id(key)] = weak_global_scope[key.name][0]
                     else:
-                        ret[id(ext)] = None
+                        ret[id(key)] = None
                 else:
-                    if ext.label in global_scope:
-                        ret[id(ext)] = global_scope[ext.label]
-                    elif ext.label in weak_global_scope:
-                        ret[id(ext)] = weak_global_scope[ext.label][0]
+                    if key.name in global_scope:
+                        ret[id(key)] = global_scope[key.name]
+                    elif key.name in weak_global_scope:
+                        ret[id(key)] = weak_global_scope[key.name][0]
                     else:
-                        raise LinkerException(f'Unresolved global ext "{ext.label}"')
+                        raise LinkerException(f'Unresolved global ext "{key.name}"')
 
     return ret
 
