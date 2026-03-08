@@ -77,6 +77,10 @@ class CodeBlock:
 
         if line.external:
             self.exts[label_name] = line.linkage
+        elif line.linkage == Linkage.WEAK_GLOBAL:
+            self.append_label(label_name)
+            self.ents[label_name] = Linkage.WEAK_GLOBAL
+            self.exts[label_name] = Linkage.GLOBAL
         else:
             self.append_label(label_name)
             if line.linkage:

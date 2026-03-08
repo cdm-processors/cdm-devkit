@@ -212,15 +212,15 @@ def eval_rel_expr_seg(seg: RelocatableExpressionSegment, s: "Section",
     local_dim = 0
     for term, m in [(t, 1) for t in seg.expr.add_terms] + [(t, -1) for t in seg.expr.sub_terms]:
         if isinstance(term, LabelNode):
-            if term.name in labels:
+            if term.name in s.exts:
+                used_exts.setdefault(term.name, 0)
+                used_exts[term.name] += m
+            elif term.name in labels:
                 local_dim += m
                 val_long += labels[term.name] * m
             elif term.name in s.labels:
                 s_dim += m
                 val_long += s.labels[term.name] * m
-            elif term.name in s.exts:
-                used_exts.setdefault(term.name, 0)
-                used_exts[term.name] += m
             else:
                 _error(seg, f'Label "{term.name}" not found')
         elif isinstance(term, TemplateFieldNode):
