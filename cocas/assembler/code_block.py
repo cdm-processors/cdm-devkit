@@ -171,16 +171,8 @@ class CodeBlock:
 
 @dataclass
 class Section(CodeBlock):
-    def __init__(self, sn: SectionNode, target_instructions: TargetInstructions):
-        if isinstance(sn, AbsoluteSectionNode):
-            self.name = '$abs'
-            address = sn.address
-        elif isinstance(sn, RelocatableSectionNode):
-            self.name = sn.name
-            address = 0
-        else:
-            raise Exception('Section is neither abs nor rel, can it happen? It was elif instead of else here')
-        super().__init__(address, sn.lines, target_instructions)
+    def __init__(self, address: int, lines: list, target_instructions: TargetInstructions):
+        super().__init__(address, lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
         entries = {
@@ -192,3 +184,19 @@ class Section(CodeBlock):
         for seg in self.segments:
             seg.fill(out, self, labels, templates)
         return out
+
+@dataclass
+class AbsoluteSection(Section):
+    def __init__(self, sn: SectionNode, target_instructions: TargetInstructions):
+        self.name = '$abs'
+        address = sn.address
+        super().__init__(address, sn.lines, target_instructions)
+
+@dataclass
+class RelocatableSection(Section):
+    def __init__(self, name: str, nodes: list[SectionNode], target_instructions: TargetInstructions):
+        if not nodes:
+            raise ValueError("Node list must not be empty.")
+        self.name = name
+        address = 0
+        super().__init__(address, [line for node in nodes for line in node.lines], target_instructions)

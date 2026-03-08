@@ -1,8 +1,9 @@
 import itertools
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Union
 
-from cocas.object_module import CodeLocation, ObjectModule, Linkage, concat_rsects
+from cocas.object_module import CodeLocation, ObjectModule, Linkage
 
 from .ast_nodes import (
     InstructionNode,
@@ -14,7 +15,7 @@ from .ast_nodes import (
     TemplateFieldNode,
     TemplateSectionNode,
 )
-from .code_block import Section
+from .code_block import AbsoluteSection, RelocatableSection
 from .exceptions import AssemblerException, AssemblerExceptionTag
 from .targets import IVaryingLengthSegment, TargetInstructions
 
@@ -102,6 +103,13 @@ def label_or_template(label: Union[LabelNode, Any], template_fields: dict[str, d
     return label
 
 
+def group_rsects(nodes: list[RelocatableSectionNode]) -> dict[str, list[RelocatableSectionNode]]:
+    grouped = defaultdict(list)
+    for node in nodes:
+        grouped[node.name].append(node)
+    return grouped
+
+
 def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
     templates = [Template(t, target_instructions) for t in pn.template_sections]
     template_fields = dict([(t.name, t.labels) for t in templates])
@@ -130,8 +138,10 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
                         arg.add_terms = list(
                             map(lambda x: label_or_template(x, template_fields), arg.add_terms))
 
-    asects = sorted((Section(asect, target_instructions) for asect in pn.absolute_sections), key=lambda s: s.address)
-    rsects = [Section(rsect, target_instructions) for rsect in pn.relocatable_sections]
+    asects = [AbsoluteSection(asect, target_instructions) 
+              for asect in sorted(pn.absolute_sections, key=lambda s: s.address)]
+    rsects = [RelocatableSection(name, nodes, target_instructions) 
+              for name, nodes in group_rsects(pn.relocatable_sections).items()]
 
     shared_externals = dict(map(lambda x: (x.label.name, x.linkage), pn.shared_externals))
     for i in itertools.chain(asects, rsects):
@@ -151,7 +161,7 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
         update_varying_length([rsect], all_labels, template_fields)
 
     asect_records = [asect.to_object_section_record(all_labels, template_fields) for asect in asects]
-    rsect_records = concat_rsects(map(lambda x: x.to_object_section_record(all_labels, template_fields), rsects))
+    rsect_records = [rsect.to_object_section_record(all_labels, template_fields) for rsect in rsects]
  
     for section in itertools.chain(asect_records, rsect_records):
         for label in section.entries.keys():
