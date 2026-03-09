@@ -212,7 +212,7 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
     shared_externals.update(gather_weak_label_externals(asects))
     for i in itertools.chain(asects, rsects):
         # Prioritize local externals over shared externals
-        for name, linkage in shared_externals:
+        for name, linkage in shared_externals.items():
             i.exts.setdefault(name, linkage)
 
     for _ in pn.top_instructions:
