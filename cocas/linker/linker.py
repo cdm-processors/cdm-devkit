@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Entry, EntryKey, Linkage
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Entry, EntryKey, Linkage, RsectsGroup, group_rsects
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
@@ -35,26 +35,28 @@ def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
     return rsect_bins
 
 
-def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[str, int]:
-    sect_addresses = {'$abs': 0}
-    for rsect in rsects:
-        rsect_size = len(rsect.data)
+def place_sects(asects: list[ObjectSectionRecord], rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[int, int]:
+    sect_addresses: dict[int, int] = {}
+    for asect in asects:
+        sect_addresses[id(asect)] = 0
+
+    for group in group_rsects(rsects):
         for i in range(len(rsect_bins)):
             bin_begin, bin_size = rsect_bins[i]
-            if bin_size >= rsect_size:
-                address = (bin_begin + rsect.alignment - 1) // rsect.alignment * rsect.alignment
-                if address + rsect_size <= bin_begin + bin_size:
-                    if rsect.name in sect_addresses:
-                        raise LinkerException(f'Duplicate sections "{rsect.name}"')
-                    sect_addresses[rsect.name] = address
-                    rsect_bins[i] = (address + rsect_size, bin_size - rsect_size)
+            if bin_size >= group.size:
+                address = (bin_begin + group.alignment - 1) // group.alignment * group.alignment
+                if address + group.size <= bin_begin + bin_size:
+                    rsect_bins[i] = (address + group.size, bin_size - group.size)
+                    for rsect in group.rsects:
+                        sect_addresses[id(rsect)] = address
+                        address += len(rsect.data)
                     break
         else:
-            raise LinkerException(f'Section "{rsect.name}" exceeds image size limit {image_size}')
+            raise LinkerException(f'Section "{group.name}" exceeds image size limit {image_size}')
     return sect_addresses
 
 
-def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[int, tuple[ObjectSectionRecord, Entry]]):
+def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[int, tuple[ObjectSectionRecord, Entry] | None]):
     used_sects_queue = asects.copy()
     used_sects = []
     i = 0
@@ -131,15 +133,14 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     asects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
     used_sects = find_referenced_sects(asects, entry_by_exts)
     try:
-        rsects = concat_rsects(filter(lambda rsect: rsect in used_sects, itertools.chain.from_iterable([obj.rsects for _, obj in objects])))
+        rsects = list(filter(lambda rsect: rsect in used_sects, itertools.chain.from_iterable([obj.rsects for _, obj in objects])))
     except ValueError as e:
         raise LinkerException(str(e))
 
-    rsects.sort(key=lambda s: -len(s.data))
     asects.sort(key=lambda s: s.address)
 
     rsect_bins = init_bins(asects, image_size)
-    sect_addresses = place_sects(rsects, rsect_bins, image_size)
+    sect_addresses = place_sects(asects, rsects, rsect_bins, image_size)
 
     image = bytearray(2 ** 16)
     code_locations: dict[int, CodeLocation] = {}
@@ -158,7 +159,7 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     # Gathering code_locations from rsects
     lower_parts: dict[int, int] = {}  # Won't be empty if two entries added together, currently targets don't do that
     for rsect in rsects:
-        image_begin = sect_addresses[rsect.name]
+        image_begin = sect_addresses[id(rsect)]
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         for entry in rsect.relocatable:
@@ -182,10 +183,10 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
                 symbol_value = 0
             else:
                 symbol_sect, symbol = entry_by_exts[id(ext_name)]
-                symbol_value = sect_addresses[symbol_sect.name] + symbol.address
+                symbol_value = sect_addresses[id(symbol_sect)] + symbol.address
 
             for entry in sect.external[ext_name]:
-                pos = sect_addresses[sect.name] + entry.offset
+                pos = sect_addresses[id(sect)] + entry.offset
                 lower_limit = 1 << 8 * entry.entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
                 val += entry.lower_part + lower_parts.get(entry.offset, 0)
