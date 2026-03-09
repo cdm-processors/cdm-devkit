@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from math import lcm
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ObjectSectionRecord, Entry
 
 from ..exceptions import AssemblerException, AssemblerExceptionTag
 
@@ -40,6 +40,9 @@ class IVaryingLengthSegment(ICodeSegment, ABC):
                 section.labels[label_name] += diff
                 if label_name in labels:
                     labels[label_name] += diff
+        for key, entry in section.entries.items():
+            if entry.address > pos:
+                section.entries[key] = Entry(entry.address + diff)
         old_locations = section.code_locations
         section.code_locations = dict()
         for PC, location in old_locations.items():
