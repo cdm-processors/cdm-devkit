@@ -6,6 +6,7 @@ from typing import Any, Union
 from cocas.object_module import CodeLocation, ObjectModule, Linkage
 
 from .ast_nodes import (
+    SectionNode,
     AbsoluteSectionNode,
     RelocatableSectionNode,
     InstructionNode,
@@ -105,6 +106,17 @@ def label_or_template(label: Union[LabelNode, Any], template_fields: dict[str, d
     return label
 
 
+def apply_templates(section_nodes: list[SectionNode], template_fields: dict[str, dict[str,int]]):
+    for i in section_nodes:
+        for line in i.lines:
+            if not isinstance(line, InstructionNode):
+                continue
+            for arg in line.arguments:
+                if not isinstance(arg, RelocatableExpressionNode):
+                    continue
+                arg.add_terms = list(map(lambda x: label_or_template(x, template_fields), arg.add_terms))
+
+
 def group_rsects(nodes: list[RelocatableSectionNode]) -> dict[str, list[RelocatableSectionNode]]:
     grouped = defaultdict(list)
     for node in nodes:
@@ -112,23 +124,13 @@ def group_rsects(nodes: list[RelocatableSectionNode]) -> dict[str, list[Relocata
     return grouped
 
 
-def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
-    templates = [Template(t, target_instructions) for t in pn.template_sections]
-    template_fields = dict([(t.name, t.labels) for t in templates])
-
+def validate_labels(section_nodes: list[SectionNode], template_fields: set[str]) :
     section_labels: dict[Union[str, int], dict[str, CodeLocation]] = defaultdict(dict)
     global_labels: dict[str, CodeLocation] = dict()
     file_local_labels: dict[str, CodeLocation] = dict()
     file_local_exts: dict[str, CodeLocation] = dict()
 
-    # LabelDeclarationNode
-    # InstructionNode
-    # ConditionalStatementNode
-    # WhileLoopNode
-    # UntilLoopNode
-    # BreakStatementNode
-    # ContinueStatementNode
-    for i in pn.absolute_sections + pn.relocatable_sections:
+    for i in section_nodes:
         section_key: Union[str, int]
         match i:
             case AbsoluteSectionNode():
@@ -136,55 +138,57 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
             case RelocatableSectionNode():
                 section_key = i.name
         for line in i.lines:
-            if isinstance(line, LabelDeclarationNode):
-                if '.' in line.label.name:
-                    prefix = line.label.name.split('.')[0]
-                    if prefix in template_fields:
-                        raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
-                                                 f'Label "{line.label.name}" conflicts with template "{prefix}"')
-
-                if line.label.name in section_labels[section_key]:
-                    first_line = section_labels[section_key][line.label.name].line
+            if not isinstance(line, LabelDeclarationNode):
+                continue
+            if '.' in line.label.name:
+                prefix = line.label.name.split('.')[0]
+                if prefix in template_fields:
                     raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
-                                             (f'Duplicate definition of label "{line.label.name}" in section\n'
-                                              f'First definition at line {first_line}'))
+                                             f'Label "{line.label.name}" conflicts with template "{prefix}"')
 
-                section_labels[section_key][line.label.name] = line.location
-                match line.linkage, line.external:
-                    case Linkage.FILE_LOCAL, True:
-                        file_local_exts[line.label.name] = line.location
-                    case Linkage.GLOBAL, False:
-                        if line.label.name in global_labels:
-                            first_line = global_labels[line.label.name].line
-                            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
-                                                     (f'Duplicate definition of global label "{line.label.name}" in file\n'
-                                                      f'First definition at line {first_line}'))
-                        global_labels[line.label.name] = line.location
-                    case Linkage.FILE_LOCAL, False:
-                        if line.label.name in file_local_labels:
-                            first_line = file_local_labels[line.label.name].line
-                            raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
-                                                     (f'Duplicate definition of file-local label "{line.label.name}" in file\n'
-                                                      f'First definition at line {first_line}'))
-                        file_local_labels[line.label.name] = line.location
+            if line.label.name in section_labels[section_key]:
+                first_line = section_labels[section_key][line.label.name].line
+                raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                         (f'Duplicate definition of label "{line.label.name}" in section\n'
+                                          f'First definition at line {first_line}'))
 
-            elif isinstance(line, InstructionNode):
-                for arg in line.arguments:
-                    if isinstance(arg, RelocatableExpressionNode):
-                        arg.add_terms = list(
-                            map(lambda x: label_or_template(x, template_fields), arg.add_terms))
+            section_labels[section_key][line.label.name] = line.location
+            match line.linkage, line.external:
+                case Linkage.FILE_LOCAL, True:
+                    file_local_exts[line.label.name] = line.location
+                case Linkage.GLOBAL, False:
+                    if line.label.name in global_labels:
+                        first_line = global_labels[line.label.name].line
+                        raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                                 (f'Duplicate definition of global label "{line.label.name}" in file\n'
+                                                  f'First definition at line {first_line}'))
+                    global_labels[line.label.name] = line.location
+                case Linkage.FILE_LOCAL, False:
+                    if line.label.name in file_local_labels:
+                        first_line = file_local_labels[line.label.name].line
+                        raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
+                                                 (f'Duplicate definition of file-local label "{line.label.name}" in file\n'
+                                                  f'First definition at line {first_line}'))
+                    file_local_labels[line.label.name] = line.location
 
     for name in set(file_local_exts) - set(file_local_labels):
         location = file_local_exts[name]
         raise AssemblerException(AssemblerExceptionTag.ASM, location.file, location.line,
                                  f'Undefined file-local label "{name}"')
 
+def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructions) -> ObjectModule:
+    templates = [Template(t, target_instructions) for t in pn.template_sections]
+    template_fields = dict([(t.name, t.labels) for t in templates])
+    shared_externals = dict(map(lambda x: (x.label.name, x.linkage), pn.shared_externals))
+    section_nodes = pn.absolute_sections + pn.relocatable_sections
+
+    validate_labels(section_nodes, template_fields.keys())
+    apply_templates(section_nodes, template_fields)
+
     asects = [AbsoluteSection(asect, target_instructions) 
               for asect in sorted(pn.absolute_sections, key=lambda s: s.address)]
     rsects = [RelocatableSection(name, nodes, target_instructions) 
               for name, nodes in group_rsects(pn.relocatable_sections).items()]
-
-    shared_externals = dict(map(lambda x: (x.label.name, x.linkage), pn.shared_externals))
     for i in itertools.chain(asects, rsects):
         i.exts |= shared_externals
 
