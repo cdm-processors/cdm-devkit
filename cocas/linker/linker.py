@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects, Entry, EntryKey, Linkage, RsectsGroup, group_rsects
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, Entry, EntryKey, Linkage, RsectsGroup, group_rsects
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
