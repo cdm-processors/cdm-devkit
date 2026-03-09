@@ -18,7 +18,7 @@ from .ast_nodes import (
     TemplateFieldNode,
     TemplateSectionNode,
 )
-from .code_block import AbsoluteSection, RelocatableSection
+from .code_block import Section, AbsoluteSection, RelocatableSection
 from .exceptions import AssemblerException, AssemblerExceptionTag
 from .targets import IVaryingLengthSegment, TargetInstructions
 
@@ -60,7 +60,7 @@ class Template:
 def gather_local_labels(sects: list[Section]):
     local_labels = dict()
     for sect in sects:
-        local_labels.update({p for p in sect.labels.items() if not p[0].startswith('$')})
+        local_labels.update({name: addr for name, addr in sect.labels.items() if not name.startswith('$')})
     return local_labels
 
 
@@ -125,18 +125,18 @@ def group_rsects(nodes: list[RelocatableSectionNode]) -> dict[str, list[Relocata
 
 
 def validate_labels(section_nodes: list[SectionNode], template_fields: set[str]) :
-    section_labels: dict[Union[str, int], dict[str, CodeLocation]] = defaultdict(dict)
+    section_labels: dict[str, dict[str, CodeLocation]] = defaultdict(dict)
     global_labels: dict[str, CodeLocation] = dict()
     file_local_labels: dict[str, CodeLocation] = dict()
     file_local_exts: dict[str, CodeLocation] = dict()
 
     for i in section_nodes:
-        section_key: Union[str, int]
+        section_name: str
         match i:
             case AbsoluteSectionNode():
-                section_key = i.address
+                section_name = "$abs"
             case RelocatableSectionNode():
-                section_key = i.name
+                section_name = i.name
         for line in i.lines:
             if not isinstance(line, LabelDeclarationNode):
                 continue
@@ -146,13 +146,13 @@ def validate_labels(section_nodes: list[SectionNode], template_fields: set[str])
                     raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
                                              f'Label "{line.label.name}" conflicts with template "{prefix}"')
 
-            if line.label.name in section_labels[section_key]:
-                first_line = section_labels[section_key][line.label.name].line
+            if line.label.name in section_labels[section_name]:
+                first_line = section_labels[section_name][line.label.name].line
                 raise AssemblerException(AssemblerExceptionTag.ASM, line.location.file, line.location.line,
-                                         (f'Duplicate definition of label "{line.label.name}" in section\n'
+                                         (f'Duplicate definition of label "{line.label.name}" in section "{section_name}"\n'
                                           f'First definition at line {first_line}'))
 
-            section_labels[section_key][line.label.name] = line.location
+            section_labels[section_name][line.label.name] = line.location
             match line.linkage, line.external:
                 case Linkage.FILE_LOCAL, True:
                     file_local_exts[line.label.name] = line.location
