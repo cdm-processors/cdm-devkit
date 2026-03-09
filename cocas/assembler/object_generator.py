@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Union
 
-from cocas.object_module import CodeLocation, ObjectModule, Linkage
+from cocas.object_module import CodeLocation, ObjectModule, EntryKey, Linkage
 
 from .ast_nodes import (
     SectionNode,
@@ -57,11 +57,29 @@ class Template:
         self.labels['_'] = size
 
 
-def gather_local_labels(sects: list[Section]):
+def gather_local_labels(sects: list[Section]) -> dict[str, int]:
     local_labels = dict()
     for sect in sects:
         local_labels.update({name: addr for name, addr in sect.labels.items() if not name.startswith('$')})
     return local_labels
+
+
+def gather_weak_label_externals(sects: list[Section]) -> dict[str, Linkage]:
+    """
+    Collects all weak external declarations that correspond to a weak label definition.
+    This is needed to support existing semantics and have weak labels defined in absolute sections 
+    visible in all other sections, despite the fact that we don't emit labels for weak definitions.
+    """
+    weak_externals: dict[str, Linkage] = dict()
+    for sect in sects:
+        # Take all weak externals that have 
+        # a corresponding weak entry with the same name.
+        weak_externals.update({
+            name: linkage 
+            for name, linkage in sect.exts.items() 
+            if EntryKey(name, Linkage.WEAK_GLOBAL) in sect.entries
+        })
+    return weak_externals
 
 
 @dataclass
@@ -124,7 +142,7 @@ def group_rsects(nodes: list[RelocatableSectionNode]) -> dict[str, list[Relocata
     return grouped
 
 
-def validate_labels(section_nodes: list[SectionNode], template_fields: set[str]) :
+def validate_labels(section_nodes: list[SectionNode], template_fields: set[str]):
     section_labels: dict[str, dict[str, CodeLocation]] = defaultdict(dict)
     global_labels: dict[str, CodeLocation] = dict()
     file_local_labels: dict[str, CodeLocation] = dict()
@@ -189,8 +207,13 @@ def generate_object_module(pn: ProgramNode, target_instructions: TargetInstructi
               for asect in sorted(pn.absolute_sections, key=lambda s: s.address)]
     rsects = [RelocatableSection(name, nodes, target_instructions) 
               for name, nodes in group_rsects(pn.relocatable_sections).items()]
+
+    # Overwrite shared externals with weak definitions in asects
+    shared_externals.update(gather_weak_label_externals(asects))
     for i in itertools.chain(asects, rsects):
-        i.exts |= shared_externals
+        # Prioritize local externals over shared externals
+        for name, linkage in shared_externals:
+            i.exts.setdefault(name, linkage)
 
     for _ in pn.top_instructions:
         pass  # do something

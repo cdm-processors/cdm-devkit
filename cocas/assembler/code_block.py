@@ -30,7 +30,7 @@ class CodeBlock:
         self.loop_stack: list = []
         self.segments: list[ICodeSegment] = []
         self.labels: dict[str, int] = dict()
-        self.ents: dict[str, Linkage] = dict()
+        self.entries: dict[EntryKey, Entry] = dict()
         self.exts: dict[str, Linkage] = dict()
         self.code_locations: dict[int, CodeLocation] = dict()
         temp_storage = dict()  # variable to save information for future lines
@@ -43,8 +43,11 @@ class CodeBlock:
             raise AssemblerException(AssemblerExceptionTag.ASM, lines[-1].location.file,
                                      lines[-1].location.line, e.message)
 
-    def append_label(self, label_name):
-        self.labels[label_name] = self.address + self.size
+    def get_address(self):
+        return self.address + self.size
+
+    def append_label(self, label_name: str):
+        self.labels[label_name] = self.get_address()
 
     def append_branch_instruction(self, location, mnemonic, label_name, inverse=False):
         self.code_locations[self.size] = location
@@ -68,17 +71,20 @@ class CodeBlock:
             ast_node_handlers[type(line)](line, temp_storage)
 
     def assemble_label_declaration(self, line: LabelDeclarationNode, __):
-        label_name = line.label.name
+        key = EntryKey(line.label.name, line.linkage)
         if line.external:
-            self.exts[label_name] = line.linkage
+            self.exts[key.name] = key.linkage
         elif line.linkage == Linkage.WEAK_GLOBAL:
-            self.append_label(label_name)
-            self.ents[label_name] = Linkage.WEAK_GLOBAL
-            self.exts[label_name] = Linkage.GLOBAL
+            # We don't know the values of WEAK_GLOBAL labels
+            # because these may be overridden at link time.
+            # This is why we don't store the address in the
+            # known label dictionary and instead add an external declaration.
+            self.entries[key] = Entry(self.get_address())
+            self.exts[key.name] = Linkage.GLOBAL
         else:
-            self.append_label(label_name)
+            self.append_label(key.name)
             if line.linkage:
-                self.ents[label_name] = line.linkage
+                self.entries[key] = Entry(self.get_address())
 
     def assemble_instruction(self, line: InstructionNode, temp_storage):
         for seg in self.target_instructions.assemble_instruction(line, temp_storage):
@@ -169,12 +175,7 @@ class Section(CodeBlock):
         super().__init__(address, lines, target_instructions)
 
     def to_object_section_record(self, labels: dict[str, int], templates: dict[str, dict[str, int]]):
-        entries = {
-            EntryKey(name, self.ents[name]): Entry(offset)
-            for name, offset in self.labels.items()
-            if name in self.ents
-        }
-        out = ObjectSectionRecord(self.name, self.address, bytearray(), entries, [], self.code_locations)
+        out = ObjectSectionRecord(self.name, self.address, bytearray(), dict(self.entries), [], self.code_locations)
         for seg in self.segments:
             seg.fill(out, self, labels, templates)
         return out
@@ -183,8 +184,7 @@ class Section(CodeBlock):
 class AbsoluteSection(Section):
     def __init__(self, sn: SectionNode, target_instructions: TargetInstructions):
         self.name = '$abs'
-        address = sn.address
-        super().__init__(address, sn.lines, target_instructions)
+        super().__init__(sn.address, sn.lines, target_instructions)
 
 @dataclass
 class RelocatableSection(Section):
@@ -192,5 +192,4 @@ class RelocatableSection(Section):
         if not nodes:
             raise ValueError("Node list must not be empty.")
         self.name = name
-        address = 0
-        super().__init__(address, [line for node in nodes for line in node.lines], target_instructions)
+        super().__init__(0, [line for node in nodes for line in node.lines], target_instructions)
