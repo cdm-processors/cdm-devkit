@@ -308,6 +308,8 @@ class BuildAstVisitor(AsmParserVisitor):
                 result = result_
             else:
                 result = codecs.encode(result_, "utf-8")
+        except ValueError as e:
+            raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except DeprecationWarning as e:
             raise AssemblerException(AssemblerExceptionTag.ASM, loc.file, loc.line, str(e))
         except UnicodeDecodeError as e:
