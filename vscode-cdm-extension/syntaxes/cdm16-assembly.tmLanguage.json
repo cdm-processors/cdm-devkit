@@ -90,7 +90,7 @@
         "directives": {
 			"patterns": [{
 				"name": "entity.name.type.cdm16-assembly",
-				"match": "\\b(align|asect|rsect|dc|ds|tplate|end|end.|macro|mpop|mpush|mend|define|db|dw)\\b"
+				"match": "\\b(align|asect|rsect|dc|ds|tplate|end|end.|macro|mpop|mpush|mend|define|db|dw|include)\\b"
 			}]
 		},
         "numbers": {
