@@ -84,6 +84,26 @@ class ObjectFileParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ObjectFileParser#linkage_spec.
+    def visitLinkage_spec(self, ctx:ObjectFileParser.Linkage_specContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#Global.
+    def visitGlobal(self, ctx:ObjectFileParser.GlobalContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#Weak.
+    def visitWeak(self, ctx:ObjectFileParser.WeakContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ObjectFileParser#Local.
+    def visitLocal(self, ctx:ObjectFileParser.LocalContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ObjectFileParser#data.
     def visitData(self, ctx:ObjectFileParser.DataContext):
         return self.visitChildren(ctx)

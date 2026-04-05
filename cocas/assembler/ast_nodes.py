@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from cocas.object_module import CodeLocation
+from cocas.object_module import Linkage
 
 
 @dataclass
@@ -53,7 +54,7 @@ class RelocatableExpressionNode(LocatableNode):
 @dataclass
 class LabelDeclarationNode(LocatableNode):
     label: LabelNode
-    entry: bool
+    linkage: Optional[Linkage]
     external: bool
 
 
@@ -130,5 +131,5 @@ class ProgramNode(Node):
     template_sections: list[TemplateSectionNode]
     relocatable_sections: list[RelocatableSectionNode]
     absolute_sections: list[AbsoluteSectionNode]
-    shared_externals: list[LabelNode] = field(default_factory=list)
+    shared_externals: list[LabelDeclarationNode] = field(default_factory=list)
     top_instructions: list[InstructionNode] = field(default_factory=list)

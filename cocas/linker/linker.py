@@ -2,7 +2,7 @@ import itertools
 from math import inf
 from typing import Any, Optional
 
-from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects
+from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, Entry, EntryKey, Linkage, RsectsGroup, group_rsects
 
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
@@ -35,68 +35,87 @@ def init_bins(asects: list[ObjectSectionRecord], image_size: Optional[int]):
     return rsect_bins
 
 
-def place_sects(rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[str, int]:
-    sect_addresses = {'$abs': 0}
-    for rsect in rsects:
-        rsect_size = len(rsect.data)
+def place_sects(asects: list[ObjectSectionRecord], rsects: list[ObjectSectionRecord], rsect_bins: list, image_size) -> dict[int, int]:
+    sect_addresses: dict[int, int] = {}
+    for asect in asects:
+        sect_addresses[id(asect)] = 0
+
+    for group in group_rsects(rsects):
         for i in range(len(rsect_bins)):
             bin_begin, bin_size = rsect_bins[i]
-            if bin_size >= rsect_size:
-                address = (bin_begin + rsect.alignment - 1) // rsect.alignment * rsect.alignment
-                if address + rsect_size <= bin_begin + bin_size:
-                    if rsect.name in sect_addresses:
-                        raise LinkerException(f'Duplicate sections "{rsect.name}"')
-                    sect_addresses[rsect.name] = address
-                    rsect_bins[i] = (address + rsect_size, bin_size - rsect_size)
+            if bin_size >= group.size:
+                address = (bin_begin + group.alignment - 1) // group.alignment * group.alignment
+                if address + group.size <= bin_begin + bin_size:
+                    rsect_bins[i] = (address + group.size, bin_size - group.size)
+                    for rsect in group.rsects:
+                        sect_addresses[id(rsect)] = address
+                        address += len(rsect.data)
                     break
         else:
-            raise LinkerException(f'Section "{rsect.name}" exceeds image size limit {image_size}')
+            raise LinkerException(f'Section "{group.name}" exceeds image size limit {image_size}')
     return sect_addresses
 
 
-def gather_ents(sects: list[ObjectSectionRecord], sect_addresses: dict[str, int]):
-    ents = dict()
-    for sect in sects:
-        for ent_name in sect.entries:
-            if ent_name in ents:
-                raise LinkerException(f'Duplicate entries "{ent_name}"')
-            ents[ent_name] = sect.entries[ent_name] + sect_addresses[sect.name]
-    return ents
-
-
-def find_exts_by_sect(sects: list[ObjectSectionRecord]):
-    exts_by_sect = dict()
-    for sect in sects:
-        exts = exts_by_sect.setdefault(sect.name, set())
-        exts |= set(sect.external.keys())
-    return exts_by_sect
-
-
-def find_sect_by_ent(sects: list[ObjectSectionRecord]):
-    sect_by_ent = dict()
-    for sect in sects:
-        for ent_name in sect.entries:
-            if ent_name in sect_by_ent:
-                raise LinkerException(f"Entry {ent_name} is declared in multiple sections")
-            sect_by_ent[ent_name] = sect.name
-    return sect_by_ent
-
-
-def find_referenced_sects(exts_by_sect: dict[str, set[str]], sect_by_ent: dict[str, str]):
-    used_sects_queue = ['$abs']
-    used_sects = {'$abs'}
+def find_referenced_sects(asects: list[ObjectSectionRecord], entry_by_ext: dict[int, tuple[ObjectSectionRecord, Entry] | None]):
+    used_sects_queue = asects.copy()
+    used_sects = []
     i = 0
     while i < len(used_sects_queue):
-        if used_sects_queue[i] in exts_by_sect:
-            for ext_name in exts_by_sect[used_sects_queue[i]]:
-                if ext_name not in sect_by_ent:
-                    raise LinkerException(f'Unresolved ext "{ext_name}"')
-                new_sect = sect_by_ent[ext_name]
-                if new_sect not in used_sects:
-                    used_sects_queue.append(new_sect)
-                    used_sects.add(new_sect)
+        sect = used_sects_queue[i]
+        used_sects.append(sect)
+
+        for ext in sect.external:
+            if not entry_by_ext[id(ext)] is None and not entry_by_ext[id(ext)][0] in used_sects_queue:
+                used_sects_queue.append(entry_by_ext[id(ext)][0])
         i += 1
     return used_sects
+    
+
+def find_entries_for_exts(modules: list[ObjectModule]) -> dict[int, Optional[tuple[ObjectSectionRecord, Entry]]]:
+    ret: dict[int, Optional[tuple[ObjectSectionRecord, Entry]]] = {}
+
+    # modules_scope: id(ObjectModule) -> (label -> (section, entry))
+    modules_scope: dict[int, dict[str, tuple[ObjectSectionRecord, Entry]]] = {}
+    global_scope: dict[str, tuple[ObjectSectionRecord, Entry]] = {}
+    weak_global_scope: dict[str, list[tuple[ObjectSectionRecord, Entry]]] = {}
+
+    for module in modules:
+        for sect in (module.rsects + module.asects):
+            for key, entry in sect.entries.items():
+                if key.linkage == Linkage.FILE_LOCAL:
+                    if id(module) in modules_scope and key.name in modules_scope[id(module)]:
+                        raise LinkerException(f"File-local entry {key.name} is declared in multiple sections of the same object module")
+                    modules_scope.setdefault(id(module), {})[key.name] = (sect, entry)
+                elif key.linkage == Linkage.WEAK_GLOBAL:
+                    weak_global_scope.setdefault(key.name, []).append((sect, entry))
+                else:
+                    if key.name in global_scope:
+                        raise LinkerException(f"Global entry {key.name} is declared in multiple sections")
+                    global_scope[key.name] = (sect, entry)
+
+    for module in modules:
+        for sect in (module.rsects + module.asects):
+            for key in sect.external:
+                if key.linkage == Linkage.FILE_LOCAL:
+                    if (not id(module) in modules_scope) or (not key.name in modules_scope[id(module)]):
+                        raise LinkerException(f'Unresolved file-local ext "{key.name}"')
+                    ret[id(key)] = modules_scope[id(module)][key.name]
+                elif key.linkage == Linkage.WEAK_GLOBAL:
+                    if key.name in global_scope:
+                        ret[id(key)] = global_scope[key.name]
+                    elif key.name in weak_global_scope:
+                        ret[id(key)] = weak_global_scope[key.name][0]
+                    else:
+                        ret[id(key)] = None
+                else:
+                    if key.name in global_scope:
+                        ret[id(key)] = global_scope[key.name]
+                    elif key.name in weak_global_scope:
+                        ret[id(key)] = weak_global_scope[key.name][0]
+                    else:
+                        raise LinkerException(f'Unresolved global ext "{key.name}"')
+
+    return ret
 
 
 def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = None) -> \
@@ -108,26 +127,26 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     :param image_size: maximum size of image for current target or None if no limit
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
+    # For all XTRN find corresponding NTRY
+    entry_by_exts = find_entries_for_exts([obj for _, obj in objects])
+    
     asects: list[ObjectSectionRecord] = list(itertools.chain.from_iterable([obj.asects for _, obj in objects]))
+    used_sects = find_referenced_sects(asects, entry_by_exts)
     try:
-        rsects = concat_rsects(itertools.chain.from_iterable([obj.rsects for _, obj in objects]))
+        rsects = list(filter(lambda rsect: rsect in used_sects, itertools.chain.from_iterable([obj.rsects for _, obj in objects])))
     except ValueError as e:
         raise LinkerException(str(e))
 
-    exts_by_sect = find_exts_by_sect(asects + rsects)
-    sect_by_ent = find_sect_by_ent(asects + rsects)
-    used_sects = find_referenced_sects(exts_by_sect, sect_by_ent)
-
-    rsects = [s for s in rsects if s.name in used_sects]
-    rsects.sort(key=lambda s: -len(s.data))
     asects.sort(key=lambda s: s.address)
 
     rsect_bins = init_bins(asects, image_size)
-    sect_addresses = place_sects(rsects, rsect_bins, image_size)
-    ents = gather_ents(asects + rsects, sect_addresses)
+    sect_addresses = place_sects(asects, rsects, rsect_bins, image_size)
+
     image = bytearray(2 ** 16)
     code_locations: dict[int, CodeLocation] = {}
 
+    # Writing asects data to image
+    # Gathering code_locations from asects
     for asect in asects:
         image_begin = asect.address
         image_end = image_begin + len(asect.data)
@@ -135,9 +154,12 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
         for loc_offset, location in asect.code_locations.items():
             code_locations[loc_offset + image_begin] = location
 
+    # Writing rsects data to image
+    # Rellocation
+    # Gathering code_locations from rsects
     lower_parts: dict[int, int] = {}  # Won't be empty if two entries added together, currently targets don't do that
     for rsect in rsects:
-        image_begin = sect_addresses[rsect.name]
+        image_begin = sect_addresses[id(rsect)]
         image_end = image_begin + len(rsect.data)
         image[image_begin:image_end] = rsect.data
         for entry in rsect.relocatable:
@@ -154,14 +176,21 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
         for loc_offset, location in rsect.code_locations.items():
             code_locations[loc_offset + image_begin] = location
 
+    # Linking XTRNs with NTRYs
     for sect in asects + rsects:
         for ext_name in sect.external:
+            if entry_by_exts[id(ext_name)] is None:
+                symbol_value = 0
+            else:
+                symbol_sect, symbol = entry_by_exts[id(ext_name)]
+                symbol_value = sect_addresses[id(symbol_sect)] + symbol.address
+
             for entry in sect.external[ext_name]:
-                pos = sect_addresses[sect.name] + entry.offset
+                pos = sect_addresses[id(sect)] + entry.offset
                 lower_limit = 1 << 8 * entry.entry_bytes.start
                 val = int.from_bytes(image[pos:pos + len(entry.entry_bytes)], 'little', signed=False) * lower_limit
                 val += entry.lower_part + lower_parts.get(entry.offset, 0)
-                val += ents[ext_name] * entry.sign
+                val += symbol_value * entry.sign
                 val %= (1 << 8 * entry.entry_bytes.stop)
                 image[pos:pos + len(entry.entry_bytes)] = \
                     (val // lower_limit).to_bytes(len(entry.entry_bytes), 'little', signed=False)

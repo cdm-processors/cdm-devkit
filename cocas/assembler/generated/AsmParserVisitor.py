@@ -92,6 +92,41 @@ class AsmParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by AsmParser#globalExtType.
+    def visitGlobalExtType(self, ctx:AsmParser.GlobalExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#fileExtType.
+    def visitFileExtType(self, ctx:AsmParser.FileExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#weakExtType.
+    def visitWeakExtType(self, ctx:AsmParser.WeakExtTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#localLabelSuffix.
+    def visitLocalLabelSuffix(self, ctx:AsmParser.LocalLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#globalLabelSuffix.
+    def visitGlobalLabelSuffix(self, ctx:AsmParser.GlobalLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#fileLabelSuffix.
+    def visitFileLabelSuffix(self, ctx:AsmParser.FileLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AsmParser#weakLabelSuffix.
+    def visitWeakLabelSuffix(self, ctx:AsmParser.WeakLabelSuffixContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by AsmParser#standaloneLabels.
     def visitStandaloneLabels(self, ctx:AsmParser.StandaloneLabelsContext):
         return self.visitChildren(ctx)

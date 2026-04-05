@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord
+from cocas.object_module import CodeLocation, ExternalEntry, ObjectSectionRecord, EntryKey
 
 from ...ast_nodes import LabelNode, RelocatableExpressionNode, TemplateFieldNode
 from ...exceptions import AssemblerException, AssemblerExceptionTag
@@ -212,12 +212,12 @@ def eval_rel_expr_seg(seg: RelocatableExpressionSegment, s: "Section",
     local_dim = 0
     for term, m in [(t, 1) for t in seg.expr.add_terms] + [(t, -1) for t in seg.expr.sub_terms]:
         if isinstance(term, LabelNode):
-            if term.name in labels:
-                local_dim += m
-                val_long += labels[term.name] * m
-            elif term.name in s.labels:
+            if term.name in s.labels:
                 s_dim += m
                 val_long += s.labels[term.name] * m
+            elif term.name in labels:
+                local_dim += m
+                val_long += labels[term.name] * m
             elif term.name in s.exts:
                 used_exts.setdefault(term.name, 0)
                 used_exts[term.name] += m
@@ -262,12 +262,16 @@ def add_ext_record(obj_rec: "ObjectSectionRecord", ext: str, s: "Section", val: 
     val_lo, _ = val.to_bytes(2, 'little', signed=False)
     offset = s.address + len(obj_rec.data)
     if seg.expr.byte_specifier == 'low':
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 1), full_bytes=False))
+        obj_rec.external \
+            .setdefault(EntryKey(ext, s.exts[ext]), []) \
+            .append(ExternalEntry(offset, range(0, 1), full_bytes=False))
     elif seg.expr.byte_specifier == 'high':
         entry = ExternalEntry(offset, range(1, 2), full_bytes=False, lower_part=val_lo)
-        obj_rec.external.setdefault(ext, []).append(entry)
+        obj_rec.external.setdefault(EntryKey(ext, s.exts[ext]), []).append(entry)
     else:
-        obj_rec.external.setdefault(ext, []).append(ExternalEntry(offset, range(0, 2), full_bytes=True))
+        obj_rec.external \
+            .setdefault(EntryKey(ext, s.exts[ext]), []) \
+            .append(ExternalEntry(offset, range(0, 2), full_bytes=True))
 
 
 def add_rel_record(obj_rec: "ObjectSectionRecord", s: "Section", val: int,

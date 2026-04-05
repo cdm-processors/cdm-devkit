@@ -40,12 +40,19 @@ targ_record: TARG label NEWLINE;
 source_record: FILE SPACES_FILE filepath NEWLINE;
 abs_record: ABS abs_address COLON_ABS data? NEWLINE_BYTES+;
 loc_record: LOC location* NEWLINE;
-ntry_record: NTRY label number NEWLINE;
+ntry_record: NTRY label linkage_spec number NEWLINE;
 name_record: NAME section NEWLINE;
 alig_record: ALIG number NEWLINE;
 data_record: DATA data? NEWLINE_BYTES+;
 rel_record: REL entry_usage* NEWLINE;
-xtrn_record: XTRN label COLON (section entry_usage)* NEWLINE;
+xtrn_record: XTRN label linkage_spec COLON (section entry_usage)* NEWLINE;
+
+linkage_spec: (PLUS linkage)?;
+linkage
+    : GLOBAL # Global
+    | WEAK  # Weak
+    | LOCAL # Local
+    ;
 
 data: BYTES;
 filepath: FILEPATH;

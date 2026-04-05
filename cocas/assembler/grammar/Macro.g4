@@ -15,13 +15,13 @@ first_param : WS param | ;
 
 label :       (macro_piece | macro_variable+ l_sep | l_sep)* macro_variable* LABEL_END ;
 param :       (macro_piece | macro_variable+ p_sep | p_sep)* macro_variable* ;
-instruction : (macro_piece | macro_variable+ OTHER | OTHER)+ macro_variable* | macro_variable+ ;
+instruction : ((macro_piece | macro_variable+ OTHER | OTHER)+ macro_variable* | macro_variable+) QUESTION_MARK? ;
 l_sep : OTHER | WS | COMMA ;
 p_sep : OTHER | WS ;
 
 macro_piece : macro_text | macro_param | macro_nonce ;
 macro_variable : QUESTION_MARK macro_piece+ ;
-macro_text : Macro | NAME | DIGIT | STRING | CHAR ;
+macro_text : Macro | NAME | DIGIT | STRING | CHAR;
 macro_param : DOLLAR_SIGN DIGIT ;
 macro_nonce : APOSTROPHE ;
 
@@ -34,7 +34,7 @@ COMMENT : '#'~[\n]* -> skip ;
 
 ASTERISK : '*' ;
 COMMA : ',' ;
-LABEL_END : [:>] ;
+LABEL_END : ':' | '>' | ':>' | '?>' ;
 QUESTION_MARK : '?' ;
 STRING: '"' (~[\\"\n]+ | '\\' .)* '"' ;
 CHAR : '\'' (~[\\'\n]+ | '\\' .)* '\'' ;
