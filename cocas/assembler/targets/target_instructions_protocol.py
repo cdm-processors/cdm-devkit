@@ -22,3 +22,6 @@ class TargetInstructions(Protocol):
 
     def assembly_directives(self) -> set[str]:
         ...
+
+    def update_handlers(self, new_handlers: list[object]) -> None:
+        ...

@@ -1,1 +1,1 @@
-from . import assembler, linker, object_file, object_module
+from . import linker, object_file, object_module

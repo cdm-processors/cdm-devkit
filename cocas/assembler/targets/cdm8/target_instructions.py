@@ -253,3 +253,6 @@ handlers = [
 
 def assembly_directives():
     return {'ds', 'dc'}
+
+def update_handlers(new_handlers: list[Handler]):
+    pass

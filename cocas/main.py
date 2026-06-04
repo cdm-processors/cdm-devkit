@@ -7,7 +7,7 @@ from typing import Union
 import colorama
 
 from cocas import exception_handlers as handlers
-from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets, read_mlb
+from cocas.assembler import AssemblerException, assemble_files, list_assembler_targets, read_mlb, parse_target, list_target_extensions
 from cocas.exception_handlers import log_error
 from cocas.linker import LinkerException, list_linker_targets, target_link, write_debug_export, write_image
 from cocas.object_file import ObjectFileException, list_object_targets, read_object_files, write_object_file
@@ -39,13 +39,19 @@ def main():
     if args.list_targets:
         print('Available targets: ' + ', '.join(available_targets))
         return
-    target: str = args.target.replace('-', '').lower()
-    if target[:1].isdecimal():
-        target = 'cdm' + target
+    target_info = parse_target(args.target)
+    target = target_info.base
+    extensions = target_info.extensions
+    available_extensions = sorted(list_target_extensions(target))
+    unknown_extensions = [ext for ext in extensions if ext not in available_extensions]
 
     if target not in available_targets:
         log_error("Main", 'Unknown target ' + target)
         print('Available targets: ' + ', '.join(available_targets), file=stderr)
+        return 2
+    if unknown_extensions:
+        log_error("Main", "Unknown extension(s): " + ", ".join(unknown_extensions))
+        print(f"Available extensions for {target_info.base}: " + ", ".join(available_extensions), file=stderr)
         return 2
     if len(args.sources) == 0:
         log_error("Main", 'No source files provided')
@@ -90,9 +96,9 @@ def main():
     try:
         macro_libraries = [read_mlb(mlb) for mlb in mlb_files]
         objects: list[tuple[Path, ObjectModule]] = list(itertools.chain(
-            assemble_files(target, asm_files, bool(args.debug), relative_path, absolute_path, realpath,
+            assemble_files(target_info, asm_files, bool(args.debug), relative_path, absolute_path, realpath,
                            macro_libraries=macro_libraries),
-            read_object_files(target, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
+            read_object_files(target_info, obj_files, bool(args.debug), relative_path, absolute_path, realpath)
         ))
     except AssemblerException as e:
         handlers.log_asm_exception(e)
@@ -107,14 +113,14 @@ def main():
     try:
         if args.merge:
             write_object_file((args.output or 'merged.obj'), [tup[1] for tup in objects],
-                              target, bool(args.debug or args.merge))
+                              target_info, bool(args.debug or args.merge))
         elif args.compile and args.output:
-            write_object_file(args.output, [tup[1] for tup in objects], target, bool(args.debug))
+            write_object_file(args.output, [tup[1] for tup in objects], target_info, bool(args.debug))
         elif args.compile:
             for path, obj in objects:
-                write_object_file(path.with_suffix('.obj').name, [obj], target, bool(args.debug))
+                write_object_file(path.with_suffix('.obj').name, [obj], target_info, bool(args.debug))
         else:
-            data, code_locations = target_link(objects, target)
+            data, code_locations = target_link(objects, target_info)
             if args.output:
                 write_image(args.output, data)
             else:

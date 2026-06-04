@@ -4,6 +4,8 @@ from typing import Any, Optional
 
 from cocas.object_module import CodeLocation, ObjectModule, ObjectSectionRecord, concat_rsects
 
+from cocas.assembler.target_parser import TargetInfo
+
 from .exceptions import LinkerException
 from .targets import TargetParams, import_target
 
@@ -171,14 +173,14 @@ def link(objects: list[tuple[Any, ObjectModule]], image_size: Optional[int] = No
     return image, code_locations
 
 
-def target_link(objects: list[tuple[Any, ObjectModule]], target_name: str) -> \
+def target_link(objects: list[tuple[Any, ObjectModule]], target: TargetInfo) -> \
         tuple[bytearray, dict[int, CodeLocation]]:
     """
     Link object modules with checking constraints for the target
 
     :param objects: list of pairs (file path, object module)
-    :param target_name: name of the target
+    :param target: dataclass containing name of processor target and list of extensions
     :return: pair [bytearray of image data, mapping from image addresses to locations in source files]
     """
-    params: TargetParams = import_target(target_name)
+    params: TargetParams = import_target(target.base)
     return link(objects, params.image_size)

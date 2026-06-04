@@ -8,6 +8,8 @@ from antlr4 import CommonTokenStream, InputStream
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
 
+from cocas.assembler.target_parser import TargetInfo
+
 from .exceptions import AntlrErrorListener, ObjectFileException
 from .generated import ObjectFileLexer, ObjectFileParser, ObjectFileParserVisitor
 from .targets import TargetParams, import_target
@@ -244,7 +246,7 @@ def import_object(input_stream: InputStream, filepath: Path, target: str) -> lis
     return result
 
 
-def read_object_files(target: str,
+def read_object_files(target: TargetInfo,
                       files: list[Union[str, Path]],
                       debug: bool,
                       relative_path: Optional[Path],
@@ -253,7 +255,7 @@ def read_object_files(target: str,
     """
     Open multiple object files and create object modules
 
-    :param target: name of processor target
+    :param target: dataclass containing name of processor target and list of extensions
     :param files: list of object files' paths to process
     :param debug: if debug information should be exported
     :param relative_path: if debug paths should be converted to relative to some path
@@ -271,7 +273,7 @@ def read_object_files(target: str,
             data += '\n'
 
         input_stream = antlr4.InputStream(data)
-        for obj in import_object(input_stream, Path(filepath), target):
+        for obj in import_object(input_stream, Path(filepath), target.base):
             if realpath:
                 dip = obj.source_file_path
                 obj.source_file_path = obj.source_file_path.resolve()

@@ -1,1 +1,1 @@
-from .target_instructions import assemble_instruction, assembly_directives, finish, make_branch_instruction
+from .target_instructions import assemble_instruction, assembly_directives, finish, make_branch_instruction, update_handlers

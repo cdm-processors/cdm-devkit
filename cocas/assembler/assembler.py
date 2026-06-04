@@ -7,6 +7,8 @@ import antlr4
 
 from cocas.object_module import ObjectModule
 
+from .target_parser import TargetInfo
+
 from .ast_builder import build_ast
 from .exceptions import AssemblerException, AssemblerExceptionTag
 from .macro_processor import MacroDefinition, process_macros, read_mlb
@@ -46,7 +48,7 @@ def get_debug_info_path(filepath: Path,
     return debug_info_path
 
 
-def assemble_files(target: str,
+def assemble_files(target: TargetInfo,
                    files: list[Path],
                    debug: bool,
                    relative_path: Optional[Path],
@@ -57,7 +59,7 @@ def assemble_files(target: str,
     """
     Open and assemble multiple files into object modules
 
-    :param target: name of processor, should be valid
+    :param target: dataclass containing name of processor target and list of extensions, name should be valid
     :param files: list of assembler files' paths to process
     :param debug: if debug information should be collected
     :param relative_path: if debug paths should be relative to some path
@@ -68,7 +70,23 @@ def assemble_files(target: str,
     """
     _ = absolute_path
     target_instructions = import_target(target)
-    macros = read_mlb(standard_mlb(target))
+    macros = read_mlb(standard_mlb(target.base))
+
+    for ext in target.extensions:
+        ext_mlb_path = (
+            Path(__file__).parent / target.base / "extensions" / ext / "standard.mlb"
+        )
+        if ext_mlb_path.exists():
+            ext_macros = read_mlb(ext_mlb_path)
+            for name in ext_macros:
+                for i in ext_macros[name]:
+                    if (name in macros) and (i in macros[name]):
+                        if ext_macros[name][i] != macros[name][i]:
+                            raise AssemblerException(AssemblerExceptionTag.MACRO,
+                                                    ext_macros[name][i].location.file, ext_macros[name][i].location.line,
+                                                    description=f"Redefinition of macro {name}/{i} in extension '{ext}'")
+            macros |= ext_macros
+
     if macro_libraries:
         for lib in macro_libraries:
             for name in lib.keys():

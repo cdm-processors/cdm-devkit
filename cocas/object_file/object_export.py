@@ -4,6 +4,8 @@ from typing import Union
 
 from cocas.object_module import CodeLocation, ExternalEntry, ObjectModule, ObjectSectionRecord
 
+from cocas.assembler.target_parser import TargetInfo
+
 from .targets import TargetParams, import_target
 
 
@@ -94,16 +96,16 @@ def export_object(objs: list[ObjectModule], target: str, debug: bool) -> list[st
     return result
 
 
-def write_object_file(filepath: Union[Path, str], objs: list[ObjectModule], target: str, debug: bool):
+def write_object_file(filepath: Union[Path, str], objs: list[ObjectModule], target: TargetInfo, debug: bool):
     """
     Export and write to a file a group of object modules
 
     :param filepath: path to the output object file
     :param objs: objects to export
-    :param target: name of selected processor target, must be valid
+    :param target: dataclass containing name of processor target and list of extensions, name must be valid
     :param debug: if needed to export debug information
     :return: list of strings of object file, ended by new line
     """
-    lines = export_object(objs, target, debug)
+    lines = export_object(objs, target.base, debug)
     with open(filepath, 'w') as file:
         file.writelines(lines)
