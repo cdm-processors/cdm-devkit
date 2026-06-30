@@ -66,12 +66,11 @@ abstract class BankedMem extends InstanceFactory {
     // other constants
     static final int DELAY = 10;
 
-    private WeakHashMap<Instance, File> currentInstanceFiles;
+    private final WeakHashMap<Instance, File> fileChooserFiles;
 
     BankedMem(String name, StringGetter desc, int extraPorts) {
-
         super(name, desc);
-        currentInstanceFiles = new WeakHashMap<Instance, File>();
+        fileChooserFiles = new WeakHashMap<>();
         setInstancePoker(BankedMemPoker.class);
         setKeyConfigurator(JoinedConfigurator.create(
                 new BitWidthConfigurator(ADDR_ATTR, 2, 24, 0),
@@ -172,20 +171,18 @@ abstract class BankedMem extends InstanceFactory {
         }
     }
 
-    File getCurrentImage(Instance instance) {
-        return currentInstanceFiles.get(instance);
+    File getFileChooserFile(Instance instance) {
+        return fileChooserFiles.get(instance);
     }
 
-    void setCurrentImage(Instance instance, File value) {
-        currentInstanceFiles.put(instance, value);
+    void setFileChooserFile(Instance instance, File value) {
+        fileChooserFiles.put(instance, value);
     }
 
-    public void loadImage(InstanceState instanceState, File imageFile)
-            throws IOException {
+    void setAndLoadImage(InstanceState instanceState, File imageFile) throws IOException {
         instanceState.getAttributeSet().setValue(PATH_ATTRIBUTE, imageFile.getAbsolutePath());
-        BankedMemState s = this.getState(instanceState);
-        HexFile.open(s.getContents(), imageFile);
-        this.setCurrentImage(instanceState.getInstance(), imageFile);
+        setFileChooserFile(instanceState.getInstance(), imageFile);
+        loadImage(instanceState, imageFile);
     }
 
     void autoLoadImage(InstanceState state) {
@@ -194,10 +191,25 @@ abstract class BankedMem extends InstanceFactory {
         }
         String filename = state.getAttributeSet().getValue(PATH_ATTRIBUTE);
         try {
-            File file = new File(filename);
-            loadImage(state, file);
+            File imageFile;
+            File projectFile = state.getProject().getLogisimFile().getLoader().getMainFile();
+            if (projectFile != null) {
+                imageFile = new File(projectFile.getParent(), filename);
+            } else {
+                imageFile = new File(filename);
+            }
+
+            setFileChooserFile(state.getInstance(), imageFile);
+            loadImage(state, imageFile);
         } catch (IOException e) {
+            getState(state).getContents().clear();
         }
+    }
+
+    public void loadImage(InstanceState instanceState, File imageFile)
+        throws IOException {
+        BankedMemState s = getState(instanceState);
+        HexFile.open(s.getContents(), imageFile);
     }
 
     @Override
