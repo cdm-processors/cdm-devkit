@@ -99,14 +99,14 @@ class BankedMemMenu implements ActionListener, MenuExtender {
 
     private void doLoad() {
         JFileChooser chooser = proj.createChooser();
-        File oldSelected = factory.getCurrentImage(instance);
+        File oldSelected = factory.getFileChooserFile(instance);
         if (oldSelected != null) chooser.setSelectedFile(oldSelected);
         chooser.setDialogTitle(BankedStrings.get("ramLoadDialogTitle"));
         int choice = chooser.showOpenDialog(frame);
         if (choice == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             try {
-                factory.loadImage(circState.getInstanceState(instance), f);
+                factory.setAndLoadImage(circState.getInstanceState(instance), f);
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(frame, e.getMessage(),
                         BankedStrings.get("ramLoadErrorTitle"), JOptionPane.ERROR_MESSAGE);
@@ -118,7 +118,7 @@ class BankedMemMenu implements ActionListener, MenuExtender {
         BankedMemState s = factory.getState(instance, circState);
 
         JFileChooser chooser = proj.createChooser();
-        File oldSelected = factory.getCurrentImage(instance);
+        File oldSelected = factory.getFileChooserFile(instance);
         if (oldSelected != null) chooser.setSelectedFile(oldSelected);
         chooser.setDialogTitle(BankedStrings.get("ramSaveDialogTitle"));
         int choice = chooser.showSaveDialog(frame);
@@ -126,7 +126,7 @@ class BankedMemMenu implements ActionListener, MenuExtender {
             File f = chooser.getSelectedFile();
             try {
                 HexFile.save(f, s.getContents());
-                factory.setCurrentImage(instance, f);
+                factory.setFileChooserFile(instance, f);
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(frame, e.getMessage(),
                         BankedStrings.get("ramSaveErrorTitle"), JOptionPane.ERROR_MESSAGE);
